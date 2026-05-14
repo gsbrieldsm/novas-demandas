@@ -1,166 +1,139 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
+import { useEffect, useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { format, startOfMonth, startOfWeek } from 'date-fns'
+import { format, startOfMonth, startOfWeek, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
-import type { Ticket, TicketStatus, Priority, RequestType } from '@/types'
-import { REQUEST_TYPE_LABELS, STATUS_LABELS, PRIORITY_LABELS } from '@/types'
-
-const COLUMNS: { id: TicketStatus; label: string; color: string; bg: string }[] = [
-  { id: 'novo', label: 'Novo', color: 'text-blue-700', bg: 'bg-blue-50' },
-  { id: 'em_andamento', label: 'Em Andamento', color: 'text-amber-700', bg: 'bg-amber-50' },
-  { id: 'em_revisao', label: 'Em Revisão', color: 'text-purple-700', bg: 'bg-purple-50' },
-  { id: 'concluido', label: 'Concluído', color: 'text-green-700', bg: 'bg-green-50' },
-]
-
-const PRIORITY_COLORS: Record<Priority, string> = {
-  normal: 'bg-slate-100 text-slate-600',
-  alta: 'bg-orange-100 text-orange-700',
-  urgente: 'bg-red-100 text-red-700',
-}
-
-const TYPE_COLORS: Record<RequestType, string> = {
-  estrategia: 'bg-indigo-100 text-indigo-700',
-  gravacao: 'bg-pink-100 text-pink-700',
-  conteudo: 'bg-cyan-100 text-cyan-700',
-  arte: 'bg-violet-100 text-violet-700',
-  edicao: 'bg-teal-100 text-teal-700',
-  outro: 'bg-slate-100 text-slate-600',
-}
+import type { Ticket, RequestType } from '@/types'
+import { REQUEST_TYPE_LABELS } from '@/types'
 
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-function StatCard({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: string }) {
+function AdminNav({ onLogout }: { onLogout: () => void }) {
+  const router = useRouter()
+  const pathname = usePathname()
+
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col gap-1">
-      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</p>
-      <p className={clsx('text-2xl font-bold', accent ?? 'text-slate-900')}>{value}</p>
+    <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <span className="font-bold text-slate-900">GM&Co</span>
+        </div>
+        <nav className="flex items-center gap-1">
+          <button
+            onClick={() => router.push('/admin')}
+            className={clsx(
+              'px-4 py-1.5 rounded-lg text-sm font-medium transition-colors',
+              pathname === '/admin' ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:text-slate-800'
+            )}
+          >
+            Gestão
+          </button>
+          <button
+            onClick={() => router.push('/admin/demandas')}
+            className={clsx(
+              'px-4 py-1.5 rounded-lg text-sm font-medium transition-colors',
+              pathname === '/admin/demandas' ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:text-slate-800'
+            )}
+          >
+            Demandas
+          </button>
+        </nav>
+      </div>
+      <div className="flex items-center gap-3">
+        <button onClick={() => router.push('/chat')} className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+          Ver portal →
+        </button>
+        <button onClick={onLogout} className="text-sm text-slate-500 hover:text-slate-700">
+          Sair
+        </button>
+      </div>
+    </header>
+  )
+}
+
+function StatCard({
+  label, value, sub, accent, icon,
+}: {
+  label: string; value: string; sub?: string; accent?: string; icon: React.ReactNode
+}) {
+  return (
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+      <div className="flex items-start justify-between mb-4">
+        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+          {icon}
+        </div>
+      </div>
+      <p className={clsx('text-3xl font-bold mb-1', accent ?? 'text-slate-900')}>{value}</p>
       {sub && <p className="text-xs text-slate-400">{sub}</p>}
     </div>
   )
 }
 
-function TicketCard({ ticket, index }: { ticket: Ticket; index: number }) {
-  const router = useRouter()
-
-  return (
-    <Draggable draggableId={ticket.id} index={index}>
-      {(provided, snapshot) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-          onClick={() => router.push(`/admin/chamado/${ticket.id}`)}
-          className={clsx(
-            'bg-white rounded-2xl p-4 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-all',
-            snapshot.isDragging && 'shadow-xl rotate-1 scale-105'
-          )}
-        >
-          <div className="flex items-start justify-between gap-2 mb-3">
-            <span className={clsx('text-xs font-medium px-2 py-0.5 rounded-full', TYPE_COLORS[ticket.request_type])}>
-              {REQUEST_TYPE_LABELS[ticket.request_type]}
-            </span>
-            <span className={clsx('text-xs font-medium px-2 py-0.5 rounded-full', PRIORITY_COLORS[ticket.priority])}>
-              {PRIORITY_LABELS[ticket.priority]}
-            </span>
-          </div>
-
-          <p className="text-sm font-semibold text-slate-800 mb-1 line-clamp-2">{ticket.title}</p>
-          <p className="text-xs text-slate-500 mb-3">{ticket.client_name} {ticket.company ? `· ${ticket.company}` : ''}</p>
-
-          {ticket.purpose && (
-            <p className="text-xs text-slate-400 italic line-clamp-2 mb-3">"{ticket.purpose}"</p>
-          )}
-
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-400">
-              {format(new Date(ticket.created_at), "d MMM", { locale: ptBR })}
-            </p>
-            <div className="flex items-center gap-2">
-              {ticket.deadline && (
-                <p className="text-xs font-medium text-slate-500">
-                  Prazo: {format(new Date(ticket.deadline), "d MMM", { locale: ptBR })}
-                </p>
-              )}
-              {ticket.is_fixed_client && (
-                <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">Fixo</span>
-              )}
-              {!ticket.is_fixed_client && ticket.budget_value != null && (
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
-                  {formatBRL(ticket.budget_value)}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </Draggable>
-  )
-}
-
-export default function AdminPage() {
+export default function GestaoPage() {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<RequestType | 'todos'>('todos')
   const router = useRouter()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) router.push('/admin/login')
     })
-    loadTickets()
-  }, [router])
-
-  async function loadTickets() {
-    const res = await fetch('/api/tickets')
-    if (res.ok) {
-      const data = await res.json()
+    fetch('/api/tickets').then(r => r.json()).then(data => {
       setTickets(data)
-    }
-    setLoading(false)
-  }
-
-  async function handleDragEnd(result: DropResult) {
-    if (!result.destination) return
-    const ticketId = result.draggableId
-    const newStatus = result.destination.droppableId as TicketStatus
-    setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status: newStatus } : t)))
-    await fetch(`/api/tickets/${ticketId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
+      setLoading(false)
     })
-  }
+  }, [router])
 
   async function handleLogout() {
     await supabase.auth.signOut()
     router.push('/admin/login')
   }
 
-  const filtered = tickets.filter((t) => filter === 'todos' || t.request_type === filter)
-
-  const countByStatus = useCallback(
-    (status: TicketStatus) => filtered.filter((t) => t.status === status).length,
-    [filtered]
-  )
-
   const now = new Date()
   const monthStart = startOfMonth(now)
+  const lastMonthStart = startOfMonth(subMonths(now, 1))
   const weekStart = startOfWeek(now, { weekStartsOn: 1 })
 
-  const receitaMes = tickets
-    .filter((t) => t.status === 'concluido' && !t.is_fixed_client && t.budget_value != null && new Date(t.created_at) >= monthStart)
-    .reduce((sum, t) => sum + (t.budget_value ?? 0), 0)
+  const concluidos = tickets.filter(t => t.status === 'concluido')
 
-  const demandasAtivas = tickets.filter((t) => ['novo', 'em_andamento', 'em_revisao'].includes(t.status)).length
+  const receitaMes = concluidos
+    .filter(t => !t.is_fixed_client && t.budget_value != null && new Date(t.updated_at ?? t.created_at) >= monthStart)
+    .reduce((s, t) => s + (t.budget_value ?? 0), 0)
 
-  const novosSemana = tickets.filter((t) => new Date(t.created_at) >= weekStart).length
+  const receitaMesAnterior = concluidos
+    .filter(t => !t.is_fixed_client && t.budget_value != null && new Date(t.updated_at ?? t.created_at) >= lastMonthStart && new Date(t.updated_at ?? t.created_at) < monthStart)
+    .reduce((s, t) => s + (t.budget_value ?? 0), 0)
+
+  const demandasAtivas = tickets.filter(t => ['novo', 'em_andamento', 'em_revisao'].includes(t.status)).length
+  const novosSemana = tickets.filter(t => new Date(t.created_at) >= weekStart).length
+  const clientesFixos = [...new Set(tickets.filter(t => t.is_fixed_client).map(t => t.client_email))].length
+
+  const receitaAberta = tickets
+    .filter(t => t.status !== 'concluido' && t.status !== 'cancelado' && !t.is_fixed_client && t.budget_value != null)
+    .reduce((s, t) => s + (t.budget_value ?? 0), 0)
+
+  const byType = Object.entries(REQUEST_TYPE_LABELS).map(([key, label]) => ({
+    label,
+    key: key as RequestType,
+    total: tickets.filter(t => t.request_type === key).length,
+    concluidos: tickets.filter(t => t.request_type === key && t.status === 'concluido').length,
+  })).filter(t => t.total > 0).sort((a, b) => b.total - a.total)
+
+  const recenteConcluidos = concluidos
+    .filter(t => t.budget_value != null && !t.is_fixed_client)
+    .sort((a, b) => new Date(b.updated_at ?? b.created_at).getTime() - new Date(a.updated_at ?? a.created_at).getTime())
+    .slice(0, 5)
 
   if (loading) {
     return (
@@ -172,102 +145,97 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Top bar */}
-      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
+      <AdminNav onLogout={handleLogout} />
+
+      <div className="max-w-6xl mx-auto w-full px-6 py-8 space-y-8">
+
+        {/* Cards principais */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard
+            label="Receita do Mês"
+            value={formatBRL(receitaMes)}
+            sub={receitaMesAnterior > 0 ? `Mês anterior: ${formatBRL(receitaMesAnterior)}` : 'Chamados concluídos este mês'}
+            accent="text-green-600"
+            icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+          />
+          <StatCard
+            label="Demandas Ativas"
+            value={String(demandasAtivas)}
+            sub="em aberto no momento"
+            icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}
+          />
+          <StatCard
+            label="Novos Chamados"
+            value={String(novosSemana)}
+            sub="esta semana"
+            accent={novosSemana > 0 ? 'text-blue-600' : undefined}
+            icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          {/* Receita em aberto + clientes fixos */}
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Receita em Aberto</p>
+              <p className="text-2xl font-bold text-slate-900">{formatBRL(receitaAberta)}</p>
+              <p className="text-xs text-slate-400 mt-1">Demandas ativas com orçamento definido</p>
             </div>
-            <span className="font-bold text-slate-900">Chamados</span>
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Clientes Fixos</p>
+              <p className="text-2xl font-bold text-amber-600">{clientesFixos}</p>
+              <p className="text-xs text-slate-400 mt-1">clientes com demandas em pacote</p>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as RequestType | 'todos')}
-            className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-          >
-            <option value="todos">Todos os tipos</option>
-            {Object.entries(REQUEST_TYPE_LABELS).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
-            ))}
-          </select>
-          <button onClick={() => router.push('/chat')} className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
-            Ver portal →
-          </button>
-          <button onClick={handleLogout} className="text-sm text-slate-500 hover:text-slate-700">
-            Sair
-          </button>
-        </div>
-      </header>
-
-      {/* Metrics */}
-      <div className="px-6 pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          label="Receita do Mês"
-          value={formatBRL(receitaMes)}
-          sub="chamados concluídos este mês"
-          accent="text-green-600"
-        />
-        <StatCard
-          label="Demandas Ativas"
-          value={String(demandasAtivas)}
-          sub="em aberto no momento"
-        />
-        <StatCard
-          label="Novos Chamados"
-          value={String(novosSemana)}
-          sub="esta semana"
-          accent={novosSemana > 0 ? 'text-blue-600' : undefined}
-        />
-      </div>
-
-      {/* Kanban */}
-      <div className="flex-1 overflow-x-auto p-6">
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex gap-4 min-w-max">
-            {COLUMNS.map((col) => {
-              const colTickets = filtered.filter((t) => t.status === col.id)
-              return (
-                <div key={col.id} className="w-72 flex flex-col">
-                  <div className={clsx('flex items-center justify-between px-3 py-2 rounded-xl mb-3', col.bg)}>
-                    <span className={clsx('text-sm font-semibold', col.color)}>{col.label}</span>
-                    <span className={clsx('text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center bg-white', col.color)}>
-                      {countByStatus(col.id)}
+          {/* Últimos concluídos com valor */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Últimos Concluídos</p>
+            {recenteConcluidos.length === 0 ? (
+              <p className="text-sm text-slate-400">Nenhum chamado concluído com valor ainda.</p>
+            ) : (
+              <div className="space-y-3">
+                {recenteConcluidos.map(t => (
+                  <div
+                    key={t.id}
+                    onClick={() => router.push(`/admin/chamado/${t.id}`)}
+                    className="flex items-center justify-between cursor-pointer hover:bg-slate-50 rounded-xl px-2 py-1.5 -mx-2 transition-colors"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-slate-800 line-clamp-1">{t.title}</p>
+                      <p className="text-xs text-slate-400">{t.client_name}</p>
+                    </div>
+                    <span className="text-sm font-semibold text-green-600 flex-shrink-0 ml-3">
+                      {formatBRL(t.budget_value!)}
                     </span>
                   </div>
-
-                  <Droppable droppableId={col.id}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={clsx(
-                          'flex-1 space-y-3 min-h-[200px] rounded-2xl p-2 transition-colors',
-                          snapshot.isDraggingOver && 'bg-indigo-50/50'
-                        )}
-                      >
-                        {colTickets.map((ticket, i) => (
-                          <TicketCard key={ticket.id} ticket={ticket} index={i} />
-                        ))}
-                        {provided.placeholder}
-                        {colTickets.length === 0 && !snapshot.isDraggingOver && (
-                          <div className="flex items-center justify-center h-24 text-slate-300 text-xs border-2 border-dashed border-slate-200 rounded-xl">
-                            Nenhum chamado
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
-              )
-            })}
+                ))}
+              </div>
+            )}
           </div>
-        </DragDropContext>
+        </div>
+
+        {/* Demandas por tipo */}
+        {byType.length > 0 && (
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Demandas por Tipo</p>
+            <div className="space-y-3">
+              {byType.map(({ label, total, concluidos: done }) => (
+                <div key={label} className="flex items-center gap-3">
+                  <p className="text-sm text-slate-700 w-28 flex-shrink-0">{label}</p>
+                  <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="h-full bg-indigo-500 rounded-full"
+                      style={{ width: `${Math.round((done / total) * 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-slate-400 w-20 text-right flex-shrink-0">{done}/{total} concluídos</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
