@@ -9,6 +9,9 @@ import type { ChatMessage } from '@/types'
 const PROFESSIONAL_NAME = process.env.NEXT_PUBLIC_PROFESSIONAL_NAME || 'Gabriel'
 const COMPANY_NAME = process.env.NEXT_PUBLIC_COMPANY_NAME || PROFESSIONAL_NAME
 
+const GOLD = '#C5A880'
+const GOLD_DARK = '#A88960'
+
 function Avatar({ size = 8, full = false }: { size?: number; full?: boolean }) {
   const logo = full ? '/logo-full.png' : '/logo-symbol.png'
   return (
@@ -30,14 +33,19 @@ function Avatar({ size = 8, full = false }: { size?: number; full?: boolean }) {
 function TypingIndicator() {
   return (
     <div className="flex items-end gap-2 animate-fade-in">
-      <Avatar size={8} />
-      <div className="bg-white rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+      <div
+        className="w-8 h-8 rounded-full flex items-center justify-center text-[#1C1A18] text-xs font-bold flex-shrink-0"
+        style={{ backgroundColor: GOLD }}
+      >
+        G
+      </div>
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl rounded-bl-sm px-4 py-3">
         <div className="flex gap-1 items-center h-4">
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse-dot"
-              style={{ animationDelay: `${i * 0.16}s` }}
+              className="w-2 h-2 rounded-full animate-pulse-dot"
+              style={{ backgroundColor: GOLD, animationDelay: `${i * 0.16}s` }}
             />
           ))}
         </div>
@@ -64,7 +72,10 @@ function Message({ msg, name }: { msg: ChatMessage; name: string }) {
       )}
     >
       {!isUser && (
-        <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center text-[#1C1A18] text-xs font-bold flex-shrink-0"
+          style={{ backgroundColor: GOLD }}
+        >
           {name[0]}
         </div>
       )}
@@ -72,9 +83,10 @@ function Message({ msg, name }: { msg: ChatMessage; name: string }) {
         className={clsx(
           'max-w-[75%] px-4 py-3 rounded-2xl shadow-sm text-sm leading-relaxed whitespace-pre-wrap',
           isUser
-            ? 'bg-indigo-600 text-white rounded-br-sm'
-            : 'bg-white text-slate-800 rounded-bl-sm'
+            ? 'text-[#1C1A18] rounded-br-sm'
+            : 'bg-white/10 backdrop-blur-sm text-white/90 rounded-bl-sm'
         )}
+        style={isUser ? { backgroundColor: GOLD } : {}}
       >
         {displayContent}
       </div>
@@ -92,33 +104,34 @@ function SuccessModal({
   const router = useRouter()
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-slide-up">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="bg-[#1C1A18] border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-slide-up">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: `${GOLD}20` }}>
+          <svg className="w-8 h-8" style={{ color: GOLD }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-xl font-bold text-slate-900 mb-2">Pedido registrado!</h2>
-        <p className="text-slate-500 text-sm mb-6">
+        <h2 className="text-xl font-bold text-white mb-2">Pedido registrado!</h2>
+        <p className="text-white/50 text-sm mb-6">
           Seu briefing foi recebido. Você pode acompanhar o status do seu chamado a qualquer momento.
         </p>
-        <div className="bg-slate-50 rounded-xl p-3 mb-6">
-          <p className="text-xs text-slate-400 mb-1">Número do chamado</p>
-          <p className="font-mono text-sm font-semibold text-slate-700 break-all">
+        <div className="bg-white/5 rounded-xl p-3 mb-6">
+          <p className="text-xs text-white/30 mb-1">Número do chamado</p>
+          <p className="font-mono text-sm font-semibold text-white/80 break-all">
             #{ticketId.slice(0, 8).toUpperCase()}
           </p>
         </div>
         <div className="flex flex-col gap-2">
           <button
             onClick={() => router.push(`/acompanhar/${ticketId}`)}
-            className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 transition-colors"
+            className="w-full py-3 rounded-xl font-medium transition-all hover:opacity-90 text-[#1C1A18]"
+            style={{ backgroundColor: GOLD }}
           >
             Acompanhar status
           </button>
           <button
             onClick={onClose}
-            className="w-full text-slate-500 py-2 text-sm hover:text-slate-700 transition-colors"
+            className="w-full text-white/40 py-2 text-sm hover:text-white/70 transition-colors"
           >
             Fechar
           </button>
@@ -213,16 +226,15 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-[#0D0B09] via-[#141210] to-[#1A1612]">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-4 bg-black/20 backdrop-blur-sm border-b border-white/10">
+      <div className="flex items-center gap-3 px-4 py-4 bg-black/30 backdrop-blur-sm border-b border-white/5">
         <Avatar size={10} />
         <div>
           <p className="text-white font-semibold text-sm">{COMPANY_NAME}</p>
-          <p className="text-indigo-300 text-xs">Assistente Estratégica</p>
+          <p className="text-xs" style={{ color: `${GOLD}99` }}>Assistente Estratégica</p>
         </div>
       </div>
-
 
       {/* Messages */}
       {!started ? (
@@ -232,13 +244,14 @@ export default function ChatPage() {
             <h1 className="text-white text-4xl sm:text-5xl font-bold leading-tight tracking-tight mb-4">
               Nada do que fazemos existe por acaso.
             </h1>
-            <p className="text-indigo-300 text-sm sm:text-base max-w-sm mx-auto leading-relaxed">
+            <p className="text-sm sm:text-base max-w-sm mx-auto leading-relaxed" style={{ color: `${GOLD}99` }}>
               Vou entender sua demanda de forma estratégica. Leva só alguns segundos!
             </p>
           </div>
           <button
             onClick={startConversation}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white px-10 py-3.5 rounded-2xl font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg text-sm"
+            className="px-10 py-3.5 rounded-2xl font-semibold transition-all hover:opacity-90 active:scale-95 shadow-lg text-sm text-[#1C1A18]"
+            style={{ backgroundColor: GOLD }}
           >
             Começar →
           </button>
@@ -259,7 +272,7 @@ export default function ChatPage() {
 
       {/* Input */}
       {started && (
-        <div className="px-4 py-4 bg-black/20 backdrop-blur-sm border-t border-white/10">
+        <div className="px-4 py-4 bg-black/30 backdrop-blur-sm border-t border-white/5">
           <div className="flex items-end gap-3 max-w-2xl mx-auto">
             <textarea
               ref={inputRef}
@@ -269,8 +282,10 @@ export default function ChatPage() {
               placeholder="Digite sua mensagem..."
               rows={1}
               disabled={loading}
-              className="flex-1 bg-white/10 text-white placeholder-white/40 border border-white/20 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-indigo-400 focus:bg-white/15 transition-all disabled:opacity-50"
+              className="flex-1 bg-white/5 text-white placeholder-white/25 border border-white/10 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:bg-white/8 transition-all disabled:opacity-50"
               style={{ minHeight: '44px', maxHeight: '120px' }}
+              onFocus={(e) => (e.target.style.borderColor = `${GOLD}66`)}
+              onBlur={(e) => (e.target.style.borderColor = 'rgba(255,255,255,0.10)')}
               onInput={(e) => {
                 const t = e.target as HTMLTextAreaElement
                 t.style.height = 'auto'
@@ -280,14 +295,15 @@ export default function ChatPage() {
             <button
               onClick={handleSend}
               disabled={loading || !input.trim()}
-              className="w-11 h-11 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 flex-shrink-0"
+              className="w-11 h-11 disabled:opacity-30 disabled:cursor-not-allowed text-[#1C1A18] rounded-2xl flex items-center justify-center transition-all hover:opacity-90 active:scale-95 flex-shrink-0"
+              style={{ backgroundColor: GOLD }}
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
               </svg>
             </button>
           </div>
-          <p className="text-center text-white/20 text-xs mt-2">
+          <p className="text-center text-white/15 text-xs mt-2">
             Enter para enviar · Shift+Enter para quebrar linha
           </p>
         </div>
