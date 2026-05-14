@@ -69,11 +69,12 @@ export default function TicketDetailPage() {
 
   async function updateField(field: string, value: string) {
     if (!ticket) return
-    setTicket((prev) => prev ? { ...prev, [field]: value } : null)
+    const parsed = value === 'true' ? true : value === 'false' ? false : value === 'null' ? null : value
+    setTicket((prev) => prev ? { ...prev, [field]: parsed } : null)
     await fetch(`/api/tickets/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [field]: value }),
+      body: JSON.stringify({ [field]: parsed }),
     })
   }
 
@@ -195,6 +196,60 @@ export default function TicketDetailPage() {
                 Enviar e-mail →
               </a>
             )}
+          </Section>
+
+          <Section title="Orçamento">
+            <div className="space-y-3">
+              <div className="flex rounded-xl overflow-hidden border border-slate-200 text-sm">
+                <button
+                  onClick={() => updateField('is_fixed_client', 'false')}
+                  className={clsx(
+                    'flex-1 py-2 font-medium transition-colors',
+                    !ticket.is_fixed_client ? 'bg-indigo-600 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'
+                  )}
+                >
+                  Avulso
+                </button>
+                <button
+                  onClick={() => updateField('is_fixed_client', 'true')}
+                  className={clsx(
+                    'flex-1 py-2 font-medium transition-colors',
+                    ticket.is_fixed_client ? 'bg-amber-500 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'
+                  )}
+                >
+                  Cliente Fixo
+                </button>
+              </div>
+
+              {ticket.is_fixed_client ? (
+                <div className="bg-amber-50 rounded-xl px-4 py-3 text-center">
+                  <p className="text-xs text-amber-600 font-semibold">Incluso no pacote</p>
+                  <p className="text-xs text-amber-500 mt-0.5">Demanda de cliente fixo</p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Valor do serviço</p>
+                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500">
+                    <span className="px-3 text-sm text-slate-400 bg-slate-50 border-r border-slate-200 py-2">R$</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0,00"
+                      value={ticket.budget_value ?? ''}
+                      onChange={(e) => setTicket((prev) => prev ? { ...prev, budget_value: e.target.value ? Number(e.target.value) : null } : null)}
+                      onBlur={(e) => updateField('budget_value', e.target.value || 'null')}
+                      className="flex-1 px-3 py-2 text-sm text-slate-800 focus:outline-none"
+                    />
+                  </div>
+                  {ticket.budget_value != null && (
+                    <p className="text-xs text-green-600 font-semibold mt-1.5 text-right">
+                      {ticket.budget_value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </Section>
 
           <Section title="Detalhes">

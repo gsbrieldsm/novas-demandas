@@ -20,6 +20,8 @@ export interface Ticket {
   priority: Priority
   admin_notes: string | null
   scheduled_at: string | null
+  budget_value: number | null
+  is_fixed_client: boolean
   chat_transcript: ChatMessage[]
 }
 

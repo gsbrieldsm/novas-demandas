@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { supabase } from '@/lib/supabase'
-import { format } from 'date-fns'
+import { format, startOfMonth, startOfWeek } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import type { Ticket, TicketStatus, Priority, RequestType } from '@/types'
@@ -24,11 +24,26 @@ const PRIORITY_COLORS: Record<Priority, string> = {
 }
 
 const TYPE_COLORS: Record<RequestType, string> = {
+  estrategia: 'bg-indigo-100 text-indigo-700',
   gravacao: 'bg-pink-100 text-pink-700',
   conteudo: 'bg-cyan-100 text-cyan-700',
   arte: 'bg-violet-100 text-violet-700',
   edicao: 'bg-teal-100 text-teal-700',
   outro: 'bg-slate-100 text-slate-600',
+}
+
+function formatBRL(value: number) {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
+function StatCard({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: string }) {
+  return (
+    <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col gap-1">
+      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</p>
+      <p className={clsx('text-2xl font-bold', accent ?? 'text-slate-900')}>{value}</p>
+      {sub && <p className="text-xs text-slate-400">{sub}</p>}
+    </div>
+  )
 }
 
 function TicketCard({ ticket, index }: { ticket: Ticket; index: number }) {
@@ -67,11 +82,21 @@ function TicketCard({ ticket, index }: { ticket: Ticket; index: number }) {
             <p className="text-xs text-slate-400">
               {format(new Date(ticket.created_at), "d MMM", { locale: ptBR })}
             </p>
-            {ticket.deadline && (
-              <p className="text-xs font-medium text-slate-500">
-                Prazo: {format(new Date(ticket.deadline), "d MMM", { locale: ptBR })}
-              </p>
-            )}
+            <div className="flex items-center gap-2">
+              {ticket.deadline && (
+                <p className="text-xs font-medium text-slate-500">
+                  Prazo: {format(new Date(ticket.deadline), "d MMM", { locale: ptBR })}
+                </p>
+              )}
+              {ticket.is_fixed_client && (
+                <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">Fixo</span>
+              )}
+              {!ticket.is_fixed_client && ticket.budget_value != null && (
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                  {formatBRL(ticket.budget_value)}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -103,14 +128,9 @@ export default function AdminPage() {
 
   async function handleDragEnd(result: DropResult) {
     if (!result.destination) return
-
     const ticketId = result.draggableId
     const newStatus = result.destination.droppableId as TicketStatus
-
-    setTickets((prev) =>
-      prev.map((t) => (t.id === ticketId ? { ...t, status: newStatus } : t))
-    )
-
+    setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status: newStatus } : t)))
     await fetch(`/api/tickets/${ticketId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -123,20 +143,24 @@ export default function AdminPage() {
     router.push('/admin/login')
   }
 
-  const filtered = tickets.filter(
-    (t) => filter === 'todos' || t.request_type === filter
-  )
+  const filtered = tickets.filter((t) => filter === 'todos' || t.request_type === filter)
 
   const countByStatus = useCallback(
     (status: TicketStatus) => filtered.filter((t) => t.status === status).length,
     [filtered]
   )
 
-  const stats = {
-    total: tickets.filter((t) => t.status !== 'concluido' && t.status !== 'cancelado').length,
-    novos: tickets.filter((t) => t.status === 'novo').length,
-    urgentes: tickets.filter((t) => t.priority === 'urgente' && t.status !== 'concluido').length,
-  }
+  const now = new Date()
+  const monthStart = startOfMonth(now)
+  const weekStart = startOfWeek(now, { weekStartsOn: 1 })
+
+  const receitaMes = tickets
+    .filter((t) => t.status === 'concluido' && !t.is_fixed_client && t.budget_value != null && new Date(t.created_at) >= monthStart)
+    .reduce((sum, t) => sum + (t.budget_value ?? 0), 0)
+
+  const demandasAtivas = tickets.filter((t) => ['novo', 'em_andamento', 'em_revisao'].includes(t.status)).length
+
+  const novosSemana = tickets.filter((t) => new Date(t.created_at) >= weekStart).length
 
   if (loading) {
     return (
@@ -159,25 +183,9 @@ export default function AdminPage() {
             </div>
             <span className="font-bold text-slate-900">Chamados</span>
           </div>
-
-          {/* Stats */}
-          <div className="hidden md:flex items-center gap-4 text-sm">
-            <span className="text-slate-500">{stats.total} ativos</span>
-            {stats.novos > 0 && (
-              <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
-                {stats.novos} novos
-              </span>
-            )}
-            {stats.urgentes > 0 && (
-              <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
-                {stats.urgentes} urgente{stats.urgentes > 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Filter */}
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as RequestType | 'todos')}
@@ -188,22 +196,35 @@ export default function AdminPage() {
               <option key={k} value={k}>{v}</option>
             ))}
           </select>
-
-          <button
-            onClick={() => router.push('/chat')}
-            className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
-          >
+          <button onClick={() => router.push('/chat')} className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
             Ver portal →
           </button>
-
-          <button
-            onClick={handleLogout}
-            className="text-sm text-slate-500 hover:text-slate-700"
-          >
+          <button onClick={handleLogout} className="text-sm text-slate-500 hover:text-slate-700">
             Sair
           </button>
         </div>
       </header>
+
+      {/* Metrics */}
+      <div className="px-6 pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard
+          label="Receita do Mês"
+          value={formatBRL(receitaMes)}
+          sub="chamados concluídos este mês"
+          accent="text-green-600"
+        />
+        <StatCard
+          label="Demandas Ativas"
+          value={String(demandasAtivas)}
+          sub="em aberto no momento"
+        />
+        <StatCard
+          label="Novos Chamados"
+          value={String(novosSemana)}
+          sub="esta semana"
+          accent={novosSemana > 0 ? 'text-blue-600' : undefined}
+        />
+      </div>
 
       {/* Kanban */}
       <div className="flex-1 overflow-x-auto p-6">
@@ -234,7 +255,6 @@ export default function AdminPage() {
                           <TicketCard key={ticket.id} ticket={ticket} index={i} />
                         ))}
                         {provided.placeholder}
-
                         {colTickets.length === 0 && !snapshot.isDraggingOver && (
                           <div className="flex items-center justify-center h-24 text-slate-300 text-xs border-2 border-dashed border-slate-200 rounded-xl">
                             Nenhum chamado
