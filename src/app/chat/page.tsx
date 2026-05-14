@@ -225,39 +225,37 @@ export default function ChatPage() {
 
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
-        {!started ? (
-          <div className="flex flex-col items-center justify-center h-full gap-6 animate-fade-in">
-            <Avatar size={24} full />
-            <div className="text-center">
-              <h1 className="text-white text-2xl font-bold mb-2">
-                Seja bem-vindo a {COMPANY_NAME}
-              </h1>
-              <p className="text-indigo-300 text-sm max-w-xs">
-                Vou te ajudar a formular seu pedido de forma estratégica. Leva só alguns minutos.
-              </p>
-            </div>
-            <button
-              onClick={startConversation}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-2xl font-medium transition-all hover:scale-105 active:scale-95 shadow-lg"
-            >
-              Começar →
-            </button>
+      {!started ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 animate-fade-in">
+          <Avatar size={24} full />
+          <div className="text-center">
+            <h1 className="text-white text-2xl font-bold mb-2">
+              Seja bem-vindo a {COMPANY_NAME}
+            </h1>
+            <p className="text-indigo-300 text-sm max-w-xs">
+              Vou te ajudar a formular seu pedido de forma estratégica. Leva só alguns minutos.
+            </p>
           </div>
-        ) : (
-          <>
-            {messages
-              .filter((msg) => msg.content !== '__INIT__')
-              .map((msg, i) => (
-                <Message key={i} msg={msg} name={PROFESSIONAL_NAME} />
-              ))}
-            {loading && messages[messages.length - 1]?.role !== 'assistant' && (
-              <TypingIndicator />
-            )}
-          </>
-        )}
-        <div ref={bottomRef} />
-      </div>
+          <button
+            onClick={startConversation}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-2xl font-medium transition-all hover:scale-105 active:scale-95 shadow-lg"
+          >
+            Começar →
+          </button>
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+          {messages
+            .filter((msg) => msg.content !== '__INIT__')
+            .map((msg, i) => (
+              <Message key={i} msg={msg} name={PROFESSIONAL_NAME} />
+            ))}
+          {loading && messages[messages.length - 1]?.role !== 'assistant' && (
+            <TypingIndicator />
+          )}
+          <div ref={bottomRef} />
+        </div>
+      )}
 
       {/* Input */}
       {started && (
