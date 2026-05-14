@@ -47,6 +47,7 @@ export default function TicketDetailPage() {
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const router = useRouter()
   const params = useParams()
   const id = params.id as string
@@ -76,6 +77,13 @@ export default function TicketDetailPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ [field]: parsed }),
     })
+  }
+
+  async function deleteTicket() {
+    if (!confirm('Tem certeza que deseja excluir este chamado? Essa ação não pode ser desfeita.')) return
+    setDeleting(true)
+    await fetch(`/api/tickets/${id}`, { method: 'DELETE' })
+    router.push('/admin/demandas')
   }
 
   async function saveNotes() {
@@ -290,6 +298,13 @@ export default function TicketDetailPage() {
               </div>
             </div>
           </Section>
+          <button
+            onClick={deleteTicket}
+            disabled={deleting}
+            className="w-full text-xs text-red-400 hover:text-red-600 hover:bg-red-50 border border-red-100 rounded-xl py-2.5 transition-colors disabled:opacity-50"
+          >
+            {deleting ? 'Excluindo...' : 'Excluir chamado'}
+          </button>
         </div>
       </div>
     </div>
