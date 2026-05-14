@@ -15,18 +15,14 @@ const GOLD_DARK = '#A88960'
 function Avatar({ size = 8, full = false }: { size?: number; full?: boolean }) {
   const logo = full ? '/logo-full.png' : '/logo-symbol.png'
   return (
-    <div
-      className="rounded-2xl overflow-hidden flex-shrink-0 bg-white flex items-center justify-center"
-      style={{ width: size * 4, height: size * 4 }}
-    >
-      <Image
-        src={logo}
-        alt={COMPANY_NAME}
-        width={size * 4}
-        height={size * 4}
-        className="w-full h-full object-contain p-0.5"
-      />
-    </div>
+    <Image
+      src={logo}
+      alt={COMPANY_NAME}
+      width={size * 4}
+      height={size * 4}
+      className="flex-shrink-0 object-contain"
+      style={{ width: size * 4, height: size * 4, filter: 'brightness(0) invert(1)' }}
+    />
   )
 }
 
