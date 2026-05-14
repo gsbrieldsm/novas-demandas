@@ -1,0 +1,254 @@
+'use client'
+
+import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
+import { supabase } from '@/lib/supabase'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import clsx from 'clsx'
+import type { Ticket, TicketStatus, Priority, RequestType } from '@/types'
+import { REQUEST_TYPE_LABELS, STATUS_LABELS, PRIORITY_LABELS } from '@/types'
+
+const COLUMNS: { id: TicketStatus; label: string; color: string; bg: string }[] = [
+  { id: 'novo', label: 'Novo', color: 'text-blue-700', bg: 'bg-blue-50' },
+  { id: 'em_andamento', label: 'Em Andamento', color: 'text-amber-700', bg: 'bg-amber-50' },
+  { id: 'em_revisao', label: 'Em Revisão', color: 'text-purple-700', bg: 'bg-purple-50' },
+  { id: 'concluido', label: 'Concluído', color: 'text-green-700', bg: 'bg-green-50' },
+]
+
+const PRIORITY_COLORS: Record<Priority, string> = {
+  normal: 'bg-slate-100 text-slate-600',
+  alta: 'bg-orange-100 text-orange-700',
+  urgente: 'bg-red-100 text-red-700',
+}
+
+const TYPE_COLORS: Record<RequestType, string> = {
+  gravacao: 'bg-pink-100 text-pink-700',
+  conteudo: 'bg-cyan-100 text-cyan-700',
+  arte: 'bg-violet-100 text-violet-700',
+  edicao: 'bg-teal-100 text-teal-700',
+  outro: 'bg-slate-100 text-slate-600',
+}
+
+function TicketCard({ ticket, index }: { ticket: Ticket; index: number }) {
+  const router = useRouter()
+
+  return (
+    <Draggable draggableId={ticket.id} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          onClick={() => router.push(`/admin/chamado/${ticket.id}`)}
+          className={clsx(
+            'bg-white rounded-2xl p-4 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-all',
+            snapshot.isDragging && 'shadow-xl rotate-1 scale-105'
+          )}
+        >
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <span className={clsx('text-xs font-medium px-2 py-0.5 rounded-full', TYPE_COLORS[ticket.request_type])}>
+              {REQUEST_TYPE_LABELS[ticket.request_type]}
+            </span>
+            <span className={clsx('text-xs font-medium px-2 py-0.5 rounded-full', PRIORITY_COLORS[ticket.priority])}>
+              {PRIORITY_LABELS[ticket.priority]}
+            </span>
+          </div>
+
+          <p className="text-sm font-semibold text-slate-800 mb-1 line-clamp-2">{ticket.title}</p>
+          <p className="text-xs text-slate-500 mb-3">{ticket.client_name} {ticket.company ? `· ${ticket.company}` : ''}</p>
+
+          {ticket.purpose && (
+            <p className="text-xs text-slate-400 italic line-clamp-2 mb-3">"{ticket.purpose}"</p>
+          )}
+
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-400">
+              {format(new Date(ticket.created_at), "d MMM", { locale: ptBR })}
+            </p>
+            {ticket.deadline && (
+              <p className="text-xs font-medium text-slate-500">
+                Prazo: {format(new Date(ticket.deadline), "d MMM", { locale: ptBR })}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </Draggable>
+  )
+}
+
+export default function AdminPage() {
+  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<RequestType | 'todos'>('todos')
+  const router = useRouter()
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) router.push('/admin/login')
+    })
+    loadTickets()
+  }, [router])
+
+  async function loadTickets() {
+    const res = await fetch('/api/tickets')
+    if (res.ok) {
+      const data = await res.json()
+      setTickets(data)
+    }
+    setLoading(false)
+  }
+
+  async function handleDragEnd(result: DropResult) {
+    if (!result.destination) return
+
+    const ticketId = result.draggableId
+    const newStatus = result.destination.droppableId as TicketStatus
+
+    setTickets((prev) =>
+      prev.map((t) => (t.id === ticketId ? { ...t, status: newStatus } : t))
+    )
+
+    await fetch(`/api/tickets/${ticketId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus }),
+    })
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push('/admin/login')
+  }
+
+  const filtered = tickets.filter(
+    (t) => filter === 'todos' || t.request_type === filter
+  )
+
+  const countByStatus = useCallback(
+    (status: TicketStatus) => filtered.filter((t) => t.status === status).length,
+    [filtered]
+  )
+
+  const stats = {
+    total: tickets.filter((t) => t.status !== 'concluido' && t.status !== 'cancelado').length,
+    novos: tickets.filter((t) => t.status === 'novo').length,
+    urgentes: tickets.filter((t) => t.priority === 'urgente' && t.status !== 'concluido').length,
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-slate-400 text-sm">Carregando...</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Top bar */}
+      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <span className="font-bold text-slate-900">Chamados</span>
+          </div>
+
+          {/* Stats */}
+          <div className="hidden md:flex items-center gap-4 text-sm">
+            <span className="text-slate-500">{stats.total} ativos</span>
+            {stats.novos > 0 && (
+              <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                {stats.novos} novos
+              </span>
+            )}
+            {stats.urgentes > 0 && (
+              <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
+                {stats.urgentes} urgente{stats.urgentes > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Filter */}
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as RequestType | 'todos')}
+            className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+          >
+            <option value="todos">Todos os tipos</option>
+            {Object.entries(REQUEST_TYPE_LABELS).map(([k, v]) => (
+              <option key={k} value={k}>{v}</option>
+            ))}
+          </select>
+
+          <button
+            onClick={() => router.push('/chat')}
+            className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+          >
+            Ver portal →
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="text-sm text-slate-500 hover:text-slate-700"
+          >
+            Sair
+          </button>
+        </div>
+      </header>
+
+      {/* Kanban */}
+      <div className="flex-1 overflow-x-auto p-6">
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="flex gap-4 min-w-max">
+            {COLUMNS.map((col) => {
+              const colTickets = filtered.filter((t) => t.status === col.id)
+              return (
+                <div key={col.id} className="w-72 flex flex-col">
+                  <div className={clsx('flex items-center justify-between px-3 py-2 rounded-xl mb-3', col.bg)}>
+                    <span className={clsx('text-sm font-semibold', col.color)}>{col.label}</span>
+                    <span className={clsx('text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center bg-white', col.color)}>
+                      {countByStatus(col.id)}
+                    </span>
+                  </div>
+
+                  <Droppable droppableId={col.id}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={clsx(
+                          'flex-1 space-y-3 min-h-[200px] rounded-2xl p-2 transition-colors',
+                          snapshot.isDraggingOver && 'bg-indigo-50/50'
+                        )}
+                      >
+                        {colTickets.map((ticket, i) => (
+                          <TicketCard key={ticket.id} ticket={ticket} index={i} />
+                        ))}
+                        {provided.placeholder}
+
+                        {colTickets.length === 0 && !snapshot.isDraggingOver && (
+                          <div className="flex items-center justify-center h-24 text-slate-300 text-xs border-2 border-dashed border-slate-200 rounded-xl">
+                            Nenhum chamado
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Droppable>
+                </div>
+              )
+            })}
+          </div>
+        </DragDropContext>
+      </div>
+    </div>
+  )
+}
