@@ -226,19 +226,19 @@ export default function ChatPage() {
 
       {/* Messages */}
       {!started ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 animate-fade-in">
-          <Avatar size={24} full />
-          <div className="text-center">
-            <h1 className="text-white text-2xl font-bold mb-2">
-              Seja bem-vindo a {COMPANY_NAME}
+        <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6 animate-fade-in">
+          <Avatar size={16} full />
+          <div className="text-center max-w-lg">
+            <h1 className="text-white text-4xl sm:text-5xl font-bold leading-tight tracking-tight mb-4">
+              Nada do que fazemos existe por acaso.
             </h1>
-            <p className="text-indigo-300 text-sm max-w-xs">
-              Vou te ajudar a formular seu pedido de forma estratégica. Leva só alguns minutos.
+            <p className="text-indigo-300 text-sm sm:text-base max-w-sm mx-auto leading-relaxed">
+              Vou entender sua demanda de forma estratégica. Leva só alguns segundos!
             </p>
           </div>
           <button
             onClick={startConversation}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-2xl font-medium transition-all hover:scale-105 active:scale-95 shadow-lg"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white px-10 py-3.5 rounded-2xl font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg text-sm"
           >
             Começar →
           </button>
