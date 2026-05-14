@@ -19,6 +19,7 @@ export interface Ticket {
   status: TicketStatus
   priority: Priority
   admin_notes: string | null
+  scheduled_at: string | null
   chat_transcript: ChatMessage[]
 }
 
@@ -39,6 +40,7 @@ export interface BriefingData {
   purpose: string | null
   expected_result: string | null
   priority: Priority
+  scheduled_at: string | null
 }
 
 export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {

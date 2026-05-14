@@ -151,6 +151,14 @@ export default function TicketDetailPage() {
                   <p className="text-sm text-green-900">{ticket.expected_result}</p>
                 </div>
               )}
+              {ticket.scheduled_at && (
+                <div className="bg-amber-50 rounded-xl p-4 border-l-4 border-amber-500">
+                  <p className="text-xs font-semibold text-amber-600 mb-1">Data e Horário da Gravação</p>
+                  <p className="text-sm font-bold text-amber-900">
+                    {format(new Date(ticket.scheduled_at), "EEEE, d 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                  </p>
+                </div>
+              )}
               <Field label="Onde será usado" value={ticket.where_used} />
               <Field label="Prazo" value={ticket.deadline ? format(new Date(ticket.deadline), "d 'de' MMMM 'de' yyyy", { locale: ptBR }) : null} />
             </div>

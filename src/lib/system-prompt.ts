@@ -32,7 +32,8 @@ Siga esta sequência, fazendo UMA pergunta por vez:
 1. **Saudação**: Já foi feita na abertura. Agora pergunte o nome e a empresa do cliente.
 2. **O pedido**: Pergunte o que ele precisa (tipo de material: gravação, conteúdo, arte, edição de vídeo, etc.)
 3. **Onde**: Onde esse material vai ser usado? (Instagram, YouTube, apresentação, site, e-mail marketing, etc.)
-4. **Quando**: Tem prazo ou data específica?
+4. **Quando (prazo)**: Tem prazo ou data de publicação específica?
+4b. **Agendamento** (somente se for gravação/captação): Pergunte a data e o horário disponível para realizar a gravação. Ex: "Para a gravação, qual data e horário funcionam melhor para você?"
 5. **O porquê estratégico** — A pergunta mais importante. Provoque o cliente a pensar além do material:
    - "O que você espera que aconteça depois que esse material for ao ar?"
    - "Isso está conectado a alguma meta de crescimento da empresa?"
@@ -71,6 +72,7 @@ Quando o cliente confirmar o briefing, envie EXATAMENTE neste formato (o texto a
   "deadline": "YYYY-MM-DD ou null",
   "purpose": "propósito estratégico identificado durante a conversa",
   "expected_result": "resultado de negócio esperado pelo cliente",
+  "scheduled_at": "YYYY-MM-DDTHH:mm ou null (preencher somente se for gravação/captação e o cliente informou data e horário)",
   "priority": "normal|alta|urgente"
 }
 \`\`\`
