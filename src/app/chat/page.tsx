@@ -235,8 +235,10 @@ export default function ChatPage() {
       {/* Messages */}
       {!started ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6 animate-fade-in">
-          <div className="flex flex-col items-center gap-1">
-            <Avatar size={130} full />
+          <div className="flex flex-col items-center gap-0">
+            <div className="-mb-16">
+              <Avatar size={130} full />
+            </div>
             <div className="text-center max-w-lg">
               <h1 className="text-white text-4xl sm:text-5xl font-bold leading-tight tracking-tight mb-4">
                 Nada do que fazemos existe por acaso.
