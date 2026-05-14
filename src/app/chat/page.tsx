@@ -226,7 +226,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-[#0D0B09] via-[#141210] to-[#1A1612]">
+    <div className="flex flex-col h-screen" style={{ background: 'radial-gradient(ellipse 75% 75% at 92% -10%, #C5A880 0%, #8B6840 45%, transparent 70%), radial-gradient(ellipse 65% 85% at 115% 70%, #B8946A 0%, #7A5530 45%, transparent 68%), radial-gradient(ellipse 90% 55% at 20% 90%, #3D2A14 0%, transparent 55%), #100E0B' }}>
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-4 bg-black/30 backdrop-blur-sm border-b border-white/5">
         <Avatar size={10} />
