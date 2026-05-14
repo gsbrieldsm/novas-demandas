@@ -234,15 +234,17 @@ export default function ChatPage() {
 
       {/* Messages */}
       {!started ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 animate-fade-in">
-          <Avatar size={144} full />
-          <div className="text-center max-w-lg">
-            <h1 className="text-white text-4xl sm:text-5xl font-bold leading-tight tracking-tight mb-4">
-              Nada do que fazemos existe por acaso.
-            </h1>
-            <p className="text-sm sm:text-base max-w-sm mx-auto leading-relaxed" style={{ color: `${GOLD}99` }}>
-              Vou entender sua demanda de forma estratégica. Leva só alguns segundos!
-            </p>
+        <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6 animate-fade-in">
+          <div className="flex flex-col items-center gap-1">
+            <Avatar size={130} full />
+            <div className="text-center max-w-lg">
+              <h1 className="text-white text-4xl sm:text-5xl font-bold leading-tight tracking-tight mb-4">
+                Nada do que fazemos existe por acaso.
+              </h1>
+              <p className="text-sm sm:text-base max-w-sm mx-auto leading-relaxed" style={{ color: `${GOLD}99` }}>
+                Vou entender sua demanda de forma estratégica. Leva só alguns segundos!
+              </p>
+            </div>
           </div>
           <button
             onClick={startConversation}
