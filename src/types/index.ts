@@ -1,4 +1,4 @@
-export type RequestType = 'gravacao' | 'conteudo' | 'arte' | 'edicao' | 'outro'
+export type RequestType = 'estrategia' | 'gravacao' | 'conteudo' | 'arte' | 'edicao' | 'outro'
 export type TicketStatus = 'novo' | 'em_andamento' | 'em_revisao' | 'concluido' | 'cancelado'
 export type Priority = 'normal' | 'alta' | 'urgente'
 
@@ -44,6 +44,7 @@ export interface BriefingData {
 }
 
 export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
+  estrategia: 'Estratégia',
   gravacao: 'Gravação',
   conteudo: 'Conteúdo',
   arte: 'Arte',
