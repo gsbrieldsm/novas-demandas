@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
   const stream = await anthropic.messages.stream({
     model: 'claude-sonnet-4-6',
-    max_tokens: 1024,
+    max_tokens: 4096,
     system: SYSTEM_PROMPT,
     messages: messages.map((m) => ({
       role: m.role,
@@ -37,11 +37,11 @@ export async function POST(req: Request) {
       }
 
       if (fullText.includes('[BRIEFING_COMPLETO]')) {
-        try {
-          const jsonMatch = fullText.match(/```json\n([\s\S]*?)\n```/)
-          if (jsonMatch) {
-            const briefing: BriefingData = JSON.parse(jsonMatch[1])
-            const db = getServiceClient()
+        const matches = [...fullText.matchAll(/```json\s*\n([\s\S]*?)\n\s*```/g)]
+        const db = getServiceClient()
+        for (const match of matches) {
+          try {
+            const briefing: BriefingData = JSON.parse(match[1])
             const { data } = await db
               .from('tickets')
               .insert({
@@ -57,9 +57,9 @@ export async function POST(req: Request) {
               // Notificação por email (fire-and-forget)
               sendNewTicketEmail(data).catch(err => console.error('email error:', err))
             }
+          } catch (e) {
+            console.error('Erro ao criar ticket:', e)
           }
-        } catch (e) {
-          console.error('Erro ao criar ticket:', e)
         }
       }
 
