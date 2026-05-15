@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { supabase } from '@/lib/supabase'
+import { api } from '@/lib/api'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
@@ -122,7 +123,7 @@ export default function ComercialPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) router.push('/admin/login')
     })
-    fetch('/api/leads').then(r => r.json()).then(data => {
+    api('/api/leads').then(r => r.json()).then(data => {
       setLeads(data)
       setLoading(false)
     })
@@ -138,7 +139,7 @@ export default function ComercialPage() {
     const leadId = result.draggableId
     const newStatus = result.destination.droppableId as LeadStatus
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l))
-    await fetch(`/api/leads/${leadId}`, {
+    await api(`/api/leads/${leadId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus }),
@@ -157,7 +158,7 @@ export default function ComercialPage() {
     if (form.telefone) body.telefone = form.telefone
     if (form.valor_estimado) body.valor_estimado = parseFloat(form.valor_estimado.replace(',', '.'))
 
-    const res = await fetch('/api/leads', {
+    const res = await api('/api/leads', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

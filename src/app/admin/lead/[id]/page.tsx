@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { api } from '@/lib/api'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
@@ -52,7 +53,7 @@ export default function LeadDetailPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) router.push('/admin/login')
     })
-    fetch(`/api/leads/${id}`).then(r => r.json()).then(data => {
+    api(`/api/leads/${id}`).then(r => r.json()).then(data => {
       setLead(data)
       setAnotacoes(data.anotacoes ?? '')
       setLoading(false)
@@ -65,7 +66,7 @@ export default function LeadDetailPage() {
   }
 
   async function updateField(field: string, value: unknown) {
-    const res = await fetch(`/api/leads/${id}`, {
+    const res = await api(`/api/leads/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ [field]: value }),
@@ -82,7 +83,7 @@ export default function LeadDetailPage() {
 
   async function handleDelete() {
     if (!confirm('Excluir este lead?')) return
-    await fetch(`/api/leads/${id}`, { method: 'DELETE' })
+    await api(`/api/leads/${id}`, { method: 'DELETE' })
     router.push('/admin/comercial')
   }
 
@@ -91,7 +92,7 @@ export default function LeadDetailPage() {
     if (!lead) return
     setConverting(true)
 
-    const ticketRes = await fetch('/api/tickets', {
+    const ticketRes = await api('/api/tickets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -109,7 +110,7 @@ export default function LeadDetailPage() {
     })
     const ticket = await ticketRes.json()
 
-    await fetch(`/api/leads/${id}`, {
+    await api(`/api/leads/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

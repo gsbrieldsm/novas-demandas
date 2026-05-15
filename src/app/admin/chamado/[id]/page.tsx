@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import { supabase } from '@/lib/supabase'
+import { api } from '@/lib/api'
 import type { Ticket, TicketStatus, Priority } from '@/types'
 import { REQUEST_TYPE_LABELS, STATUS_LABELS, PRIORITY_LABELS } from '@/types'
 
@@ -60,7 +61,7 @@ export default function TicketDetailPage() {
   }, [id, router])
 
   async function loadTicket() {
-    const res = await fetch(`/api/tickets/${id}`)
+    const res = await api(`/api/tickets/${id}`)
     if (res.ok) {
       const data = await res.json()
       setTicket(data)
@@ -72,7 +73,7 @@ export default function TicketDetailPage() {
     if (!ticket) return
     const parsed = value === 'true' ? true : value === 'false' ? false : value === 'null' ? null : value
     setTicket((prev) => prev ? { ...prev, [field]: parsed } : null)
-    await fetch(`/api/tickets/${id}`, {
+    await api(`/api/tickets/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ [field]: parsed }),
@@ -82,13 +83,13 @@ export default function TicketDetailPage() {
   async function deleteTicket() {
     if (!confirm('Tem certeza que deseja excluir este chamado? Essa ação não pode ser desfeita.')) return
     setDeleting(true)
-    await fetch(`/api/tickets/${id}`, { method: 'DELETE' })
+    await api(`/api/tickets/${id}`, { method: 'DELETE' })
     router.push('/admin/demandas')
   }
 
   async function saveNotes() {
     setSaving(true)
-    await fetch(`/api/tickets/${id}`, {
+    await api(`/api/tickets/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ admin_notes: notes }),

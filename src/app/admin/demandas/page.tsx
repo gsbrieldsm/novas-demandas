@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { supabase } from '@/lib/supabase'
+import { api } from '@/lib/api'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
@@ -105,7 +106,7 @@ export default function DemandasPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) router.push('/admin/login')
     })
-    fetch('/api/tickets').then(r => r.json()).then(data => {
+    api('/api/tickets').then(r => r.json()).then(data => {
       setTickets(data)
       setLoading(false)
     })
@@ -121,7 +122,7 @@ export default function DemandasPage() {
     const ticketId = result.draggableId
     const newStatus = result.destination.droppableId as TicketStatus
     setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: newStatus } : t))
-    await fetch(`/api/tickets/${ticketId}`, {
+    await api(`/api/tickets/${ticketId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus }),

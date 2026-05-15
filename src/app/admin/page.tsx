@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { api } from '@/lib/api'
 import { startOfMonth, startOfDay, subDays, format, isBefore } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
@@ -71,11 +72,11 @@ export default function GestaoPage() {
       if (!data.session) router.push('/admin/login')
     })
     Promise.all([
-      fetch('/api/tickets').then(r => r.json()),
-      fetch('/api/clientes-fixos').then(r => r.json()),
-      fetch(`/api/pagamentos?mes=${m}&ano=${a}`).then(r => r.json()),
-      fetch('/api/leads').then(r => r.json()),
-      fetch(`/api/metas?mes=${m}&ano=${a}`).then(r => r.json()),
+      api('/api/tickets').then(r => r.json()),
+      api('/api/clientes-fixos').then(r => r.json()),
+      api(`/api/pagamentos?mes=${m}&ano=${a}`).then(r => r.json()),
+      api('/api/leads').then(r => r.json()),
+      api(`/api/metas?mes=${m}&ano=${a}`).then(r => r.json()),
     ]).then(([t, c, p, l, met]) => {
       setTickets(t)
       setClientes(c)
@@ -94,7 +95,7 @@ export default function GestaoPage() {
   async function addCliente() {
     if (!form.nome || !form.valor_mensal) return
     setSaving(true)
-    const res = await fetch('/api/clientes-fixos', {
+    const res = await api('/api/clientes-fixos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -114,7 +115,7 @@ export default function GestaoPage() {
 
   async function toggleAtivo(c: ClienteFixo) {
     setClientes(prev => prev.map(x => x.id === c.id ? { ...x, ativo: !c.ativo } : x))
-    await fetch(`/api/clientes-fixos/${c.id}`, {
+    await api(`/api/clientes-fixos/${c.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ativo: !c.ativo }),
@@ -124,7 +125,7 @@ export default function GestaoPage() {
   async function deleteCliente(id: string) {
     if (!confirm('Remover este cliente fixo?')) return
     setClientes(prev => prev.filter(c => c.id !== id))
-    await fetch(`/api/clientes-fixos/${id}`, { method: 'DELETE' })
+    await api(`/api/clientes-fixos/${id}`, { method: 'DELETE' })
   }
 
   async function saveMeta(tipo: 'fixo' | 'avulso') {
@@ -133,7 +134,7 @@ export default function GestaoPage() {
     setMeta(updated)
     setEditingMeta(null)
     setMetaInput('')
-    await fetch('/api/metas', {
+    await api('/api/metas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updated),

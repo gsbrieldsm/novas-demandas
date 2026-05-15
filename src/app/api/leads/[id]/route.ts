@@ -1,13 +1,15 @@
-import { getServiceClient } from '@/lib/supabase'
+import { requireAuth } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(req)
+  if ('error' in auth) return auth.error
+
   const { id } = await params
-  const db = getServiceClient()
-  const { data, error } = await db.from('leads').select('*').eq('id', id).single()
+  const { data, error } = await auth.db.from('leads').select('*').eq('id', id).single()
   if (error) return NextResponse.json({ error: error.message }, { status: 404 })
   return NextResponse.json(data)
 }
@@ -16,10 +18,12 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(req)
+  if ('error' in auth) return auth.error
+
   const { id } = await params
   const body = await req.json()
-  const db = getServiceClient()
-  const { data, error } = await db
+  const { data, error } = await auth.db
     .from('leads')
     .update(body)
     .eq('id', id)
@@ -30,12 +34,14 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(req)
+  if ('error' in auth) return auth.error
+
   const { id } = await params
-  const db = getServiceClient()
-  const { error } = await db.from('leads').delete().eq('id', id)
+  const { error } = await auth.db.from('leads').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

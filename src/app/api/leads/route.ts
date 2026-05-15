@@ -1,9 +1,11 @@
-import { getServiceClient } from '@/lib/supabase'
+import { requireAuth } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 
-export async function GET() {
-  const db = getServiceClient()
-  const { data, error } = await db
+export async function GET(req: Request) {
+  const auth = await requireAuth(req)
+  if ('error' in auth) return auth.error
+
+  const { data, error } = await auth.db
     .from('leads')
     .select('*')
     .order('created_at', { ascending: false })
@@ -13,9 +15,11 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireAuth(req)
+  if ('error' in auth) return auth.error
+
   const body = await req.json()
-  const db = getServiceClient()
-  const { data, error } = await db
+  const { data, error } = await auth.db
     .from('leads')
     .insert(body)
     .select()

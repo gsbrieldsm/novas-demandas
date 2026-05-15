@@ -1,14 +1,16 @@
-import { getServiceClient } from '@/lib/supabase'
+import { requireAuth } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(req)
+  if ('error' in auth) return auth.error
+
   const { id } = await params
   const body = await req.json()
-  const db = getServiceClient()
-  const { data, error } = await db
+  const { data, error } = await auth.db
     .from('pagamentos')
     .update({ ...body, recebido_em: body.recebido ? new Date().toISOString() : null })
     .eq('id', id)

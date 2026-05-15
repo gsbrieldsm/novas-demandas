@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { api } from '@/lib/api'
 import { format, addMonths, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
@@ -69,10 +70,10 @@ export default function FinanceiroPage() {
     const a = mes.getFullYear()
 
     Promise.all([
-      fetch('/api/clientes-fixos').then(r => r.json()),
-      fetch(`/api/pagamentos?mes=${m}&ano=${a}`).then(r => r.json()),
-      fetch('/api/tickets').then(r => r.json()),
-      fetch(`/api/despesas?mes=${m}&ano=${a}`).then(r => r.json()),
+      api('/api/clientes-fixos').then(r => r.json()),
+      api(`/api/pagamentos?mes=${m}&ano=${a}`).then(r => r.json()),
+      api('/api/tickets').then(r => r.json()),
+      api(`/api/despesas?mes=${m}&ano=${a}`).then(r => r.json()),
     ]).then(([c, p, t, d]) => {
       setClientes(c)
       setPagamentos(p)
@@ -90,7 +91,7 @@ export default function FinanceiroPage() {
   async function toggleAvulso(ticket: Ticket) {
     const novo = !ticket.pagamento_recebido
     setTickets(prev => prev.map(t => t.id === ticket.id ? { ...t, pagamento_recebido: novo } : t))
-    await fetch(`/api/tickets/${ticket.id}`, {
+    await api(`/api/tickets/${ticket.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pagamento_recebido: novo }),
@@ -102,7 +103,7 @@ export default function FinanceiroPage() {
     const a = mes.getFullYear()
 
     if (!pag) {
-      const res = await fetch('/api/pagamentos', {
+      const res = await api('/api/pagamentos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cliente_id: cliente.id, mes: m, ano: a, valor: cliente.valor_mensal, recebido: true }),
@@ -110,7 +111,7 @@ export default function FinanceiroPage() {
       const novo = await res.json()
       setPagamentos(prev => [...prev, novo])
     } else {
-      const res = await fetch(`/api/pagamentos/${pag.id}`, {
+      const res = await api(`/api/pagamentos/${pag.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ recebido: !pag.recebido }),
@@ -125,7 +126,7 @@ export default function FinanceiroPage() {
     setSavingDesp(true)
     const valor = parseFloat(despForm.valor.replace(',', '.'))
     if (isNaN(valor)) { setSavingDesp(false); return }
-    const res = await fetch('/api/despesas', {
+    const res = await api('/api/despesas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -146,7 +147,7 @@ export default function FinanceiroPage() {
   async function deleteDespesa(id: string) {
     if (!confirm('Excluir esta despesa?')) return
     setDespesas(prev => prev.filter(d => d.id !== id))
-    await fetch(`/api/despesas/${id}`, { method: 'DELETE' })
+    await api(`/api/despesas/${id}`, { method: 'DELETE' })
   }
 
   // ============ Cálculos ============
