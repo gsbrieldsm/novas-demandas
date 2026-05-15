@@ -14,6 +14,7 @@ export function AdminNav({ onLogout, extra }: { onLogout: () => void; extra?: Re
     { label: 'Gestão', href: '/admin' },
     { label: 'Financeiro', href: '/admin/financeiro' },
     { label: 'Demandas', href: '/admin/demandas' },
+    { label: 'Comercial', href: '/admin/comercial' },
   ]
 
   return (

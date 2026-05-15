@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 export async function GET() {
   const db = getServiceClient()
   const { data, error } = await db
-    .from('tickets')
+    .from('leads')
     .select('*')
     .order('created_at', { ascending: false })
 
@@ -16,8 +16,8 @@ export async function POST(req: Request) {
   const body = await req.json()
   const db = getServiceClient()
   const { data, error } = await db
-    .from('tickets')
-    .insert({ chat_transcript: [], ...body })
+    .from('leads')
+    .insert(body)
     .select()
     .single()
 
