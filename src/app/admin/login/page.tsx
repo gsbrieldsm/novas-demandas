@@ -40,15 +40,15 @@ export default function LoginPage() {
           <div className="flex items-center justify-center mb-5">
             <Image
               src="/logo-symbol.png"
-              alt="GM&Co"
-              width={64}
-              height={64}
+              alt="Gabriel Moraes & Co"
+              width={192}
+              height={192}
               className="object-contain"
               style={{ filter: 'brightness(0) invert(1)' }}
               priority
             />
           </div>
-          <h1 className="text-white text-2xl font-bold tracking-tight">Painel GM&Co</h1>
+          <h1 className="text-white text-2xl font-bold tracking-tight">Painel Gabriel Moraes &amp; Co</h1>
           <p className="text-white/50 text-sm mt-1">Acesso restrito</p>
         </div>
 
