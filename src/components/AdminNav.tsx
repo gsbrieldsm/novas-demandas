@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
+import Image from 'next/image'
 import clsx from 'clsx'
 
 const GOLD = '#C5A880'
@@ -16,14 +17,22 @@ export function AdminNav({ onLogout, extra }: { onLogout: () => void; extra?: Re
   ]
 
   return (
-    <header className="bg-white border-b border-slate-100 px-6 py-0 flex items-center justify-between shadow-sm">
+    <header
+      className="px-6 py-0 flex items-center justify-between shadow-md"
+      style={{
+        background: 'radial-gradient(ellipse 60% 150% at 95% 50%, #C5A880 0%, #6B4C28 40%, transparent 70%), #100E0B',
+      }}
+    >
       <div className="flex items-center gap-8">
-        <div className="py-4 flex items-center gap-2">
-          <div
-            className="w-1 h-6 rounded-full"
-            style={{ backgroundColor: GOLD }}
+        <div className="py-3">
+          <Image
+            src="/logo-symbol.png"
+            alt="GM&Co"
+            width={36}
+            height={36}
+            className="object-contain"
+            style={{ filter: 'brightness(0) invert(1)' }}
           />
-          <span className="font-bold text-slate-900 tracking-tight">GM&Co</span>
         </div>
         <nav className="flex items-center h-full">
           {links.map(link => {
@@ -35,8 +44,8 @@ export function AdminNav({ onLogout, extra }: { onLogout: () => void; extra?: Re
                 className={clsx(
                   'px-4 py-5 text-sm font-medium transition-colors border-b-2 -mb-px',
                   active
-                    ? 'border-[#C5A880] text-slate-900'
-                    : 'border-transparent text-slate-400 hover:text-slate-700'
+                    ? 'text-white border-[#C5A880]'
+                    : 'text-white/50 border-transparent hover:text-white/80'
                 )}
               >
                 {link.label}
@@ -49,13 +58,14 @@ export function AdminNav({ onLogout, extra }: { onLogout: () => void; extra?: Re
         {extra}
         <button
           onClick={() => router.push('/chat')}
-          className="text-sm font-medium px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-300 transition-colors"
+          className="text-sm font-medium px-3 py-1.5 rounded-lg border text-white/60 hover:text-white transition-colors"
+          style={{ borderColor: `${GOLD}40` }}
         >
           Portal →
         </button>
         <button
           onClick={onLogout}
-          className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
+          className="text-sm text-white/40 hover:text-white/70 transition-colors"
         >
           Sair
         </button>

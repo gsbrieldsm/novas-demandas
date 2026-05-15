@@ -8,7 +8,6 @@ import clsx from 'clsx'
 import type { Ticket, RequestType } from '@/types'
 import { REQUEST_TYPE_LABELS } from '@/types'
 import { AdminNav } from '@/components/AdminNav'
-import { AdminFooter } from '@/components/AdminFooter'
 
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -306,7 +305,7 @@ export default function GestaoPage() {
           </div>
         )}
       </div>
-      <AdminFooter />
+
     </div>
   )
 }

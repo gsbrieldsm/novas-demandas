@@ -7,7 +7,6 @@ import { format, addMonths, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import { AdminNav } from '@/components/AdminNav'
-import { AdminFooter } from '@/components/AdminFooter'
 import type { Ticket } from '@/types'
 
 function formatBRL(v: number) {
@@ -269,7 +268,7 @@ export default function FinanceiroPage() {
           </div>
         )}
       </div>
-      <AdminFooter />
+
     </div>
   )
 }
