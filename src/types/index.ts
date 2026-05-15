@@ -22,6 +22,7 @@ export interface Ticket {
   scheduled_at: string | null
   budget_value: number | null
   is_fixed_client: boolean
+  pagamento_recebido: boolean
   chat_transcript: ChatMessage[]
 }
 
