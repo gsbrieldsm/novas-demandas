@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { SYSTEM_PROMPT } from '@/lib/system-prompt'
 import { getServiceClient } from '@/lib/supabase'
+import { sendNewTicketEmail } from '@/lib/email'
 import type { ChatMessage, BriefingData } from '@/types'
 
 const anthropic = new Anthropic({
@@ -47,12 +48,14 @@ export async function POST(req: Request) {
                 ...briefing,
                 chat_transcript: messages,
               })
-              .select('id')
+              .select('*')
               .single()
 
             if (data) {
               const ticketIdMarker = `\n[TICKET_ID:${data.id}]`
               controller.enqueue(new TextEncoder().encode(ticketIdMarker))
+              // Notificação por email (fire-and-forget)
+              sendNewTicketEmail(data).catch(err => console.error('email error:', err))
             }
           }
         } catch (e) {

@@ -1,4 +1,5 @@
 import { getServiceClient } from '@/lib/supabase'
+import { sendNewTicketEmail } from '@/lib/email'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -22,5 +23,7 @@ export async function POST(req: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  // Notificação por email (fire-and-forget)
+  sendNewTicketEmail(data).catch(err => console.error('email error:', err))
   return NextResponse.json(data)
 }
