@@ -118,9 +118,9 @@ export default function FinanceiroPage() {
   const totalRecebido = rows.filter(r => r.pag?.recebido).reduce((s, r) => s + r.cliente.valor_mensal, 0)
   const totalPendente = totalEsperado - totalRecebido
 
-  // Avulsos concluídos neste mês sem pagamento registrado (sem budget é ignorado)
+  // Avulsos com orçamento definido criados neste mês (ignora clientes fixos e tickets sem valor)
   const avulsosMes = tickets.filter(t => {
-    if (t.status !== 'concluido' || t.is_fixed_client || !t.budget_value) return false
+    if (t.is_fixed_client || !t.budget_value || t.status === 'cancelado') return false
     const d = new Date(t.created_at)
     return d.getMonth() + 1 === m && d.getFullYear() === a
   })
