@@ -33,12 +33,28 @@ interface Pagamento {
   cliente: ClienteFixo
 }
 
+type DespesaTipo = 'pessoal' | 'corporativa'
+
+interface Despesa {
+  id: string
+  created_at: string
+  tipo: DespesaTipo
+  descricao: string
+  valor: number
+  mes: number
+  ano: number
+}
+
 export default function FinanceiroPage() {
   const [mes, setMes] = useState(new Date())
   const [clientes, setClientes] = useState<ClienteFixo[]>([])
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([])
   const [tickets, setTickets] = useState<Ticket[]>([])
+  const [despesas, setDespesas] = useState<Despesa[]>([])
   const [loading, setLoading] = useState(true)
+  const [showDespForm, setShowDespForm] = useState(false)
+  const [despForm, setDespForm] = useState<{ tipo: DespesaTipo; descricao: string; valor: string }>({ tipo: 'corporativa', descricao: '', valor: '' })
+  const [savingDesp, setSavingDesp] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -56,10 +72,12 @@ export default function FinanceiroPage() {
       fetch('/api/clientes-fixos').then(r => r.json()),
       fetch(`/api/pagamentos?mes=${m}&ano=${a}`).then(r => r.json()),
       fetch('/api/tickets').then(r => r.json()),
-    ]).then(([c, p, t]) => {
+      fetch(`/api/despesas?mes=${m}&ano=${a}`).then(r => r.json()),
+    ]).then(([c, p, t, d]) => {
       setClientes(c)
       setPagamentos(p)
       setTickets(t)
+      setDespesas(d)
       setLoading(false)
     })
   }, [mes])
@@ -84,7 +102,6 @@ export default function FinanceiroPage() {
     const a = mes.getFullYear()
 
     if (!pag) {
-      // Criar e marcar como recebido
       const res = await fetch('/api/pagamentos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -93,7 +110,6 @@ export default function FinanceiroPage() {
       const novo = await res.json()
       setPagamentos(prev => [...prev, novo])
     } else {
-      // Toggle recebido
       const res = await fetch(`/api/pagamentos/${pag.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -104,6 +120,36 @@ export default function FinanceiroPage() {
     }
   }
 
+  async function addDespesa() {
+    if (!despForm.descricao || !despForm.valor) return
+    setSavingDesp(true)
+    const valor = parseFloat(despForm.valor.replace(',', '.'))
+    if (isNaN(valor)) { setSavingDesp(false); return }
+    const res = await fetch('/api/despesas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tipo: despForm.tipo,
+        descricao: despForm.descricao,
+        valor,
+        mes: mes.getMonth() + 1,
+        ano: mes.getFullYear(),
+      }),
+    })
+    const nova = await res.json()
+    setDespesas(prev => [nova, ...prev])
+    setDespForm({ tipo: 'corporativa', descricao: '', valor: '' })
+    setShowDespForm(false)
+    setSavingDesp(false)
+  }
+
+  async function deleteDespesa(id: string) {
+    if (!confirm('Excluir esta despesa?')) return
+    setDespesas(prev => prev.filter(d => d.id !== id))
+    await fetch(`/api/despesas/${id}`, { method: 'DELETE' })
+  }
+
+  // ============ Cálculos ============
   const m = mes.getMonth() + 1
   const a = mes.getFullYear()
 
@@ -114,11 +160,10 @@ export default function FinanceiroPage() {
     pag: pagamentos.find(p => p.cliente_id === c.id),
   }))
 
-  const totalEsperado = clientesAtivos.reduce((s, c) => s + c.valor_mensal, 0)
-  const totalRecebido = rows.filter(r => r.pag?.recebido).reduce((s, r) => s + r.cliente.valor_mensal, 0)
-  const totalPendente = totalEsperado - totalRecebido
+  const totalEsperadoFixo = clientesAtivos.reduce((s, c) => s + Number(c.valor_mensal), 0)
+  const totalRecebidoFixo = rows.filter(r => r.pag?.recebido).reduce((s, r) => s + Number(r.cliente.valor_mensal), 0)
+  const totalPendenteFixo = totalEsperadoFixo - totalRecebidoFixo
 
-  // Avulsos com orçamento definido criados neste mês (ignora clientes fixos e tickets sem valor)
   const avulsosMes = tickets.filter(t => {
     if (t.is_fixed_client || !t.budget_value || t.status === 'cancelado') return false
     const d = new Date(t.created_at)
@@ -129,47 +174,93 @@ export default function FinanceiroPage() {
   const totalAvulsoRecebido = avulsosMes.filter(t => t.pagamento_recebido).reduce((s, t) => s + (t.budget_value ?? 0), 0)
   const totalAvulsoPendente = totalAvulso - totalAvulsoRecebido
 
+  const entradas = totalRecebidoFixo + totalAvulsoRecebido
+  const pendente = totalPendenteFixo + totalAvulsoPendente
+
+  const saidas = despesas.reduce((s, d) => s + Number(d.valor), 0)
+  const saidasPessoais = despesas.filter(d => d.tipo === 'pessoal').reduce((s, d) => s + Number(d.valor), 0)
+  const saidasCorp = despesas.filter(d => d.tipo === 'corporativa').reduce((s, d) => s + Number(d.valor), 0)
+
+  const balanco = entradas - saidas
+  const balancoPositivo = balanco >= 0
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <AdminNav onLogout={handleLogout} />
 
-      <div className="max-w-4xl mx-auto w-full px-6 py-8 space-y-6">
+      <div className="max-w-6xl mx-auto w-full px-6 py-8 space-y-6">
 
-        {/* Seletor de mês */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-slate-900">
-            {format(mes, "MMMM 'de' yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())}
-          </h1>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setMes(m => subMonths(m, 1))} className="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">‹</button>
-            <button onClick={() => setMes(new Date())} className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-colors">Hoje</button>
-            <button onClick={() => setMes(m => addMonths(m, 1))} className="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">›</button>
+        {/* Header com mês e balanço */}
+        <div className="flex items-end justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-4">
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Financeiro</p>
+              <h1 className="text-2xl font-bold text-slate-900 mt-1">
+                {format(mes, "MMMM 'de' yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())}
+              </h1>
+            </div>
+            <div className="flex items-center gap-2 ml-2">
+              <button onClick={() => setMes(m => subMonths(m, 1))} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">‹</button>
+              <button onClick={() => setMes(new Date())} className="text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-colors">Hoje</button>
+              <button onClick={() => setMes(m => addMonths(m, 1))} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">›</button>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-slate-400">Balanço do mês</p>
+            <p className={clsx('text-2xl font-bold', balancoPositivo ? 'text-green-600' : 'text-red-500')}>
+              {balancoPositivo ? '+' : ''}{formatBRL(balanco)}
+            </p>
           </div>
         </div>
 
-        {/* Cards de resumo */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Esperado</p>
-            <p className="text-2xl font-bold text-slate-900">{formatBRL(totalEsperado + totalAvulso)}</p>
-            <p className="text-xs text-slate-400 mt-1">Fixo {formatBRL(totalEsperado)} + Avulso {formatBRL(totalAvulso)}</p>
+        {/* PAINEL BALANÇO (gradiente dark/gold) */}
+        <div
+          className="rounded-2xl p-6 shadow-md text-white"
+          style={{
+            background: 'radial-gradient(ellipse 80% 150% at 95% 50%, #C5A880 0%, #6B4C28 40%, #1c1a18 80%), #100E0B',
+          }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-white/60">Visão Geral</p>
+              <p className="text-sm text-white/80 mt-0.5">Entradas, saídas e resultado do mês</p>
+            </div>
           </div>
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Recebido</p>
-            <p className="text-2xl font-bold text-green-600">{formatBRL(totalRecebido + totalAvulsoRecebido)}</p>
-            <p className="text-xs text-slate-400 mt-1">Fixo {formatBRL(totalRecebido)} + Avulso {formatBRL(totalAvulsoRecebido)}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Pendente</p>
-            <p className={clsx('text-2xl font-bold', (totalPendente + totalAvulsoPendente) > 0 ? 'text-red-500' : 'text-slate-400')}>{formatBRL(totalPendente + totalAvulsoPendente)}</p>
-            <p className="text-xs text-slate-400 mt-1">Fixo {formatBRL(totalPendente)} + Avulso {formatBRL(totalAvulsoPendente)}</p>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <BalancoCard
+              label="Entradas"
+              value={formatBRL(entradas)}
+              sub={`Fixo ${formatBRL(totalRecebidoFixo)} + Avulso ${formatBRL(totalAvulsoRecebido)}`}
+              color="text-green-300"
+            />
+            <BalancoCard
+              label="Saídas"
+              value={formatBRL(saidas)}
+              sub={`Pess. ${formatBRL(saidasPessoais)} + Corp. ${formatBRL(saidasCorp)}`}
+              color="text-red-300"
+            />
+            <BalancoCard
+              label="Balanço"
+              value={`${balancoPositivo ? '+' : ''}${formatBRL(balanco)}`}
+              sub={balancoPositivo ? 'Resultado positivo' : 'Resultado negativo'}
+              color={balancoPositivo ? 'text-green-300' : 'text-red-300'}
+              highlight
+            />
+            <BalancoCard
+              label="Pendente"
+              value={formatBRL(pendente)}
+              sub={`${rows.filter(r => !r.pag?.recebido).length + avulsosMes.filter(t => !t.pagamento_recebido).length} a receber`}
+              color={pendente > 0 ? 'text-amber-300' : 'text-white/60'}
+            />
           </div>
         </div>
 
         {/* Tabela de clientes fixos */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100">
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-700">Recebimentos Fixos</h2>
+            <span className="text-sm font-bold text-amber-600">{formatBRL(totalRecebidoFixo)} <span className="text-xs font-normal text-slate-400">de {formatBRL(totalEsperadoFixo)}</span></span>
           </div>
 
           {loading ? (
@@ -195,7 +286,7 @@ export default function FinanceiroPage() {
                       {cliente.email && <p className="text-xs text-slate-400">{cliente.email}</p>}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm font-semibold text-slate-800">{formatBRL(cliente.valor_mensal)}</span>
+                      <span className="text-sm font-semibold text-slate-800">{formatBRL(Number(cliente.valor_mensal))}</span>
                     </td>
                     <td className="px-6 py-4">
                       {cliente.dia_vencimento ? (
@@ -246,7 +337,7 @@ export default function FinanceiroPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-700">Avulsos com Orçamento</h2>
-            <span className="text-sm font-bold text-slate-700">{formatBRL(totalAvulso)}</span>
+            <span className="text-sm font-bold text-slate-700">{formatBRL(totalAvulsoRecebido)} <span className="text-xs font-normal text-slate-400">de {formatBRL(totalAvulso)}</span></span>
           </div>
           {avulsosMes.length === 0 ? (
             <div className="px-6 py-8 text-center text-slate-400 text-sm">Nenhum avulso com orçamento este mês.</div>
@@ -303,8 +394,140 @@ export default function FinanceiroPage() {
             </table>
           )}
         </div>
-      </div>
 
+        {/* DESPESAS */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-700">Despesas</h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Pessoais {formatBRL(saidasPessoais)} · Corporativas {formatBRL(saidasCorp)}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-bold text-red-500">{formatBRL(saidas)}</span>
+              <button
+                onClick={() => setShowDespForm(v => !v)}
+                className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition-opacity"
+                style={{ background: '#C5A880' }}
+              >
+                {showDespForm ? 'Cancelar' : '+ Adicionar'}
+              </button>
+            </div>
+          </div>
+
+          {showDespForm && (
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                <div className="sm:col-span-3">
+                  <select
+                    value={despForm.tipo}
+                    onChange={e => setDespForm(f => ({ ...f, tipo: e.target.value as DespesaTipo }))}
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                  >
+                    <option value="corporativa">Corporativa</option>
+                    <option value="pessoal">Pessoal</option>
+                  </select>
+                </div>
+                <div className="sm:col-span-5">
+                  <input
+                    placeholder="Descrição (ex: Adobe, conta de luz...)"
+                    value={despForm.descricao}
+                    onChange={e => setDespForm(f => ({ ...f, descricao: e.target.value }))}
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#C5A880] bg-white">
+                    <span className="px-2 text-xs text-slate-400 bg-slate-100 border-r border-slate-200 py-2">R$</span>
+                    <input
+                      placeholder="0,00"
+                      value={despForm.valor}
+                      onChange={e => setDespForm(f => ({ ...f, valor: e.target.value }))}
+                      onKeyDown={e => { if (e.key === 'Enter') addDespesa() }}
+                      inputMode="decimal"
+                      className="w-full text-sm px-2 py-2 focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="sm:col-span-2">
+                  <button
+                    onClick={addDespesa}
+                    disabled={savingDesp || !despForm.descricao || !despForm.valor}
+                    className="w-full text-sm py-2 rounded-lg text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+                    style={{ background: '#C5A880' }}
+                  >
+                    {savingDesp ? 'Salvando...' : 'Salvar'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="max-h-96 overflow-y-auto">
+            {despesas.length === 0 ? (
+              <div className="px-6 py-8 text-center text-slate-400 text-sm">Nenhuma despesa este mês.</div>
+            ) : (
+              <table className="w-full">
+                <thead className="sticky top-0 bg-white border-b border-slate-100">
+                  <tr className="text-left">
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Tipo</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Descrição</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Valor</th>
+                    <th className="px-6 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {despesas.map(d => (
+                    <tr key={d.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-3">
+                        <span className={clsx(
+                          'inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full',
+                          d.tipo === 'pessoal'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-purple-100 text-purple-700'
+                        )}>
+                          {d.tipo === 'pessoal' ? 'Pessoal' : 'Corporativa'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3">
+                        <p className="text-sm text-slate-800">{d.descricao}</p>
+                        <p className="text-xs text-slate-400">{format(new Date(d.created_at), "d 'de' MMM", { locale: ptBR })}</p>
+                      </td>
+                      <td className="px-6 py-3">
+                        <span className="text-sm font-semibold text-red-500">- {formatBRL(Number(d.valor))}</span>
+                      </td>
+                      <td className="px-6 py-3 text-right">
+                        <button
+                          onClick={() => deleteDespesa(d.id)}
+                          className="text-slate-300 hover:text-red-400 transition-colors text-lg leading-none"
+                        >
+                          ×
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BalancoCard({ label, value, sub, color, highlight }: { label: string; value: string; sub?: string; color: string; highlight?: boolean }) {
+  return (
+    <div className={clsx(
+      'rounded-xl p-4 border',
+      highlight
+        ? 'bg-white/15 border-white/30 backdrop-blur-sm'
+        : 'bg-white/5 border-white/10 backdrop-blur-sm'
+    )}>
+      <p className="text-xs uppercase tracking-wider text-white/60 mb-2">{label}</p>
+      <p className={clsx('text-2xl font-bold leading-tight', color)}>{value}</p>
+      {sub && <p className="text-[11px] text-white/50 mt-1.5 leading-tight">{sub}</p>}
     </div>
   )
 }
