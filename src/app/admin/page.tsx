@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { startOfMonth, startOfWeek, subMonths } from 'date-fns'
 import clsx from 'clsx'
 import type { Ticket, RequestType } from '@/types'
 import { REQUEST_TYPE_LABELS } from '@/types'
+import { AdminNav } from '@/components/AdminNav'
 
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -18,33 +19,6 @@ interface ClienteFixo {
   email: string | null
   valor_mensal: number
   ativo: boolean
-}
-
-function AdminNav({ onLogout }: { onLogout: () => void }) {
-  const router = useRouter()
-  const pathname = usePathname()
-  return (
-    <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-          </div>
-          <span className="font-bold text-slate-900">GM&Co</span>
-        </div>
-        <nav className="flex items-center gap-1">
-          <button onClick={() => router.push('/admin')} className={clsx('px-4 py-1.5 rounded-lg text-sm font-medium transition-colors', pathname === '/admin' ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:text-slate-800')}>Gestão</button>
-          <button onClick={() => router.push('/admin/demandas')} className={clsx('px-4 py-1.5 rounded-lg text-sm font-medium transition-colors', pathname === '/admin/demandas' ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:text-slate-800')}>Demandas</button>
-        </nav>
-      </div>
-      <div className="flex items-center gap-3">
-        <button onClick={() => router.push('/chat')} className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">Ver portal →</button>
-        <button onClick={onLogout} className="text-sm text-slate-500 hover:text-slate-700">Sair</button>
-      </div>
-    </header>
-  )
 }
 
 function StatCard({ label, value, sub, accent, icon }: { label: string; value: string; sub?: string; accent?: string; icon: React.ReactNode }) {
@@ -65,7 +39,7 @@ export default function GestaoPage() {
   const [clientes, setClientes] = useState<ClienteFixo[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ nome: '', email: '', valor_mensal: '' })
+  const [form, setForm] = useState({ nome: '', email: '', valor_mensal: '', dia_vencimento: '' })
   const [saving, setSaving] = useState(false)
   const router = useRouter()
 
@@ -94,11 +68,11 @@ export default function GestaoPage() {
     const res = await fetch('/api/clientes-fixos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome: form.nome, email: form.email || null, valor_mensal: Number(form.valor_mensal), ativo: true }),
+      body: JSON.stringify({ nome: form.nome, email: form.email || null, valor_mensal: Number(form.valor_mensal), dia_vencimento: form.dia_vencimento ? Number(form.dia_vencimento) : null, ativo: true }),
     })
     const novo = await res.json()
     setClientes(prev => [...prev, novo])
-    setForm({ nome: '', email: '', valor_mensal: '' })
+    setForm({ nome: '', email: '', valor_mensal: '', dia_vencimento: '' })
     setShowForm(false)
     setSaving(false)
   }
@@ -220,15 +194,28 @@ export default function GestaoPage() {
                   onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                   className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
-                <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500">
-                  <span className="px-3 text-sm text-slate-400 bg-slate-100 border-r border-slate-200 py-2">R$</span>
-                  <input
-                    type="number"
-                    placeholder="Valor mensal"
-                    value={form.valor_mensal}
-                    onChange={e => setForm(f => ({ ...f, valor_mensal: e.target.value }))}
-                    className="flex-1 text-sm px-3 py-2 focus:outline-none"
-                  />
+                <div className="flex gap-2">
+                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 flex-1">
+                    <span className="px-3 text-sm text-slate-400 bg-slate-100 border-r border-slate-200 py-2">R$</span>
+                    <input
+                      type="number"
+                      placeholder="Valor mensal"
+                      value={form.valor_mensal}
+                      onChange={e => setForm(f => ({ ...f, valor_mensal: e.target.value }))}
+                      className="flex-1 text-sm px-3 py-2 focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 w-24">
+                    <span className="px-2 text-xs text-slate-400 bg-slate-100 border-r border-slate-200 py-2">Dia</span>
+                    <input
+                      type="number"
+                      min="1" max="31"
+                      placeholder="—"
+                      value={form.dia_vencimento}
+                      onChange={e => setForm(f => ({ ...f, dia_vencimento: e.target.value }))}
+                      className="w-full text-sm px-2 py-2 focus:outline-none"
+                    />
+                  </div>
                 </div>
                 <div className="flex gap-2 pt-1">
                   <button onClick={addCliente} disabled={saving} className="flex-1 bg-indigo-600 text-white text-sm py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">

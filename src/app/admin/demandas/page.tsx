@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
@@ -9,6 +9,7 @@ import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import type { Ticket, TicketStatus, Priority, RequestType } from '@/types'
 import { REQUEST_TYPE_LABELS, PRIORITY_LABELS } from '@/types'
+import { AdminNav } from '@/components/AdminNav'
 
 const COLUMNS: { id: TicketStatus; label: string; color: string; bg: string }[] = [
   { id: 'novo', label: 'Novo', color: 'text-blue-700', bg: 'bg-blue-50' },
@@ -99,7 +100,6 @@ export default function DemandasPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<RequestType | 'todos'>('todos')
   const router = useRouter()
-  const pathname = usePathname()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -145,57 +145,18 @@ export default function DemandasPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <span className="font-bold text-slate-900">GM&Co</span>
-          </div>
-          <nav className="flex items-center gap-1">
-            <button
-              onClick={() => router.push('/admin')}
-              className={clsx(
-                'px-4 py-1.5 rounded-lg text-sm font-medium transition-colors',
-                pathname === '/admin' ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:text-slate-800'
-              )}
-            >
-              Gestão
-            </button>
-            <button
-              onClick={() => router.push('/admin/demandas')}
-              className={clsx(
-                'px-4 py-1.5 rounded-lg text-sm font-medium transition-colors',
-                pathname === '/admin/demandas' ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:text-slate-800'
-              )}
-            >
-              Demandas
-            </button>
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <select
-            value={filter}
-            onChange={e => setFilter(e.target.value as RequestType | 'todos')}
-            className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-          >
-            <option value="todos">Todos os tipos</option>
-            {Object.entries(REQUEST_TYPE_LABELS).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
-            ))}
-          </select>
-          <button onClick={() => router.push('/chat')} className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
-            Ver portal →
-          </button>
-          <button onClick={handleLogout} className="text-sm text-slate-500 hover:text-slate-700">
-            Sair
-          </button>
-        </div>
-      </header>
+      <AdminNav onLogout={handleLogout} extra={
+        <select
+          value={filter}
+          onChange={e => setFilter(e.target.value as RequestType | 'todos')}
+          className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+        >
+          <option value="todos">Todos os tipos</option>
+          {Object.entries(REQUEST_TYPE_LABELS).map(([k, v]) => (
+            <option key={k} value={k}>{v}</option>
+          ))}
+        </select>
+      } />
 
       <div className="flex-1 overflow-x-auto p-6">
         <DragDropContext onDragEnd={handleDragEnd}>
