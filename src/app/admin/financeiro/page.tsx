@@ -7,6 +7,7 @@ import { format, addMonths, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import { AdminNav } from '@/components/AdminNav'
+import { AdminFooter } from '@/components/AdminFooter'
 import type { Ticket } from '@/types'
 
 function formatBRL(v: number) {
@@ -118,7 +119,7 @@ export default function FinanceiroPage() {
   const totalAvulso = avulsosMes.reduce((s, t) => s + (t.budget_value ?? 0), 0)
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <AdminNav onLogout={handleLogout} />
 
       <div className="max-w-4xl mx-auto w-full px-6 py-8 space-y-6">
@@ -268,6 +269,7 @@ export default function FinanceiroPage() {
           </div>
         )}
       </div>
+      <AdminFooter />
     </div>
   )
 }

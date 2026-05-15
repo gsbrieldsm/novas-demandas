@@ -10,6 +10,7 @@ import clsx from 'clsx'
 import type { Ticket, TicketStatus, Priority, RequestType } from '@/types'
 import { REQUEST_TYPE_LABELS, PRIORITY_LABELS } from '@/types'
 import { AdminNav } from '@/components/AdminNav'
+import { AdminFooter } from '@/components/AdminFooter'
 
 const COLUMNS: { id: TicketStatus; label: string; color: string; bg: string }[] = [
   { id: 'novo', label: 'Novo', color: 'text-blue-700', bg: 'bg-blue-50' },
@@ -144,7 +145,7 @@ export default function DemandasPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <AdminNav onLogout={handleLogout} extra={
         <select
           value={filter}
@@ -200,6 +201,7 @@ export default function DemandasPage() {
           </div>
         </DragDropContext>
       </div>
+      <AdminFooter />
     </div>
   )
 }
