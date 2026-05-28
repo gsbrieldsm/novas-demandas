@@ -49,6 +49,7 @@ export default function TicketDetailPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [showChat, setShowChat] = useState(false)
   const router = useRouter()
   const params = useParams()
   const id = params.id as string
@@ -173,6 +174,60 @@ export default function TicketDetailPage() {
               <Field label="Prazo" value={ticket.deadline ? format(new Date(ticket.deadline), "d 'de' MMMM 'de' yyyy", { locale: ptBR }) : null} />
             </div>
           </Section>
+
+          {/* Conversa completa */}
+          {ticket.chat_transcript && ticket.chat_transcript.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <button
+                onClick={() => setShowChat(v => !v)}
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors text-left"
+              >
+                <div>
+                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Conversa Completa</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {ticket.chat_transcript.length} mensagens — clique para {showChat ? 'esconder' : 'ver tudo que o cliente disse'}
+                  </p>
+                </div>
+                <span className={clsx('text-slate-400 transition-transform text-lg', showChat && 'rotate-180')}>⌄</span>
+              </button>
+
+              {showChat && (
+                <div
+                  className="border-t border-slate-100 px-5 py-5 space-y-3 max-h-[500px] overflow-y-auto"
+                  style={{
+                    background: 'linear-gradient(180deg, #fafafa 0%, #ffffff 100%)',
+                  }}
+                >
+                  {ticket.chat_transcript.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={clsx(
+                        'flex',
+                        msg.role === 'user' ? 'justify-end' : 'justify-start'
+                      )}
+                    >
+                      <div
+                        className={clsx(
+                          'max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
+                          msg.role === 'user'
+                            ? 'bg-[#C5A880]/20 text-slate-800 rounded-br-sm'
+                            : 'bg-white border border-slate-200 text-slate-700 rounded-bl-sm'
+                        )}
+                      >
+                        <p className={clsx(
+                          'text-[10px] uppercase tracking-wider mb-1 font-semibold',
+                          msg.role === 'user' ? 'text-[#8B6840]' : 'text-slate-400'
+                        )}>
+                          {msg.role === 'user' ? ticket.client_name || 'Cliente' : 'IA'}
+                        </p>
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <Section title="Notas Internas (visível só para você)">
             <textarea
