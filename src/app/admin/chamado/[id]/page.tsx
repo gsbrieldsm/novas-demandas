@@ -50,6 +50,7 @@ export default function TicketDetailPage() {
   const [saved, setSaved] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [showChat, setShowChat] = useState(false)
+  const [fullscreenNotes, setFullscreenNotes] = useState(false)
   const router = useRouter()
   const params = useParams()
   const id = params.id as string
@@ -229,21 +230,38 @@ export default function TicketDetailPage() {
             </div>
           )}
 
-          <Section title="Notas Internas (visível só para você)">
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Notas Internas</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Onde você desenvolve o projeto · visível só para você</p>
+              </div>
+              <button
+                onClick={() => setFullscreenNotes(true)}
+                className="text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors flex items-center gap-1.5"
+                title="Abrir em tela cheia"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                Tela cheia
+              </button>
+            </div>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Adicione suas anotações, estratégia, referências..."
-              className="w-full text-sm text-slate-700 border border-slate-200 rounded-xl p-3 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[100px]"
+              placeholder="Adicione suas anotações, estratégia, referências, roteiro, ideias..."
+              className="w-full text-sm text-slate-700 border border-slate-200 rounded-xl p-4 resize-y focus:outline-none focus:ring-2 focus:ring-[#C5A880] min-h-[400px] leading-relaxed"
             />
             <button
               onClick={saveNotes}
               disabled={saving}
-              className="mt-2 text-sm bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+              className="mt-2 text-sm text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+              style={{ background: '#C5A880' }}
             >
               {saving ? 'Salvando...' : saved ? '✓ Salvo!' : 'Salvar notas'}
             </button>
-          </Section>
+          </div>
         </div>
 
         {/* Sidebar */}
@@ -363,6 +381,70 @@ export default function TicketDetailPage() {
           </button>
         </div>
       </div>
+
+      {/* Notas em tela cheia */}
+      {fullscreenNotes && (
+        <div className="fixed inset-0 z-50 bg-white flex flex-col">
+          {/* Header fullscreen */}
+          <div className="border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Notas Internas</p>
+              <h2 className="text-sm font-semibold text-slate-700 mt-0.5 line-clamp-1">{ticket.title}</h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={saveNotes}
+                disabled={saving}
+                className="text-sm text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                style={{ background: '#C5A880' }}
+              >
+                {saving ? 'Salvando...' : saved ? '✓ Salvo!' : 'Salvar'}
+              </button>
+              <button
+                onClick={() => setFullscreenNotes(false)}
+                className="text-sm font-medium px-4 py-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors flex items-center gap-1.5"
+                title="Sair da tela cheia (ESC)"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Fechar
+              </button>
+            </div>
+          </div>
+
+          {/* Textarea em tela cheia */}
+          <div className="flex-1 overflow-hidden flex justify-center">
+            <textarea
+              autoFocus
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setFullscreenNotes(false)
+                if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+                  e.preventDefault()
+                  saveNotes()
+                }
+              }}
+              placeholder="Aqui você desenvolve o projeto inteiro — estratégia, roteiro, ideias, referências, próximos passos..."
+              className="w-full max-w-4xl h-full text-base text-slate-700 p-8 focus:outline-none resize-none leading-relaxed"
+              style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace' }}
+            />
+          </div>
+
+          {/* Footer com dica */}
+          <div className="border-t border-slate-100 px-6 py-2.5 text-xs text-slate-400 flex items-center justify-between">
+            <span>{notes.length} caracteres · {notes.split(/\s+/).filter(Boolean).length} palavras</span>
+            <span className="flex items-center gap-3">
+              <kbd className="px-2 py-0.5 bg-slate-100 rounded text-slate-500 text-[10px]">⌘ S</kbd>
+              <span>salvar</span>
+              <span className="text-slate-300">·</span>
+              <kbd className="px-2 py-0.5 bg-slate-100 rounded text-slate-500 text-[10px]">ESC</kbd>
+              <span>fechar</span>
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
