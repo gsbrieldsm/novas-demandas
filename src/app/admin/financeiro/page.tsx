@@ -44,6 +44,9 @@ interface Despesa {
   valor: number
   mes: number
   ano: number
+  pago: boolean
+  pago_em: string | null
+  vencimento: string | null
 }
 
 export default function FinanceiroPage() {
@@ -54,7 +57,7 @@ export default function FinanceiroPage() {
   const [despesas, setDespesas] = useState<Despesa[]>([])
   const [loading, setLoading] = useState(true)
   const [showDespForm, setShowDespForm] = useState(false)
-  const [despForm, setDespForm] = useState<{ tipo: DespesaTipo; descricao: string; valor: string }>({ tipo: 'corporativa', descricao: '', valor: '' })
+  const [despForm, setDespForm] = useState<{ tipo: DespesaTipo; descricao: string; valor: string; vencimento: string }>({ tipo: 'corporativa', descricao: '', valor: '', vencimento: '' })
   const [savingDesp, setSavingDesp] = useState(false)
   const router = useRouter()
 
@@ -135,13 +138,31 @@ export default function FinanceiroPage() {
         valor,
         mes: mes.getMonth() + 1,
         ano: mes.getFullYear(),
+        vencimento: despForm.vencimento || null,
       }),
     })
     const nova = await res.json()
     setDespesas(prev => [nova, ...prev])
-    setDespForm({ tipo: 'corporativa', descricao: '', valor: '' })
+    setDespForm({ tipo: 'corporativa', descricao: '', valor: '', vencimento: '' })
     setShowDespForm(false)
     setSavingDesp(false)
+  }
+
+  async function togglePago(despesa: Despesa) {
+    const novo = !despesa.pago
+    setDespesas(prev => prev.map(d => d.id === despesa.id ? {
+      ...d,
+      pago: novo,
+      pago_em: novo ? new Date().toISOString() : null,
+    } : d))
+    await api(`/api/despesas/${despesa.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pago: novo,
+        pago_em: novo ? new Date().toISOString() : null,
+      }),
+    })
   }
 
   async function deleteDespesa(id: string) {
@@ -178,11 +199,14 @@ export default function FinanceiroPage() {
   const entradas = totalRecebidoFixo + totalAvulsoRecebido
   const pendente = totalPendenteFixo + totalAvulsoPendente
 
-  const saidas = despesas.reduce((s, d) => s + Number(d.valor), 0)
+  const saidasPagas = despesas.filter(d => d.pago).reduce((s, d) => s + Number(d.valor), 0)
+  const saidasAPagar = despesas.filter(d => !d.pago).reduce((s, d) => s + Number(d.valor), 0)
+  const saidasTotal = saidasPagas + saidasAPagar
   const saidasPessoais = despesas.filter(d => d.tipo === 'pessoal').reduce((s, d) => s + Number(d.valor), 0)
   const saidasCorp = despesas.filter(d => d.tipo === 'corporativa').reduce((s, d) => s + Number(d.valor), 0)
 
-  const balanco = entradas - saidas
+  // Balanço considera apenas o que efetivamente saiu da conta
+  const balanco = entradas - saidasPagas
   const balancoPositivo = balanco >= 0
 
   return (
@@ -237,8 +261,8 @@ export default function FinanceiroPage() {
             />
             <BalancoCard
               label="Saídas"
-              value={formatBRL(saidas)}
-              sub={`Pess. ${formatBRL(saidasPessoais)} + Corp. ${formatBRL(saidasCorp)}`}
+              value={formatBRL(saidasPagas)}
+              sub={saidasAPagar > 0 ? `+ ${formatBRL(saidasAPagar)} a pagar` : 'Tudo pago ✓'}
               color="text-red-300"
             />
             <BalancoCard
@@ -402,11 +426,11 @@ export default function FinanceiroPage() {
             <div>
               <h2 className="text-sm font-semibold text-slate-700">Despesas</h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                Pessoais {formatBRL(saidasPessoais)} · Corporativas {formatBRL(saidasCorp)}
+                Pessoais {formatBRL(saidasPessoais)} · Corporativas {formatBRL(saidasCorp)} · <span className="text-green-600 font-medium">Pago {formatBRL(saidasPagas)}</span> · <span className="text-amber-600 font-medium">A pagar {formatBRL(saidasAPagar)}</span>
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-sm font-bold text-red-500">{formatBRL(saidas)}</span>
+              <span className="text-sm font-bold text-red-500">{formatBRL(saidasTotal)}</span>
               <button
                 onClick={() => setShowDespForm(v => !v)}
                 className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition-opacity"
@@ -420,7 +444,7 @@ export default function FinanceiroPage() {
           {showDespForm && (
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
-                <div className="sm:col-span-3">
+                <div className="sm:col-span-2">
                   <select
                     value={despForm.tipo}
                     onChange={e => setDespForm(f => ({ ...f, tipo: e.target.value as DespesaTipo }))}
@@ -430,7 +454,7 @@ export default function FinanceiroPage() {
                     <option value="pessoal">Pessoal</option>
                   </select>
                 </div>
-                <div className="sm:col-span-5">
+                <div className="sm:col-span-4">
                   <input
                     placeholder="Descrição (ex: Adobe, conta de luz...)"
                     value={despForm.descricao}
@@ -452,6 +476,15 @@ export default function FinanceiroPage() {
                   </div>
                 </div>
                 <div className="sm:col-span-2">
+                  <input
+                    type="date"
+                    value={despForm.vencimento}
+                    onChange={e => setDespForm(f => ({ ...f, vencimento: e.target.value }))}
+                    title="Vencimento (opcional)"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                  />
+                </div>
+                <div className="sm:col-span-2">
                   <button
                     onClick={addDespesa}
                     disabled={savingDesp || !despForm.descricao || !despForm.valor}
@@ -462,10 +495,11 @@ export default function FinanceiroPage() {
                   </button>
                 </div>
               </div>
+              <p className="text-xs text-slate-400 mt-2">A data de vencimento é opcional — quando preenchida, a despesa aparece na Agenda.</p>
             </div>
           )}
 
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-[480px] overflow-y-auto">
             {despesas.length === 0 ? (
               <div className="px-6 py-8 text-center text-slate-400 text-sm">Nenhuma despesa este mês.</div>
             ) : (
@@ -474,40 +508,90 @@ export default function FinanceiroPage() {
                   <tr className="text-left">
                     <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Tipo</th>
                     <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Descrição</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Vencimento</th>
                     <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Valor</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {despesas.map(d => (
-                    <tr key={d.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-3">
-                        <span className={clsx(
-                          'inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full',
-                          d.tipo === 'pessoal'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-purple-100 text-purple-700'
-                        )}>
-                          {d.tipo === 'pessoal' ? 'Pessoal' : 'Corporativa'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3">
-                        <p className="text-sm text-slate-800">{d.descricao}</p>
-                        <p className="text-xs text-slate-400">{format(new Date(d.created_at), "d 'de' MMM", { locale: ptBR })}</p>
-                      </td>
-                      <td className="px-6 py-3">
-                        <span className="text-sm font-semibold text-red-500">- {formatBRL(Number(d.valor))}</span>
-                      </td>
-                      <td className="px-6 py-3 text-right">
-                        <button
-                          onClick={() => deleteDespesa(d.id)}
-                          className="text-slate-300 hover:text-red-400 transition-colors text-lg leading-none"
-                        >
-                          ×
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {despesas.map(d => {
+                    const venc = d.vencimento ? new Date(d.vencimento + 'T12:00:00') : null
+                    const atrasado = venc && !d.pago && venc < new Date()
+                    return (
+                      <tr key={d.id} className={clsx('hover:bg-slate-50 transition-colors', d.pago && 'opacity-70')}>
+                        <td className="px-6 py-3">
+                          <span className={clsx(
+                            'inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full',
+                            d.tipo === 'pessoal'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-purple-100 text-purple-700'
+                          )}>
+                            {d.tipo === 'pessoal' ? 'Pessoal' : 'Corporativa'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-3">
+                          <p className={clsx('text-sm', d.pago ? 'text-slate-500' : 'text-slate-800')}>{d.descricao}</p>
+                          <p className="text-xs text-slate-400">criada {format(new Date(d.created_at), "d 'de' MMM", { locale: ptBR })}</p>
+                        </td>
+                        <td className="px-6 py-3">
+                          {venc ? (
+                            <span className={clsx('text-sm', atrasado ? 'text-red-500 font-semibold' : 'text-slate-600')}>
+                              {format(venc, "d 'de' MMM", { locale: ptBR })}
+                              {atrasado && <span className="block text-[10px] uppercase tracking-wider">atrasado</span>}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-slate-300">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-3">
+                          <span className={clsx('text-sm font-semibold', d.pago ? 'text-slate-400 line-through' : 'text-red-500')}>
+                            - {formatBRL(Number(d.valor))}
+                          </span>
+                        </td>
+                        <td className="px-6 py-3">
+                          {d.pago ? (
+                            <div>
+                              <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-100 text-green-700 px-2.5 py-1 rounded-full">
+                                ✓ Pago
+                              </span>
+                              {d.pago_em && (
+                                <p className="text-xs text-slate-400 mt-1">
+                                  {format(new Date(d.pago_em), "d 'de' MMM", { locale: ptBR })}
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full">
+                              ⏳ A pagar
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-3 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => togglePago(d)}
+                              className={clsx(
+                                'text-xs px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap',
+                                d.pago
+                                  ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                  : 'bg-green-600 text-white hover:bg-green-700'
+                              )}
+                            >
+                              {d.pago ? 'Desfazer' : 'Marcar pago'}
+                            </button>
+                            <button
+                              onClick={() => deleteDespesa(d.id)}
+                              className="text-slate-300 hover:text-red-400 transition-colors text-lg leading-none"
+                              title="Excluir"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             )}
