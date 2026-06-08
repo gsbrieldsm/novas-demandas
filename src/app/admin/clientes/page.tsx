@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { api } from '@/lib/api'
-import { format, addMonths, subMonths, startOfMonth, endOfMonth } from 'date-fns'
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear, addYears, subYears } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import { AdminNav } from '@/components/AdminNav'
@@ -20,6 +20,7 @@ interface ClienteFixo {
   nome: string
   valor_mensal: number
   ativo: boolean
+  created_at: string
 }
 
 interface LinhaCliente {
@@ -33,7 +34,10 @@ interface LinhaCliente {
   tickets: Ticket[]
 }
 
+type Periodo = 'mes' | 'ano'
+
 export default function ClientesPage() {
+  const [periodo, setPeriodo] = useState<Periodo>('mes')
   const [mes, setMes] = useState(new Date())
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [clientesFixos, setClientesFixos] = useState<ClienteFixo[]>([])
@@ -53,13 +57,11 @@ export default function ClientesPage() {
 
   useEffect(() => {
     setLoading(true)
-    const from = format(startOfMonth(mes), 'yyyy-MM-dd')
-    const to = format(endOfMonth(mes), 'yyyy-MM-dd')
-
+    // Carrega TODOS os apontamentos — atribuímos por ticket, não por data do apontamento
     Promise.all([
       api('/api/tickets').then(r => r.json()),
       api('/api/clientes-fixos').then(r => r.json()),
-      api(`/api/tempo?from=${from}&to=${to}`).then(r => r.json()),
+      api('/api/tempo').then(r => r.json()),
       api('/api/configuracoes').then(r => r.json()),
     ]).then(([t, cf, ap, cfg]) => {
       setTickets(t)
@@ -68,7 +70,7 @@ export default function ClientesPage() {
       if (cfg.hora_alvo) setHoraAlvo(Number(cfg.hora_alvo) || 300)
       setLoading(false)
     })
-  }, [mes])
+  }, [])
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -98,28 +100,49 @@ export default function ClientesPage() {
     return map
   }, [apontamentos])
 
+  // Range do período (mês ou ano)
+  const range = useMemo(() => {
+    if (periodo === 'mes') {
+      return { start: startOfMonth(mes), end: endOfMonth(mes) }
+    }
+    return { start: startOfYear(mes), end: endOfYear(mes) }
+  }, [periodo, mes])
+
+  // Quantos meses o cliente fixo esteve ativo no período (pra receita correta no ano)
+  function mesesAtivosNoPeriodo(cf: ClienteFixo): number {
+    if (!cf.ativo) return 0
+    const created = new Date(cf.created_at)
+    const now = new Date()
+    const periodEnd = range.end > now ? now : range.end
+    const periodStart = created > range.start ? created : range.start
+    if (periodStart > periodEnd) return 0
+    const months = (periodEnd.getFullYear() - periodStart.getFullYear()) * 12
+      + (periodEnd.getMonth() - periodStart.getMonth()) + 1
+    return Math.max(0, months)
+  }
+
   // Linhas agregadas por cliente
   const linhas = useMemo(() => {
-    const monthStart = startOfMonth(mes)
-    const monthEnd = endOfMonth(mes)
-    const mNum = mes.getMonth() + 1
-    const aNum = mes.getFullYear()
-
-    // Tickets do mês (criados, em curso, ou com tempo apontado no mês)
-    const ticketsMes = tickets.filter(t => {
+    // Tickets criados DENTRO do período (regra principal — fim do bug)
+    const ticketsPeriodo = tickets.filter(t => {
       const created = new Date(t.created_at)
-      // ticket criado no mês OU tem tempo apontado no mês
-      return (created >= monthStart && created <= monthEnd) || minutosPorTicket.has(t.id)
+      return created >= range.start && created <= range.end
     })
 
     const result: LinhaCliente[] = []
 
     // === Clientes fixos ativos ===
     clientesFixos.filter(c => c.ativo).forEach(cf => {
-      const tks = ticketsMes.filter(t => t.cliente_fixo_id === cf.id || (t.is_fixed_client && t.client_name?.toLowerCase().trim() === cf.nome?.toLowerCase().trim()))
+      const tks = ticketsPeriodo.filter(t =>
+        t.cliente_fixo_id === cf.id ||
+        (t.is_fixed_client && t.client_name?.toLowerCase().trim() === cf.nome?.toLowerCase().trim())
+      )
+      // Tempo = TODO o apontado nos tickets criados no período (independente de quando apontou)
       const min = tks.reduce((s, t) => s + (minutosPorTicket.get(t.id) ?? 0), 0)
-      // Receita = valor_mensal cheio (modo A escolhido pelo usuário)
-      const receita = Number(cf.valor_mensal)
+      // Receita = valor_mensal × meses ativos no período
+      const meses = mesesAtivosNoPeriodo(cf)
+      const receita = Number(cf.valor_mensal) * meses
+      if (meses === 0 && tks.length === 0) return // pula clientes sem atividade nem receita
       result.push({
         key: `fixo-${cf.id}`,
         nome: cf.nome,
@@ -132,8 +155,8 @@ export default function ClientesPage() {
       })
     })
 
-    // === Clientes avulsos (agregados por client_name) ===
-    const avulsos = ticketsMes.filter(t => !t.is_fixed_client && t.budget_value != null)
+    // === Clientes avulsos (agregados por client_name) — sem duplicação ===
+    const avulsos = ticketsPeriodo.filter(t => !t.is_fixed_client && t.budget_value != null)
     const avulsoMap = new Map<string, { tickets: Ticket[]; receita: number }>()
     avulsos.forEach(t => {
       const key = t.client_name || 'Sem nome'
@@ -163,7 +186,7 @@ export default function ClientesPage() {
       if (b.rh == null) return -1
       return b.rh - a.rh
     })
-  }, [tickets, clientesFixos, minutosPorTicket, mes])
+  }, [tickets, clientesFixos, minutosPorTicket, range])
 
   const totalReceita = linhas.reduce((s, l) => s + l.receita, 0)
   const totalMinutos = linhas.reduce((s, l) => s + l.minutos, 0)
@@ -184,17 +207,46 @@ export default function ClientesPage() {
 
         {/* Header */}
         <div className="flex items-end justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Clientes · Rentabilidade</p>
               <h1 className="text-2xl font-bold text-slate-900 mt-1">
-                {format(mes, "MMMM 'de' yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())}
+                {periodo === 'mes'
+                  ? format(mes, "MMMM 'de' yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())
+                  : `Ano ${format(mes, 'yyyy')}`}
               </h1>
             </div>
+
             <div className="flex items-center gap-2 ml-2">
-              <button onClick={() => setMes(m => subMonths(m, 1))} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">‹</button>
-              <button onClick={() => setMes(new Date())} className="text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-colors">Hoje</button>
-              <button onClick={() => setMes(m => addMonths(m, 1))} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">›</button>
+              {periodo === 'mes' ? (
+                <>
+                  <button onClick={() => setMes(m => subMonths(m, 1))} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">‹</button>
+                  <button onClick={() => setMes(new Date())} className="text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-colors">Hoje</button>
+                  <button onClick={() => setMes(m => addMonths(m, 1))} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">›</button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => setMes(m => subYears(m, 1))} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">‹</button>
+                  <button onClick={() => setMes(new Date())} className="text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-colors">Atual</button>
+                  <button onClick={() => setMes(m => addYears(m, 1))} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">›</button>
+                </>
+              )}
+            </div>
+
+            {/* Toggle Mês / Ano */}
+            <div className="flex rounded-lg overflow-hidden border border-slate-200 text-sm">
+              <button
+                onClick={() => setPeriodo('mes')}
+                className={clsx('px-4 py-2 transition-colors', periodo === 'mes' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-50')}
+              >
+                Mês
+              </button>
+              <button
+                onClick={() => setPeriodo('ano')}
+                className={clsx('px-4 py-2 transition-colors', periodo === 'ano' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-50')}
+              >
+                Ano
+              </button>
             </div>
           </div>
           <div className="text-right">
@@ -344,9 +396,10 @@ export default function ClientesPage() {
           )}
         </div>
 
-        <div className="text-xs text-slate-400 px-2">
-          💡 <span className="font-medium">Como funciona:</span> para clientes fixos, receita = valor_mensal cheio independente do número de demandas.
-          Para avulsos, receita = soma dos orçamentos do mês. Tempo = tudo apontado nos chamados dentro do mês.
+        <div className="text-xs text-slate-400 px-2 space-y-1">
+          <p>💡 <span className="font-medium">Como funciona:</span> demandas são atribuídas ao período em que foram <em>criadas</em>. O tempo apontado nelas conta para esse período, independente de quando foi registrado.</p>
+          <p className="pl-5">• <span className="font-medium">Fixo:</span> receita = valor mensal × meses ativos no período</p>
+          <p className="pl-5">• <span className="font-medium">Avulso:</span> receita = soma dos orçamentos das demandas criadas no período</p>
         </div>
       </div>
     </div>
