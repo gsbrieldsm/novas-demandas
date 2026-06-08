@@ -96,21 +96,38 @@
     .nav-entrar {
       color: var(--text2);
       font-size: 13px;
+      font-weight: 500;
+      letter-spacing: .04em;
+      text-decoration: none;
+      padding: 9px 12px;
+      transition: color .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.75;
+    }
+    .nav-entrar:hover {
+      color: var(--accent);
+      opacity: 1;
+    }
+
+    .nav-solicitar {
+      color: var(--accent);
+      font-size: 13px;
       font-weight: 600;
       letter-spacing: .04em;
       text-decoration: none;
       padding: 9px 18px;
       border-radius: 6px;
-      border: 1px solid rgba(197,168,128,0.3);
+      border: 1px solid var(--accent);
       transition: all .2s;
       display: inline-flex;
       align-items: center;
       gap: 6px;
     }
-    .nav-entrar:hover {
-      color: var(--accent);
-      border-color: var(--accent);
-      background: rgba(197,168,128,0.08);
+    .nav-solicitar:hover {
+      background: rgba(197,168,128,0.12);
+      transform: translateY(-1px);
     }
 
     .nav-hamburger {
@@ -977,7 +994,7 @@
     /* ── RESPONSIVE ──────────────────────────── */
     @media (max-width: 900px) {
       nav { padding: 0 20px; }
-      .nav-links, .nav-cta, .nav-entrar { display: none; }
+      .nav-links, .nav-cta, .nav-entrar, .nav-solicitar { display: none; }
       .nav-hamburger { display: flex; }
 
       .principio-grid { grid-template-columns: 1fr; gap: 48px; }
@@ -1012,7 +1029,8 @@
       <li><a href="#diferenciais">Diferenciais</a></li>
       <li><a href="#paraquem">Para quem</a></li>
     </ul>
-    <a href="/admin/login" class="nav-entrar">Entrar →</a>
+    <a href="/admin/login" class="nav-entrar">Entrar</a>
+    <a href="/chat" class="nav-solicitar">Solicitar demanda</a>
     <a href="#contato" class="nav-cta">Conversar</a>
     <div class="nav-hamburger" onclick="toggleMenu()">
       <span></span><span></span><span></span>
@@ -1467,11 +1485,13 @@
       const links = document.querySelector('.nav-links');
       const cta = document.querySelector('.nav-cta');
       const entrar = document.querySelector('.nav-entrar');
+      const solicitar = document.querySelector('.nav-solicitar');
       if (links) {
         const open = links.style.display === 'flex';
         links.style.cssText = open ? '' : 'display:flex;flex-direction:column;position:fixed;top:72px;left:0;right:0;background:rgba(8,12,16,0.98);padding:24px;gap:20px;border-bottom:1px solid rgba(255,255,255,0.07)';
         if (cta) cta.style.display = open ? '' : 'block';
         if (entrar) entrar.style.display = open ? '' : 'inline-flex';
+        if (solicitar) solicitar.style.display = open ? '' : 'inline-flex';
       }
     }
   </script>
