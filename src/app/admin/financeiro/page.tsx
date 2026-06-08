@@ -213,26 +213,26 @@ export default function FinanceiroPage() {
     <div className="min-h-screen bg-white flex flex-col">
       <AdminNav onLogout={handleLogout} />
 
-      <div className="max-w-6xl mx-auto w-full px-6 py-8 space-y-6">
+      <div className="max-w-6xl mx-auto w-full px-4 py-4 md:px-6 md:py-8 space-y-4 md:space-y-6 pb-24 md:pb-8">
 
         {/* Header com mês e balanço */}
-        <div className="flex items-end justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-4">
+        <div className="flex items-end justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Financeiro</p>
-              <h1 className="text-2xl font-bold text-slate-900 mt-1">
+              <p className="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">Financeiro</p>
+              <h1 className="text-lg md:text-2xl font-bold text-slate-900 mt-0.5 md:mt-1">
                 {format(mes, "MMMM 'de' yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())}
               </h1>
             </div>
-            <div className="flex items-center gap-2 ml-2">
-              <button onClick={() => setMes(m => subMonths(m, 1))} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">‹</button>
-              <button onClick={() => setMes(new Date())} className="text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-colors">Hoje</button>
-              <button onClick={() => setMes(m => addMonths(m, 1))} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">›</button>
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <button onClick={() => setMes(m => subMonths(m, 1))} className="w-8 h-8 md:w-9 md:h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">‹</button>
+              <button onClick={() => setMes(new Date())} className="text-xs px-2.5 md:px-3 py-1.5 md:py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-colors">Hoje</button>
+              <button onClick={() => setMes(m => addMonths(m, 1))} className="w-8 h-8 md:w-9 md:h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">›</button>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-xs text-slate-400">Balanço do mês</p>
-            <p className={clsx('text-2xl font-bold', balancoPositivo ? 'text-green-600' : 'text-red-500')}>
+            <p className="text-[10px] md:text-xs text-slate-400">Balanço do mês</p>
+            <p className={clsx('text-lg md:text-2xl font-bold', balancoPositivo ? 'text-green-600' : 'text-red-500')}>
               {balancoPositivo ? '+' : ''}{formatBRL(balanco)}
             </p>
           </div>
@@ -240,7 +240,7 @@ export default function FinanceiroPage() {
 
         {/* PAINEL BALANÇO (gradiente dark/gold) */}
         <div
-          className="rounded-2xl p-6 shadow-md text-white"
+          className="rounded-2xl p-4 md:p-6 shadow-md text-white"
           style={{
             background: 'radial-gradient(ellipse 80% 150% at 95% 50%, #C5A880 0%, #6B4C28 40%, #1c1a18 80%), #100E0B',
           }}
@@ -293,68 +293,108 @@ export default function FinanceiroPage() {
           ) : clientesAtivos.length === 0 ? (
             <div className="px-6 py-8 text-center text-slate-400 text-sm">Nenhum cliente fixo ativo. Cadastre em Gestão.</div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="text-left">
-                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Cliente</th>
-                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Valor</th>
-                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Vencimento</th>
-                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {rows.map(({ cliente, pag }) => (
-                  <tr key={cliente.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-medium text-slate-800">{cliente.nome}</p>
-                      {cliente.email && <p className="text-xs text-slate-400">{cliente.email}</p>}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-semibold text-slate-800">{formatBRL(Number(cliente.valor_mensal))}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {cliente.dia_vencimento ? (
-                        <span className="text-sm text-slate-600">Dia {cliente.dia_vencimento}</span>
-                      ) : (
-                        <span className="text-sm text-slate-300">—</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {pag?.recebido ? (
-                        <div>
-                          <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-100 text-green-700 px-2.5 py-1 rounded-full">
-                            ✓ Recebido
+            <>
+              {/* Desktop: tabela */}
+              <table className="hidden md:table w-full">
+                <thead>
+                  <tr className="text-left">
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Cliente</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Valor</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Vencimento</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {rows.map(({ cliente, pag }) => (
+                    <tr key={cliente.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-medium text-slate-800">{cliente.nome}</p>
+                        {cliente.email && <p className="text-xs text-slate-400">{cliente.email}</p>}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-semibold text-slate-800">{formatBRL(Number(cliente.valor_mensal))}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {cliente.dia_vencimento ? (
+                          <span className="text-sm text-slate-600">Dia {cliente.dia_vencimento}</span>
+                        ) : (
+                          <span className="text-sm text-slate-300">—</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {pag?.recebido ? (
+                          <div>
+                            <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-100 text-green-700 px-2.5 py-1 rounded-full">
+                              ✓ Recebido
+                            </span>
+                            {pag.recebido_em && (
+                              <p className="text-xs text-slate-400 mt-1">
+                                {format(new Date(pag.recebido_em), "d 'de' MMM", { locale: ptBR })}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 text-red-500 px-2.5 py-1 rounded-full">
+                            ⏳ Pendente
                           </span>
-                          {pag.recebido_em && (
-                            <p className="text-xs text-slate-400 mt-1">
-                              {format(new Date(pag.recebido_em), "d 'de' MMM", { locale: ptBR })}
-                            </p>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => togglePagamento(cliente, pag)}
+                          className={clsx(
+                            'text-xs px-3 py-1.5 rounded-lg font-medium transition-colors',
+                            pag?.recebido
+                              ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                              : 'bg-green-600 text-white hover:bg-green-700'
                           )}
-                        </div>
+                        >
+                          {pag?.recebido ? 'Desfazer' : 'Marcar recebido'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Mobile: cards */}
+              <div className="md:hidden divide-y divide-slate-50">
+                {rows.map(({ cliente, pag }) => (
+                  <div key={cliente.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{cliente.nome}</p>
+                        <p className="text-sm text-amber-600 font-medium">{formatBRL(Number(cliente.valor_mensal))}</p>
+                        {cliente.dia_vencimento && (
+                          <p className="text-xs text-slate-400">Vence dia {cliente.dia_vencimento}</p>
+                        )}
+                      </div>
+                      {pag?.recebido ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-100 text-green-700 px-2.5 py-1 rounded-full flex-shrink-0">
+                          ✓ Recebido
+                        </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 text-red-500 px-2.5 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 text-red-500 px-2.5 py-1 rounded-full flex-shrink-0">
                           ⏳ Pendente
                         </span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => togglePagamento(cliente, pag)}
-                        className={clsx(
-                          'text-xs px-3 py-1.5 rounded-lg font-medium transition-colors',
-                          pag?.recebido
-                            ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                            : 'bg-green-600 text-white hover:bg-green-700'
-                        )}
-                      >
-                        {pag?.recebido ? 'Desfazer' : 'Marcar recebido'}
-                      </button>
-                    </td>
-                  </tr>
+                    </div>
+                    <button
+                      onClick={() => togglePagamento(cliente, pag)}
+                      className={clsx(
+                        'w-full text-sm py-2 rounded-lg font-medium transition-colors',
+                        pag?.recebido
+                          ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                          : 'bg-green-600 text-white hover:bg-green-700'
+                      )}
+                    >
+                      {pag?.recebido ? 'Desfazer' : 'Marcar recebido'}
+                    </button>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
 
@@ -367,56 +407,99 @@ export default function FinanceiroPage() {
           {avulsosMes.length === 0 ? (
             <div className="px-6 py-8 text-center text-slate-400 text-sm">Nenhum avulso com orçamento este mês.</div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="text-left">
-                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Chamado</th>
-                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Cliente</th>
-                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Valor</th>
-                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
+            <>
+              {/* Desktop: tabela */}
+              <table className="hidden md:table w-full">
+                <thead>
+                  <tr className="text-left">
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Chamado</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Cliente</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Valor</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {avulsosMes.map(t => (
+                    <tr key={t.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 cursor-pointer" onClick={() => router.push(`/admin/chamado/${t.id}`)}>
+                        <p className="text-sm font-medium text-slate-800 line-clamp-1">{t.title}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-slate-600">{t.client_name}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-semibold text-slate-800">{formatBRL(t.budget_value!)}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {t.pagamento_recebido ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-100 text-green-700 px-2.5 py-1 rounded-full">
+                            ✓ Recebido
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 text-red-500 px-2.5 py-1 rounded-full">
+                            ⏳ Pendente
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => toggleAvulso(t)}
+                          className={clsx(
+                            'text-xs px-3 py-1.5 rounded-lg font-medium transition-colors',
+                            t.pagamento_recebido
+                              ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                              : 'bg-green-600 text-white hover:bg-green-700'
+                          )}
+                        >
+                          {t.pagamento_recebido ? 'Desfazer' : 'Marcar recebido'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Mobile: cards */}
+              <div className="md:hidden divide-y divide-slate-50">
                 {avulsosMes.map(t => (
-                  <tr key={t.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 cursor-pointer" onClick={() => router.push(`/admin/chamado/${t.id}`)}>
-                      <p className="text-sm font-medium text-slate-800 line-clamp-1">{t.title}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm text-slate-600">{t.client_name}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-semibold text-slate-800">{formatBRL(t.budget_value!)}</span>
-                    </td>
-                    <td className="px-6 py-4">
+                  <div key={t.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className="text-sm font-semibold text-slate-800 line-clamp-2 cursor-pointer"
+                          onClick={() => router.push(`/admin/chamado/${t.id}`)}
+                        >
+                          {t.title}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-0.5">{t.client_name}</p>
+                        <p className="text-sm font-semibold text-slate-800 mt-1">{formatBRL(t.budget_value!)}</p>
+                      </div>
                       {t.pagamento_recebido ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-100 text-green-700 px-2.5 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-100 text-green-700 px-2.5 py-1 rounded-full flex-shrink-0">
                           ✓ Recebido
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 text-red-500 px-2.5 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 text-red-500 px-2.5 py-1 rounded-full flex-shrink-0">
                           ⏳ Pendente
                         </span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => toggleAvulso(t)}
-                        className={clsx(
-                          'text-xs px-3 py-1.5 rounded-lg font-medium transition-colors',
-                          t.pagamento_recebido
-                            ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                            : 'bg-green-600 text-white hover:bg-green-700'
-                        )}
-                      >
-                        {t.pagamento_recebido ? 'Desfazer' : 'Marcar recebido'}
-                      </button>
-                    </td>
-                  </tr>
+                    </div>
+                    <button
+                      onClick={() => toggleAvulso(t)}
+                      className={clsx(
+                        'w-full text-sm py-2 rounded-lg font-medium transition-colors',
+                        t.pagamento_recebido
+                          ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                          : 'bg-green-600 text-white hover:bg-green-700'
+                      )}
+                    >
+                      {t.pagamento_recebido ? 'Desfazer' : 'Marcar recebido'}
+                    </button>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
 
@@ -503,7 +586,8 @@ export default function FinanceiroPage() {
             {despesas.length === 0 ? (
               <div className="px-6 py-8 text-center text-slate-400 text-sm">Nenhuma despesa este mês.</div>
             ) : (
-              <table className="w-full">
+              <>
+              <table className="hidden md:table w-full">
                 <thead className="sticky top-0 bg-white border-b border-slate-100">
                   <tr className="text-left">
                     <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Tipo</th>
@@ -594,10 +678,90 @@ export default function FinanceiroPage() {
                   })}
                 </tbody>
               </table>
+
+              {/* Mobile: cards */}
+              <div className="md:hidden divide-y divide-slate-50">
+                {despesas.map(d => {
+                  const venc = d.vencimento ? new Date(d.vencimento + 'T12:00:00') : null
+                  const atrasado = venc && !d.pago && venc < new Date()
+                  return (
+                    <div key={d.id} className={clsx('p-4 space-y-3', d.pago && 'opacity-60')}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className={clsx(
+                              'inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full',
+                              d.tipo === 'pessoal' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                            )}>
+                              {d.tipo === 'pessoal' ? 'Pessoal' : 'Corporativa'}
+                            </span>
+                            {d.pago ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                ✓ Pago
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">
+                                ⏳ A pagar
+                              </span>
+                            )}
+                            {atrasado && (
+                              <span className="text-[10px] uppercase tracking-wider bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">
+                                atrasado
+                              </span>
+                            )}
+                          </div>
+                          <p className={clsx('text-sm font-medium', d.pago ? 'text-slate-500' : 'text-slate-800')}>{d.descricao}</p>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {venc ? `Vence ${format(venc, "d 'de' MMM", { locale: ptBR })}` : `Criada ${format(new Date(d.created_at), "d 'de' MMM", { locale: ptBR })}`}
+                          </p>
+                        </div>
+                        <span className={clsx('text-sm font-bold whitespace-nowrap', d.pago ? 'text-slate-400 line-through' : 'text-red-500')}>
+                          - {formatBRL(Number(d.valor))}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => togglePago(d)}
+                          className={clsx(
+                            'flex-1 text-sm py-2 rounded-lg font-medium transition-colors',
+                            d.pago ? 'bg-slate-100 text-slate-500' : 'bg-green-600 text-white'
+                          )}
+                        >
+                          {d.pago ? 'Desfazer' : 'Marcar pago'}
+                        </button>
+                        <button
+                          onClick={() => deleteDespesa(d.id)}
+                          className="w-10 h-10 rounded-lg border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 flex items-center justify-center transition-colors"
+                          title="Excluir"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              </>
             )}
           </div>
         </div>
       </div>
+
+      {/* FAB mobile — adicionar despesa em 1 toque */}
+      <button
+        onClick={() => setShowDespForm(true)}
+        className="md:hidden fixed bottom-5 right-5 z-30 w-14 h-14 rounded-full shadow-xl text-white flex items-center justify-center hover:opacity-90 transition-opacity active:scale-95"
+        style={{
+          background: 'linear-gradient(135deg, #C5A880 0%, #8B6840 100%)',
+          boxShadow: '0 8px 24px rgba(197,168,128,0.4)',
+        }}
+        aria-label="Adicionar despesa"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      </button>
     </div>
   )
 }
