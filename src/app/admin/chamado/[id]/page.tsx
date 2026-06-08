@@ -7,8 +7,16 @@ import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import { supabase } from '@/lib/supabase'
 import { api } from '@/lib/api'
-import type { Ticket, TicketStatus, Priority } from '@/types'
+import { formatMinutos, parseMinutos, minutosDesde, valorHora } from '@/lib/tempo'
+import type { Ticket, TicketStatus, Priority, TempoApontamento } from '@/types'
 import { REQUEST_TYPE_LABELS, STATUS_LABELS, PRIORITY_LABELS } from '@/types'
+
+interface ClienteFixo {
+  id: string
+  nome: string
+  valor_mensal: number
+  ativo: boolean
+}
 
 const STATUS_STYLES: Record<TicketStatus, string> = {
   novo: 'bg-blue-100 text-blue-700',
@@ -51,6 +59,11 @@ export default function TicketDetailPage() {
   const [deleting, setDeleting] = useState(false)
   const [showChat, setShowChat] = useState(false)
   const [fullscreenNotes, setFullscreenNotes] = useState(false)
+  const [clientesFixos, setClientesFixos] = useState<ClienteFixo[]>([])
+  const [apontamentos, setApontamentos] = useState<TempoApontamento[]>([])
+  const [, setTick] = useState(0)
+  const [tempoInput, setTempoInput] = useState('')
+  const [tempoDesc, setTempoDesc] = useState('')
   const router = useRouter()
   const params = useParams()
   const id = params.id as string
@@ -60,7 +73,17 @@ export default function TicketDetailPage() {
       if (!data.session) router.push('/admin/login')
     })
     loadTicket()
+    loadClientesFixos()
+    loadApontamentos()
   }, [id, router])
+
+  // Tick a cada 1s pra atualizar contador do timer ativo
+  useEffect(() => {
+    const hasActive = apontamentos.some(a => a.ativo)
+    if (!hasActive) return
+    const itv = setInterval(() => setTick(t => t + 1), 1000)
+    return () => clearInterval(itv)
+  }, [apontamentos])
 
   async function loadTicket() {
     const res = await api(`/api/tickets/${id}`)
@@ -69,6 +92,82 @@ export default function TicketDetailPage() {
       setTicket(data)
       setNotes(data.admin_notes || '')
     }
+  }
+
+  async function loadClientesFixos() {
+    const res = await api('/api/clientes-fixos')
+    if (res.ok) setClientesFixos(await res.json())
+  }
+
+  async function loadApontamentos() {
+    const res = await api(`/api/tempo?ticket_id=${id}`)
+    if (res.ok) setApontamentos(await res.json())
+  }
+
+  async function iniciarTimer() {
+    // Para qualquer timer ativo de qualquer ticket
+    const ativosRes = await api('/api/tempo?ativo=true')
+    if (ativosRes.ok) {
+      const ativos: TempoApontamento[] = await ativosRes.json()
+      for (const a of ativos) {
+        if (a.started_at) {
+          const min = Math.max(1, minutosDesde(a.started_at))
+          await api(`/api/tempo/${a.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ minutos: min, ativo: false, started_at: null }),
+          })
+        }
+      }
+    }
+    // Inicia novo
+    const res = await api('/api/tempo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ticket_id: id,
+        started_at: new Date().toISOString(),
+        ativo: true,
+        data: format(new Date(), 'yyyy-MM-dd'),
+      }),
+    })
+    if (res.ok) loadApontamentos()
+  }
+
+  async function pararTimer(a: TempoApontamento) {
+    if (!a.started_at) return
+    const min = Math.max(1, minutosDesde(a.started_at))
+    await api(`/api/tempo/${a.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ minutos: min, ativo: false, started_at: null }),
+    })
+    loadApontamentos()
+  }
+
+  async function addManualTempo() {
+    const min = parseMinutos(tempoInput)
+    if (min <= 0) return
+    await api('/api/tempo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ticket_id: id,
+        minutos: min,
+        descricao: tempoDesc.trim() || null,
+        data: format(new Date(), 'yyyy-MM-dd'),
+        ativo: false,
+      }),
+    })
+    setTempoInput('')
+    setTempoDesc('')
+    loadApontamentos()
+  }
+
+  async function deleteApontamento(apontamentoId: string) {
+    if (!confirm('Excluir este apontamento?')) return
+    await api(`/api/tempo/${apontamentoId}`, { method: 'DELETE' })
+    setApontamentos(prev => prev.filter(a => a.id !== apontamentoId))
   }
 
   async function updateField(field: string, value: string) {
@@ -175,6 +274,20 @@ export default function TicketDetailPage() {
               <Field label="Prazo" value={ticket.deadline ? format(new Date(ticket.deadline), "d 'de' MMMM 'de' yyyy", { locale: ptBR }) : null} />
             </div>
           </Section>
+
+          {/* Tempo Trabalhado */}
+          <TempoSection
+            apontamentos={apontamentos}
+            budget={ticket.budget_value}
+            tempoInput={tempoInput}
+            setTempoInput={setTempoInput}
+            tempoDesc={tempoDesc}
+            setTempoDesc={setTempoDesc}
+            iniciarTimer={iniciarTimer}
+            pararTimer={pararTimer}
+            addManualTempo={addManualTempo}
+            deleteApontamento={deleteApontamento}
+          />
 
           {/* Conversa completa */}
           {ticket.chat_transcript && ticket.chat_transcript.length > 0 && (
@@ -304,9 +417,40 @@ export default function TicketDetailPage() {
               </div>
 
               {ticket.is_fixed_client ? (
-                <div className="bg-amber-50 rounded-xl px-4 py-3 text-center">
-                  <p className="text-xs text-amber-600 font-semibold">Incluso no pacote</p>
-                  <p className="text-xs text-amber-500 mt-0.5">Demanda de cliente fixo</p>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Cliente fixo</p>
+                    <select
+                      value={ticket.cliente_fixo_id ?? ''}
+                      onChange={async (e) => {
+                        const cfId = e.target.value || null
+                        setTicket(prev => prev ? { ...prev, cliente_fixo_id: cfId } : null)
+                        // Atualiza nome e empresa automaticamente também
+                        const cf = clientesFixos.find(c => c.id === cfId)
+                        const patch: Record<string, unknown> = { cliente_fixo_id: cfId }
+                        if (cf) {
+                          patch.client_name = cf.nome
+                          setTicket(prev => prev ? { ...prev, client_name: cf.nome } : null)
+                        }
+                        await api(`/api/tickets/${id}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(patch),
+                        })
+                      }}
+                      className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                    >
+                      <option value="">— Selecione —</option>
+                      {clientesFixos.filter(c => c.ativo).map(c => (
+                        <option key={c.id} value={c.id}>
+                          {c.nome} ({Number(c.valor_mensal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}/mês)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="bg-amber-50 rounded-xl px-4 py-3 text-center">
+                    <p className="text-xs text-amber-600 font-semibold">Incluso no pacote mensal</p>
+                  </div>
                 </div>
               ) : (
                 <div>
@@ -443,6 +587,131 @@ export default function TicketDetailPage() {
               <span>fechar</span>
             </span>
           </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============ Tempo Trabalhado ============
+function TempoSection({
+  apontamentos, budget, tempoInput, setTempoInput, tempoDesc, setTempoDesc,
+  iniciarTimer, pararTimer, addManualTempo, deleteApontamento,
+}: {
+  apontamentos: TempoApontamento[]
+  budget: number | null
+  tempoInput: string
+  setTempoInput: (s: string) => void
+  tempoDesc: string
+  setTempoDesc: (s: string) => void
+  iniciarTimer: () => void
+  pararTimer: (a: TempoApontamento) => void
+  addManualTempo: () => void
+  deleteApontamento: (id: string) => void
+}) {
+  const ativo = apontamentos.find(a => a.ativo)
+  const fechados = apontamentos.filter(a => !a.ativo && a.minutos != null)
+  const totalMin = fechados.reduce((s, a) => s + (a.minutos ?? 0), 0)
+   + (ativo?.started_at ? minutosDesde(ativo.started_at) : 0)
+
+  const rh = budget ? valorHora(budget, totalMin) : null
+
+  return (
+    <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+      <div className="flex items-start justify-between mb-4 gap-3">
+        <div>
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">⏱ Tempo Trabalhado</h3>
+          <p className="text-2xl font-bold text-slate-800 mt-0.5">{formatMinutos(totalMin)}</p>
+          {rh != null && (
+            <p className="text-xs text-slate-500 mt-0.5">
+              {rh.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}/hora nesta demanda
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {ativo ? (
+            <button
+              onClick={() => pararTimer(ativo)}
+              className="text-sm font-medium px-3 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors flex items-center gap-1.5"
+            >
+              ⏸ Parar timer
+            </button>
+          ) : (
+            <button
+              onClick={iniciarTimer}
+              className="text-sm font-medium px-3 py-2 rounded-lg text-white transition-opacity hover:opacity-90 flex items-center gap-1.5"
+              style={{ background: '#C5A880' }}
+            >
+              ▶ Iniciar timer
+            </button>
+          )}
+        </div>
+      </div>
+
+      {ativo?.started_at && (
+        <div className="bg-red-50 border border-red-100 rounded-xl p-3 mb-3 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+          <span className="text-sm text-red-700">
+            Timer rodando · {formatMinutos(minutosDesde(ativo.started_at))} (iniciado às {format(new Date(ativo.started_at), 'HH:mm')})
+          </span>
+        </div>
+      )}
+
+      {/* Form manual */}
+      <div className="bg-slate-50 rounded-xl p-3 mb-3">
+        <p className="text-xs font-semibold text-slate-500 mb-2">Adicionar manualmente</p>
+        <div className="grid grid-cols-12 gap-2">
+          <input
+            value={tempoInput}
+            onChange={e => setTempoInput(e.target.value)}
+            placeholder="1h 30min"
+            className="col-span-3 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+            onKeyDown={e => { if (e.key === 'Enter') addManualTempo() }}
+          />
+          <input
+            value={tempoDesc}
+            onChange={e => setTempoDesc(e.target.value)}
+            placeholder="Descrição (opcional)"
+            className="col-span-7 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+            onKeyDown={e => { if (e.key === 'Enter') addManualTempo() }}
+          />
+          <button
+            onClick={addManualTempo}
+            disabled={!tempoInput.trim() || parseMinutos(tempoInput) <= 0}
+            className="col-span-2 text-sm py-2 rounded-lg text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{ background: '#C5A880' }}
+          >
+            Adicionar
+          </button>
+        </div>
+        <p className="text-[10px] text-slate-400 mt-1.5">Aceita "1h 30min", "1:30", "90" (minutos) ou "1.5" (horas)</p>
+      </div>
+
+      {/* Lista */}
+      {fechados.length === 0 && !ativo ? (
+        <p className="text-xs text-slate-400 text-center py-4">Nenhum tempo apontado ainda.</p>
+      ) : (
+        <div className="space-y-1">
+          {fechados.map(a => (
+            <div key={a.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg hover:bg-slate-50 group">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-xs text-slate-400 w-16 flex-shrink-0">
+                  {format(new Date(a.data + 'T12:00:00'), 'd MMM', { locale: ptBR })}
+                </span>
+                <span className="text-sm font-semibold text-slate-700 w-20 flex-shrink-0 tabular-nums">
+                  {formatMinutos(a.minutos ?? 0)}
+                </span>
+                <span className="text-sm text-slate-500 truncate">{a.descricao || '—'}</span>
+              </div>
+              <button
+                onClick={() => deleteApontamento(a.id)}
+                className="text-slate-300 hover:text-red-400 transition-colors text-lg leading-none opacity-0 group-hover:opacity-100"
+                title="Excluir"
+              >
+                ×
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>

@@ -22,8 +22,20 @@ export interface Ticket {
   scheduled_at: string | null
   budget_value: number | null
   is_fixed_client: boolean
+  cliente_fixo_id: string | null
   pagamento_recebido: boolean
   chat_transcript: ChatMessage[]
+}
+
+export interface TempoApontamento {
+  id: string
+  created_at: string
+  ticket_id: string
+  minutos: number | null
+  descricao: string | null
+  data: string
+  started_at: string | null
+  ativo: boolean
 }
 
 export interface ChatMessage {
