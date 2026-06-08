@@ -283,7 +283,7 @@ export default function FinanceiroPage() {
 
         {/* Tabela de clientes fixos */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-700">Recebimentos Fixos</h2>
             <span className="text-sm font-bold text-amber-600">{formatBRL(totalRecebidoFixo)} <span className="text-xs font-normal text-slate-400">de {formatBRL(totalEsperadoFixo)}</span></span>
           </div>
@@ -358,40 +358,38 @@ export default function FinanceiroPage() {
                 </tbody>
               </table>
 
-              {/* Mobile: cards */}
+              {/* Mobile: cards compactos */}
               <div className="md:hidden divide-y divide-slate-50">
                 {rows.map(({ cliente, pag }) => (
-                  <div key={cliente.id} className="p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-slate-800 truncate">{cliente.nome}</p>
-                        <p className="text-sm text-amber-600 font-medium">{formatBRL(Number(cliente.valor_mensal))}</p>
+                  <button
+                    key={cliente.id}
+                    onClick={() => togglePagamento(cliente, pag)}
+                    className="w-full text-left px-4 py-3 flex items-center gap-3 active:bg-slate-50 transition-colors"
+                  >
+                    <span className={clsx(
+                      'w-1 self-stretch rounded-full flex-shrink-0',
+                      pag?.recebido ? 'bg-green-400' : 'bg-amber-400'
+                    )} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline gap-2">
+                        <p className="text-sm font-semibold text-slate-800 truncate flex-1">{cliente.nome}</p>
+                        <span className="text-sm font-bold text-amber-600 whitespace-nowrap">{formatBRL(Number(cliente.valor_mensal))}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5 text-[11px]">
+                        {pag?.recebido ? (
+                          <span className="text-green-600 font-medium">✓ Recebido</span>
+                        ) : (
+                          <span className="text-amber-600">⏳ Pendente</span>
+                        )}
                         {cliente.dia_vencimento && (
-                          <p className="text-xs text-slate-400">Vence dia {cliente.dia_vencimento}</p>
+                          <>
+                            <span className="text-slate-200">·</span>
+                            <span className="text-slate-400">Vence dia {cliente.dia_vencimento}</span>
+                          </>
                         )}
                       </div>
-                      {pag?.recebido ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-100 text-green-700 px-2.5 py-1 rounded-full flex-shrink-0">
-                          ✓ Recebido
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 text-red-500 px-2.5 py-1 rounded-full flex-shrink-0">
-                          ⏳ Pendente
-                        </span>
-                      )}
                     </div>
-                    <button
-                      onClick={() => togglePagamento(cliente, pag)}
-                      className={clsx(
-                        'w-full text-sm py-2 rounded-lg font-medium transition-colors',
-                        pag?.recebido
-                          ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                          : 'bg-green-600 text-white hover:bg-green-700'
-                      )}
-                    >
-                      {pag?.recebido ? 'Desfazer' : 'Marcar recebido'}
-                    </button>
-                  </div>
+                  </button>
                 ))}
               </div>
             </>
@@ -400,12 +398,12 @@ export default function FinanceiroPage() {
 
         {/* Avulsos do mês */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-700">Avulsos com Orçamento</h2>
             <span className="text-sm font-bold text-slate-700">{formatBRL(totalAvulsoRecebido)} <span className="text-xs font-normal text-slate-400">de {formatBRL(totalAvulso)}</span></span>
           </div>
           {avulsosMes.length === 0 ? (
-            <div className="px-6 py-8 text-center text-slate-400 text-sm">Nenhum avulso com orçamento este mês.</div>
+            <div className="px-6 py-6 md:py-8 text-center text-slate-400 text-xs md:text-sm">Nenhum avulso com orçamento este mês.</div>
           ) : (
             <>
               {/* Desktop: tabela */}
@@ -460,43 +458,39 @@ export default function FinanceiroPage() {
                 </tbody>
               </table>
 
-              {/* Mobile: cards */}
+              {/* Mobile: cards compactos */}
               <div className="md:hidden divide-y divide-slate-50">
                 {avulsosMes.map(t => (
-                  <div key={t.id} className="p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
+                  <button
+                    key={t.id}
+                    onClick={() => toggleAvulso(t)}
+                    className="w-full text-left px-4 py-3 flex items-center gap-3 active:bg-slate-50 transition-colors"
+                  >
+                    <span className={clsx(
+                      'w-1 self-stretch rounded-full flex-shrink-0',
+                      t.pagamento_recebido ? 'bg-green-400' : 'bg-amber-400'
+                    )} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline gap-2">
                         <p
-                          className="text-sm font-semibold text-slate-800 line-clamp-2 cursor-pointer"
-                          onClick={() => router.push(`/admin/chamado/${t.id}`)}
+                          className="text-sm font-semibold text-slate-800 truncate flex-1"
+                          onClick={(e) => { e.stopPropagation(); router.push(`/admin/chamado/${t.id}`) }}
                         >
                           {t.title}
                         </p>
-                        <p className="text-xs text-slate-500 mt-0.5">{t.client_name}</p>
-                        <p className="text-sm font-semibold text-slate-800 mt-1">{formatBRL(t.budget_value!)}</p>
+                        <span className="text-sm font-bold text-slate-800 whitespace-nowrap">{formatBRL(t.budget_value!)}</span>
                       </div>
-                      {t.pagamento_recebido ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-100 text-green-700 px-2.5 py-1 rounded-full flex-shrink-0">
-                          ✓ Recebido
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 text-red-500 px-2.5 py-1 rounded-full flex-shrink-0">
-                          ⏳ Pendente
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2 mt-0.5 text-[11px]">
+                        <span className="text-slate-400">{t.client_name}</span>
+                        <span className="text-slate-200">·</span>
+                        {t.pagamento_recebido ? (
+                          <span className="text-green-600 font-medium">✓ Recebido</span>
+                        ) : (
+                          <span className="text-amber-600">⏳ Pendente</span>
+                        )}
+                      </div>
                     </div>
-                    <button
-                      onClick={() => toggleAvulso(t)}
-                      className={clsx(
-                        'w-full text-sm py-2 rounded-lg font-medium transition-colors',
-                        t.pagamento_recebido
-                          ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                          : 'bg-green-600 text-white hover:bg-green-700'
-                      )}
-                    >
-                      {t.pagamento_recebido ? 'Desfazer' : 'Marcar recebido'}
-                    </button>
-                  </div>
+                  </button>
                 ))}
               </div>
             </>
@@ -505,7 +499,8 @@ export default function FinanceiroPage() {
 
         {/* DESPESAS */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          {/* Header desktop */}
+          <div className="hidden md:flex px-6 py-4 border-b border-slate-100 items-center justify-between">
             <div>
               <h2 className="text-sm font-semibold text-slate-700">Despesas</h2>
               <p className="text-xs text-slate-400 mt-0.5">
@@ -521,6 +516,19 @@ export default function FinanceiroPage() {
               >
                 {showDespForm ? 'Cancelar' : '+ Adicionar'}
               </button>
+            </div>
+          </div>
+
+          {/* Header mobile compacto */}
+          <div className="md:hidden px-4 py-3 border-b border-slate-100">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-sm font-semibold text-slate-700">Despesas</h2>
+              <span className="text-base font-bold text-red-500">{formatBRL(saidasTotal)}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-1.5 text-[11px]">
+              <span className="text-green-600 font-medium">Pago {formatBRL(saidasPagas)}</span>
+              <span className="text-slate-300">·</span>
+              <span className="text-amber-600 font-medium">A pagar {formatBRL(saidasAPagar)}</span>
             </div>
           </div>
 
@@ -679,65 +687,65 @@ export default function FinanceiroPage() {
                 </tbody>
               </table>
 
-              {/* Mobile: cards */}
+              {/* Mobile: cards compactos */}
               <div className="md:hidden divide-y divide-slate-50">
                 {despesas.map(d => {
                   const venc = d.vencimento ? new Date(d.vencimento + 'T12:00:00') : null
                   const atrasado = venc && !d.pago && venc < new Date()
                   return (
-                    <div key={d.id} className={clsx('p-4 space-y-3', d.pago && 'opacity-60')}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <span className={clsx(
-                              'inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full',
-                              d.tipo === 'pessoal' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                            )}>
-                              {d.tipo === 'pessoal' ? 'Pessoal' : 'Corporativa'}
-                            </span>
-                            {d.pago ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                                ✓ Pago
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">
-                                ⏳ A pagar
-                              </span>
-                            )}
-                            {atrasado && (
-                              <span className="text-[10px] uppercase tracking-wider bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">
-                                atrasado
-                              </span>
-                            )}
-                          </div>
-                          <p className={clsx('text-sm font-medium', d.pago ? 'text-slate-500' : 'text-slate-800')}>{d.descricao}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">
-                            {venc ? `Vence ${format(venc, "d 'de' MMM", { locale: ptBR })}` : `Criada ${format(new Date(d.created_at), "d 'de' MMM", { locale: ptBR })}`}
+                    <button
+                      key={d.id}
+                      onClick={() => togglePago(d)}
+                      className={clsx(
+                        'w-full text-left px-4 py-3 flex items-center gap-3 active:bg-slate-50 transition-colors',
+                        d.pago && 'opacity-60'
+                      )}
+                    >
+                      {/* Marcador colorido lateral por tipo */}
+                      <span
+                        className={clsx(
+                          'w-1 self-stretch rounded-full flex-shrink-0',
+                          d.tipo === 'pessoal' ? 'bg-blue-400' : 'bg-purple-400'
+                        )}
+                      />
+
+                      {/* Conteúdo principal */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline gap-2">
+                          <p className={clsx('text-sm font-medium truncate flex-1', d.pago ? 'text-slate-500' : 'text-slate-800')}>
+                            {d.descricao}
                           </p>
+                          <span className={clsx('text-sm font-bold whitespace-nowrap', d.pago ? 'text-slate-400 line-through' : 'text-red-500')}>
+                            {formatBRL(Number(d.valor))}
+                          </span>
                         </div>
-                        <span className={clsx('text-sm font-bold whitespace-nowrap', d.pago ? 'text-slate-400 line-through' : 'text-red-500')}>
-                          - {formatBRL(Number(d.valor))}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => togglePago(d)}
-                          className={clsx(
-                            'flex-1 text-sm py-2 rounded-lg font-medium transition-colors',
-                            d.pago ? 'bg-slate-100 text-slate-500' : 'bg-green-600 text-white'
+                        <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
+                          <span>{d.tipo === 'pessoal' ? 'Pessoal' : 'Corporativa'}</span>
+                          <span className="text-slate-200">·</span>
+                          {d.pago ? (
+                            <span className="text-green-600 font-medium">✓ Pago</span>
+                          ) : atrasado ? (
+                            <span className="text-red-500 font-semibold">⚠ Atrasado</span>
+                          ) : (
+                            <span className="text-amber-600">⏳ A pagar</span>
                           )}
-                        >
-                          {d.pago ? 'Desfazer' : 'Marcar pago'}
-                        </button>
-                        <button
-                          onClick={() => deleteDespesa(d.id)}
-                          className="w-10 h-10 rounded-lg border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 flex items-center justify-center transition-colors"
-                          title="Excluir"
-                        >
-                          ×
-                        </button>
+                          {venc && (
+                            <>
+                              <span className="text-slate-200">·</span>
+                              <span>vence {format(venc, "d MMM", { locale: ptBR })}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
-                    </div>
+
+                      {/* Lixeira pequena */}
+                      <span
+                        onClick={(e) => { e.stopPropagation(); deleteDespesa(d.id) }}
+                        className="w-7 h-7 rounded-md text-slate-300 hover:text-red-500 flex items-center justify-center text-lg flex-shrink-0 -mr-1"
+                      >
+                        ×
+                      </span>
+                    </button>
                   )
                 })}
               </div>
