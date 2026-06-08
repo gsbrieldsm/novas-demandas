@@ -211,31 +211,31 @@ export default function TicketDetailPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-6 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <header className="bg-white border-b border-slate-200 px-4 md:px-6 py-3 md:py-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 md:gap-3 min-w-0">
             <button
               onClick={() => router.push('/admin/demandas')}
-              className="text-slate-400 hover:text-slate-600 transition-colors"
+              className="text-slate-400 hover:text-slate-600 transition-colors text-sm md:text-base whitespace-nowrap"
             >
               ← Voltar
             </button>
-            <span className="text-slate-300">|</span>
-            <span className="text-sm font-mono text-slate-400">#{ticket.id.slice(0, 8).toUpperCase()}</span>
+            <span className="text-slate-300 hidden md:inline">|</span>
+            <span className="text-xs md:text-sm font-mono text-slate-400 truncate">#{ticket.id.slice(0, 8).toUpperCase()}</span>
           </div>
           <a
             href={`/acompanhar/${ticket.id}`}
             target="_blank"
-            className="text-sm text-indigo-600 hover:text-indigo-800"
+            className="text-xs md:text-sm text-indigo-600 hover:text-indigo-800 whitespace-nowrap"
           >
             Ver como cliente →
           </a>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="max-w-4xl mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         {/* Main content */}
-        <div className="md:col-span-2 space-y-4">
+        <div className="md:col-span-2 space-y-3 md:space-y-4">
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
             <div className="flex items-start justify-between gap-3 mb-4">
               <h1 className="text-lg font-bold text-slate-900">{ticket.title}</h1>

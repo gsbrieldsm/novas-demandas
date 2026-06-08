@@ -85,7 +85,11 @@ function formatBRL(v: number) {
 }
 
 export default function AgendaPage() {
-  const [view, setView] = useState<ViewMode>('semana')
+  const [view, setView] = useState<ViewMode>(() => {
+    // Mobile defaulta pra mês (semana fica horrível em tela pequena)
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return 'mes'
+    return 'semana'
+  })
   const [ref, setRef] = useState(new Date())
   const [loading, setLoading] = useState(true)
   const [tickets, setTickets] = useState<Ticket[]>([])
@@ -330,48 +334,48 @@ export default function AgendaPage() {
     <div className="min-h-screen bg-white flex flex-col">
       <AdminNav onLogout={handleLogout} />
 
-      <div className="max-w-7xl mx-auto w-full px-6 py-6 space-y-4 flex-1 flex flex-col">
+      <div className="max-w-7xl mx-auto w-full px-3 md:px-6 py-3 md:py-6 space-y-3 md:space-y-4 flex-1 flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-4">
-            <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Agenda</p>
-              <h1 className="text-2xl font-bold text-slate-900 mt-1">{headerLabel}</h1>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap min-w-0">
+            <div className="min-w-0">
+              <p className="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">Agenda</p>
+              <h1 className="text-base md:text-2xl font-bold text-slate-900 mt-0.5 md:mt-1 truncate">{headerLabel}</h1>
             </div>
-            <div className="flex items-center gap-2 ml-2">
-              <button onClick={() => nav(-1)} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">‹</button>
-              <button onClick={() => setRef(new Date())} className="text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-colors">Hoje</button>
-              <button onClick={() => nav(1)} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">›</button>
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <button onClick={() => nav(-1)} className="w-8 h-8 md:w-9 md:h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">‹</button>
+              <button onClick={() => setRef(new Date())} className="text-xs px-2.5 md:px-3 py-1.5 md:py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-colors">Hoje</button>
+              <button onClick={() => nav(1)} className="w-8 h-8 md:w-9 md:h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">›</button>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex rounded-lg overflow-hidden border border-slate-200 text-sm">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex rounded-lg overflow-hidden border border-slate-200 text-xs md:text-sm">
               <button
                 onClick={() => setView('semana')}
-                className={clsx('px-4 py-2 transition-colors', view === 'semana' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-50')}
+                className={clsx('px-3 md:px-4 py-1.5 md:py-2 transition-colors', view === 'semana' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-50')}
               >
                 Semana
               </button>
               <button
                 onClick={() => setView('mes')}
-                className={clsx('px-4 py-2 transition-colors', view === 'mes' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-50')}
+                className={clsx('px-3 md:px-4 py-1.5 md:py-2 transition-colors', view === 'mes' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-50')}
               >
                 Mês
               </button>
             </div>
             <button
               onClick={() => openNewEvent()}
-              className="text-sm font-medium px-4 py-2 rounded-lg text-white hover:opacity-90 transition-opacity"
+              className="text-xs md:text-sm font-medium px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-white hover:opacity-90 transition-opacity whitespace-nowrap"
               style={{ background: '#C5A880' }}
             >
-              + Novo evento
+              + Novo
             </button>
           </div>
         </div>
 
-        {/* Legenda */}
-        <div className="flex items-center gap-4 flex-wrap text-xs">
+        {/* Legenda — só desktop (no mobile poluiria) */}
+        <div className="hidden md:flex items-center gap-4 flex-wrap text-xs">
           {(Object.entries(TYPE_LABEL) as [CalEventType, string][]).map(([k, label]) => (
             <div key={k} className="flex items-center gap-1.5">
               <span className={clsx('w-2 h-2 rounded-full', TYPE_COLORS[k].dot)} />

@@ -230,39 +230,39 @@ export default function GestaoPage() {
     <div className="min-h-screen bg-white flex flex-col">
       <AdminNav onLogout={handleLogout} />
 
-      <div className="max-w-6xl mx-auto w-full px-6 py-8 space-y-6">
+      <div className="max-w-6xl mx-auto w-full px-4 py-4 md:px-6 md:py-8 space-y-4 md:space-y-6">
 
         {/* Header com saudação */}
-        <div className="flex items-end justify-between">
-          <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Gestão</p>
-            <h1 className="text-2xl font-bold text-slate-900 mt-1">
+        <div className="flex items-end justify-between gap-3 flex-wrap">
+          <div className="min-w-0">
+            <p className="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">Gestão</p>
+            <h1 className="text-lg md:text-2xl font-bold text-slate-900 mt-0.5 md:mt-1">
               {format(now, "EEEE',' d 'de' MMMM", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())}
             </h1>
           </div>
           <div className="text-right">
-            <p className="text-xs text-slate-400">Receita do mês</p>
-            <p className="text-2xl font-bold text-green-600">{formatBRL(receitaTotal)}</p>
+            <p className="text-[10px] md:text-xs text-slate-400">Receita do mês</p>
+            <p className="text-lg md:text-2xl font-bold text-green-600">{formatBRL(receitaTotal)}</p>
           </div>
         </div>
 
         {/* PAINEL HOJE */}
         <div
-          className="rounded-2xl p-6 shadow-md text-white"
+          className="rounded-2xl p-4 md:p-6 shadow-md text-white"
           style={{
             background: 'radial-gradient(ellipse 80% 150% at 95% 50%, #C5A880 0%, #6B4C28 40%, #1c1a18 80%), #100E0B',
           }}
         >
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3 md:mb-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-white/60">Painel Hoje</p>
-              <p className="text-sm text-white/80 mt-0.5">
+              <p className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-white/60">Painel Hoje</p>
+              <p className="text-xs md:text-sm text-white/80 mt-0.5">
                 {todayActions === 0 ? 'Tudo em dia ✨' : `${todayActions} ações pra você olhar`}
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
             <PainelItem
               label="Atrasados"
               value={chamadosAtrasados.length}
@@ -300,15 +300,15 @@ export default function GestaoPage() {
         </div>
 
         {/* METAS DO MÊS */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-          <div className="flex items-center justify-between mb-5">
+        <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-slate-100">
+          <div className="flex items-center justify-between mb-4 md:mb-5">
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Metas de {format(now, 'MMMM', { locale: ptBR })}</p>
-              <p className="text-sm text-slate-500 mt-0.5">Acompanhe seu progresso por modalidade</p>
+              <p className="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">Metas de {format(now, 'MMMM', { locale: ptBR })}</p>
+              <p className="text-xs md:text-sm text-slate-500 mt-0.5">Acompanhe seu progresso por modalidade</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {/* Meta Fixo */}
             <MetaCard
               tipo="fixo"
@@ -344,11 +344,11 @@ export default function GestaoPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
 
           {/* TOP CLIENTES */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-            <div className="mb-5">
+          <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-slate-100">
+            <div className="mb-4 md:mb-5">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Top Clientes</p>
               <p className="text-sm text-slate-500 mt-0.5">Quem mais pagou em {format(now, 'MMMM', { locale: ptBR })}</p>
             </div>
@@ -379,11 +379,11 @@ export default function GestaoPage() {
           </div>
 
           {/* CLIENTES FIXOS */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-            <div className="flex items-center justify-between mb-5">
+          <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-4 md:mb-5">
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Clientes Fixos</p>
-                <p className="text-2xl font-bold text-amber-600 mt-0.5">{formatBRL(mrr)}<span className="text-sm font-normal text-slate-400">/mês</span></p>
+                <p className="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">Clientes Fixos</p>
+                <p className="text-lg md:text-2xl font-bold text-amber-600 mt-0.5">{formatBRL(mrr)}<span className="text-xs md:text-sm font-normal text-slate-400">/mês</span></p>
               </div>
               <button
                 onClick={() => setShowForm(v => !v)}
@@ -479,13 +479,13 @@ function PainelItem({ label, value, sub, urgent, onClick }: { label: string; val
     <button
       onClick={onClick}
       className={clsx(
-        'rounded-xl p-3 text-left transition-all hover:scale-[1.02]',
-        'bg-white/10 backdrop-blur-sm hover:bg-white/15 border border-white/10'
+        'rounded-xl p-2.5 md:p-3 text-left transition-all hover:scale-[1.02] active:scale-95',
+        'bg-white/10 backdrop-blur-sm hover:bg-white/15 border border-white/10 min-w-0'
       )}
     >
-      <p className={clsx('text-2xl font-bold leading-none', urgent && value > 0 ? 'text-red-300' : 'text-white')}>{value}</p>
-      <p className="text-xs text-white/70 mt-1.5 leading-tight">{label}</p>
-      {sub && <p className="text-[10px] text-white/50 mt-0.5">{sub}</p>}
+      <p className={clsx('text-xl md:text-2xl font-bold leading-none tabular-nums', urgent && value > 0 ? 'text-red-300' : 'text-white')}>{value}</p>
+      <p className="text-[10px] md:text-xs text-white/70 mt-1 md:mt-1.5 leading-tight">{label}</p>
+      {sub && <p className="text-[9px] md:text-[10px] text-white/50 mt-0.5 leading-tight">{sub}</p>}
     </button>
   )
 }

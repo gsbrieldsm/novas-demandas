@@ -194,22 +194,22 @@ export default function ComercialPage() {
       } />
 
       {/* Pipeline value bar */}
-      <div className="px-6 py-3 border-b border-slate-100 flex items-center gap-6">
-        <p className="text-xs text-slate-400">
-          Pipeline ativo: <span className="font-semibold text-slate-700">{formatBRL(totalEstimado)}</span>
+      <div className="px-4 md:px-6 py-2.5 md:py-3 border-b border-slate-100 flex items-center gap-4 md:gap-6 flex-wrap">
+        <p className="text-[11px] md:text-xs text-slate-400">
+          Pipeline: <span className="font-semibold text-slate-700">{formatBRL(totalEstimado)}</span>
         </p>
-        <p className="text-xs text-slate-400">
+        <p className="text-[11px] md:text-xs text-slate-400">
           {leads.filter(l => l.status !== 'perdido' && !l.convertido_em).length} leads ativos
         </p>
       </div>
 
-      <div className="flex-1 overflow-x-auto p-6">
+      <div className="flex-1 overflow-x-auto p-4 md:p-6">
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex gap-4 min-w-max">
+          <div className="flex gap-3 md:gap-4 min-w-max">
             {COLUMNS.map(col => {
               const colLeads = leads.filter(l => l.status === col.id)
               return (
-                <div key={col.id} className="w-72 flex flex-col">
+                <div key={col.id} className="w-64 md:w-72 flex flex-col">
                   <div className={clsx('flex items-center justify-between px-3 py-2 rounded-xl mb-3', col.bg)}>
                     <span className={clsx('text-sm font-semibold', col.color)}>{col.label}</span>
                     <span className={clsx('text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center bg-white', col.color)}>
