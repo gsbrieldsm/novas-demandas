@@ -215,7 +215,7 @@ export default function TicketDetailPage() {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.push('/admin')}
+              onClick={() => router.push('/admin/demandas')}
               className="text-slate-400 hover:text-slate-600 transition-colors"
             >
               ← Voltar
