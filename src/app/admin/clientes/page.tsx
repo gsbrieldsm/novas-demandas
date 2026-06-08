@@ -203,73 +203,74 @@ export default function ClientesPage() {
     <div className="min-h-screen bg-white flex flex-col">
       <AdminNav onLogout={handleLogout} />
 
-      <div className="max-w-6xl mx-auto w-full px-6 py-8 space-y-6">
+      <div className="max-w-6xl mx-auto w-full px-4 py-4 md:px-6 md:py-8 space-y-4 md:space-y-6">
 
         {/* Header */}
-        <div className="flex items-end justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Clientes · Rentabilidade</p>
-              <h1 className="text-2xl font-bold text-slate-900 mt-1">
-                {periodo === 'mes'
-                  ? format(mes, "MMMM 'de' yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())
-                  : `Ano ${format(mes, 'yyyy')}`}
-              </h1>
-            </div>
-
-            <div className="flex items-center gap-2 ml-2">
-              {periodo === 'mes' ? (
-                <>
-                  <button onClick={() => setMes(m => subMonths(m, 1))} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">‹</button>
-                  <button onClick={() => setMes(new Date())} className="text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-colors">Hoje</button>
-                  <button onClick={() => setMes(m => addMonths(m, 1))} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">›</button>
-                </>
-              ) : (
-                <>
-                  <button onClick={() => setMes(m => subYears(m, 1))} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">‹</button>
-                  <button onClick={() => setMes(new Date())} className="text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-colors">Atual</button>
-                  <button onClick={() => setMes(m => addYears(m, 1))} className="w-9 h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">›</button>
-                </>
-              )}
-            </div>
-
-            {/* Toggle Mês / Ano */}
-            <div className="flex rounded-lg overflow-hidden border border-slate-200 text-sm">
-              <button
-                onClick={() => setPeriodo('mes')}
-                className={clsx('px-4 py-2 transition-colors', periodo === 'mes' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-50')}
-              >
-                Mês
-              </button>
-              <button
-                onClick={() => setPeriodo('ano')}
-                className={clsx('px-4 py-2 transition-colors', periodo === 'ano' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-50')}
-              >
-                Ano
-              </button>
-            </div>
+        <div className="flex items-end justify-between gap-3 flex-wrap">
+          <div>
+            <p className="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">Clientes · Rentabilidade</p>
+            <h1 className="text-lg md:text-2xl font-bold text-slate-900 mt-0.5 md:mt-1">
+              {periodo === 'mes'
+                ? format(mes, "MMMM 'de' yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())
+                : `Ano ${format(mes, 'yyyy')}`}
+            </h1>
           </div>
           <div className="text-right">
-            <p className="text-xs text-slate-400">R$/h médio</p>
-            <p className={clsx('text-2xl font-bold', rhMedio == null ? 'text-slate-300' : rhMedio >= horaAlvo ? 'text-green-600' : rhMedio >= horaAlvo * 0.5 ? 'text-amber-500' : 'text-red-500')}>
+            <p className="text-[10px] md:text-xs text-slate-400">R$/h médio</p>
+            <p className={clsx('text-lg md:text-2xl font-bold', rhMedio == null ? 'text-slate-300' : rhMedio >= horaAlvo ? 'text-green-600' : rhMedio >= horaAlvo * 0.5 ? 'text-amber-500' : 'text-red-500')}>
               {rhMedio == null ? '—' : formatBRL(rhMedio)}
             </p>
           </div>
         </div>
 
+        {/* Toggle + Navegação */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Toggle Mês / Ano */}
+          <div className="flex rounded-lg overflow-hidden border border-slate-200 text-sm">
+            <button
+              onClick={() => setPeriodo('mes')}
+              className={clsx('px-3 md:px-4 py-1.5 md:py-2 transition-colors', periodo === 'mes' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-50')}
+            >
+              Mês
+            </button>
+            <button
+              onClick={() => setPeriodo('ano')}
+              className={clsx('px-3 md:px-4 py-1.5 md:py-2 transition-colors', periodo === 'ano' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 hover:bg-slate-50')}
+            >
+              Ano
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1.5 md:gap-2">
+            {periodo === 'mes' ? (
+              <>
+                <button onClick={() => setMes(m => subMonths(m, 1))} className="w-8 h-8 md:w-9 md:h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">‹</button>
+                <button onClick={() => setMes(new Date())} className="text-xs px-2.5 md:px-3 py-1.5 md:py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-colors">Hoje</button>
+                <button onClick={() => setMes(m => addMonths(m, 1))} className="w-8 h-8 md:w-9 md:h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">›</button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => setMes(m => subYears(m, 1))} className="w-8 h-8 md:w-9 md:h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">‹</button>
+                <button onClick={() => setMes(new Date())} className="text-xs px-2.5 md:px-3 py-1.5 md:py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-colors">Atual</button>
+                <button onClick={() => setMes(m => addYears(m, 1))} className="w-8 h-8 md:w-9 md:h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">›</button>
+              </>
+            )}
+          </div>
+        </div>
+
         {/* Painel resumo */}
         <div
-          className="rounded-2xl p-6 shadow-md text-white"
+          className="rounded-2xl p-4 md:p-6 shadow-md text-white"
           style={{ background: 'radial-gradient(ellipse 80% 150% at 95% 50%, #C5A880 0%, #6B4C28 40%, #1c1a18 80%), #100E0B' }}
         >
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-white/60">Visão Geral</p>
-              <p className="text-sm text-white/80 mt-0.5">Receita, tempo e rentabilidade do mês</p>
+              <p className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-white/60">Visão Geral</p>
+              <p className="text-xs md:text-sm text-white/80 mt-0.5">Receita, tempo e rentabilidade do período</p>
             </div>
-            <div className="text-right">
+            <div className="md:text-right">
               {editingAlvo ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 md:justify-end">
                   <span className="text-xs text-white/60">Hora-alvo R$</span>
                   <input
                     autoFocus
@@ -284,21 +285,21 @@ export default function ClientesPage() {
               ) : (
                 <button
                   onClick={() => { setAlvoInput(String(horaAlvo)); setEditingAlvo(true) }}
-                  className="text-xs text-white/60 hover:text-white/90 transition-colors"
+                  className="text-xs text-white/60 hover:text-white/90 transition-colors text-left md:text-right"
                 >
-                  Hora-alvo: <span className="text-[#C5A880] font-semibold">{formatBRL(horaAlvo)}/h</span> · editar
+                  Hora-alvo <span className="text-[#C5A880] font-semibold">{formatBRL(horaAlvo)}/h</span> <span className="text-white/40">· editar</span>
                 </button>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
             <Card label="Receita total" value={formatBRL(totalReceita)} color="text-green-300" />
             <Card label="Tempo trabalhado" value={formatMinutos(totalMinutos)} color="text-blue-300" />
             <Card
               label="R$/h médio"
               value={rhMedio == null ? '—' : formatBRL(rhMedio)}
-              sub={rhMedio == null ? 'Aponte tempo nos chamados' : rhMedio >= horaAlvo ? `Acima da meta de ${formatBRL(horaAlvo)}/h` : `Abaixo da meta de ${formatBRL(horaAlvo)}/h`}
+              sub={rhMedio == null ? 'Aponte tempo nos chamados' : rhMedio >= horaAlvo ? `Acima da meta` : `Abaixo da meta`}
               color={rhMedio == null ? 'text-white/60' : rhMedio >= horaAlvo ? 'text-green-300' : 'text-amber-300'}
               highlight
             />
@@ -306,11 +307,11 @@ export default function ClientesPage() {
           </div>
         </div>
 
-        {/* Tabela */}
+        {/* Ranking */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100">
+          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100">
             <h2 className="text-sm font-semibold text-slate-700">Ranking por rentabilidade</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Do melhor R$/h ao pior · clique no cliente pra ver demandas</p>
+            <p className="text-[11px] md:text-xs text-slate-400 mt-0.5">Do melhor R$/h ao pior · toque para ver demandas</p>
           </div>
 
           {loading ? (
@@ -318,81 +319,149 @@ export default function ClientesPage() {
           ) : linhas.length === 0 ? (
             <div className="px-6 py-8 text-center text-slate-400 text-sm">Nenhum cliente com atividade este mês.</div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="text-left">
-                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Cliente</th>
-                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Receita</th>
-                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Tempo</th>
-                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">R$/h</th>
-                  <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Demandas</th>
-                  <th className="px-6 py-3"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {linhas.map(l => {
+            <>
+              {/* Desktop: tabela */}
+              <table className="hidden md:table w-full">
+                <thead>
+                  <tr className="text-left">
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Cliente</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Receita</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Tempo</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">R$/h</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Demandas</th>
+                    <th className="px-6 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {linhas.map(l => {
+                    const ind = indicadorRH(l.rh)
+                    const isOpen = expandido === l.key
+                    return (
+                      <Fragment key={l.key}>
+                        <tr
+                          onClick={() => setExpandido(isOpen ? null : l.key)}
+                          className="hover:bg-slate-50 transition-colors cursor-pointer"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <span className={clsx('text-xs font-medium px-2 py-0.5 rounded-full', l.tipo === 'fixo' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700')}>
+                                {l.tipo === 'fixo' ? 'Fixo' : 'Avulso'}
+                              </span>
+                              <span className="text-sm font-medium text-slate-800">{l.nome}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm font-semibold text-slate-800">{formatBRL(l.receita)}</td>
+                          <td className="px-6 py-4 text-sm text-slate-700 tabular-nums">{l.minutos > 0 ? formatMinutos(l.minutos) : '—'}</td>
+                          <td className="px-6 py-4">
+                            {l.rh != null ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-bold text-slate-800">{formatBRL(l.rh)}</span>
+                                {ind && <span className={clsx('text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full', ind.cor)}>{ind.label}</span>}
+                              </div>
+                            ) : (
+                              <span className="text-sm text-slate-300">—</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-slate-700">{l.tickets.length}</td>
+                          <td className="px-6 py-4 text-right">
+                            <span className={clsx('text-slate-300 text-lg transition-transform inline-block', isOpen && 'rotate-180')}>⌄</span>
+                          </td>
+                        </tr>
+                        {isOpen && l.tickets.length > 0 && (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-3 bg-slate-50">
+                              <div className="space-y-1">
+                                {l.tickets.map(t => (
+                                  <div
+                                    key={t.id}
+                                    onClick={() => router.push(`/admin/chamado/${t.id}`)}
+                                    className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg hover:bg-white cursor-pointer text-sm"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <span className="text-xs text-slate-400 w-16 flex-shrink-0">{format(new Date(t.created_at), 'd MMM', { locale: ptBR })}</span>
+                                      <span className="text-slate-800 truncate">{t.title}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 flex-shrink-0">
+                                      <span className="text-xs text-slate-500 tabular-nums">{formatMinutos(minutosPorTicket.get(t.id) ?? 0)}</span>
+                                      {t.budget_value != null && <span className="text-xs font-semibold text-green-600">{formatBRL(t.budget_value)}</span>}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    )
+                  })}
+                </tbody>
+              </table>
+
+              {/* Mobile: lista compacta */}
+              <div className="md:hidden divide-y divide-slate-50">
+                {linhas.map((l, idx) => {
                   const ind = indicadorRH(l.rh)
                   const isOpen = expandido === l.key
                   return (
                     <Fragment key={l.key}>
-                      <tr
+                      <button
                         onClick={() => setExpandido(isOpen ? null : l.key)}
-                        className="hover:bg-slate-50 transition-colors cursor-pointer"
+                        className="w-full text-left px-4 py-3 flex items-center gap-3 active:bg-slate-50 transition-colors"
                       >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <span className={clsx('text-xs font-medium px-2 py-0.5 rounded-full', l.tipo === 'fixo' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700')}>
-                              {l.tipo === 'fixo' ? 'Fixo' : 'Avulso'}
-                            </span>
-                            <span className="text-sm font-medium text-slate-800">{l.nome}</span>
+                        {/* Posição + marcador de tipo */}
+                        <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                          <span className="text-[10px] font-bold text-slate-400">{idx + 1}º</span>
+                          <span className={clsx('w-1.5 h-1.5 rounded-full', l.tipo === 'fixo' ? 'bg-amber-400' : 'bg-blue-400')} />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline gap-2">
+                            <p className="text-sm font-semibold text-slate-800 truncate flex-1">{l.nome}</p>
+                            {l.rh != null && (
+                              <span className={clsx('text-sm font-bold whitespace-nowrap', ind?.label === 'alto' ? 'text-green-600' : ind?.label === 'médio' ? 'text-amber-600' : 'text-red-500')}>
+                                {formatBRL(l.rh)}/h
+                              </span>
+                            )}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-800">{formatBRL(l.receita)}</td>
-                        <td className="px-6 py-4 text-sm text-slate-700 tabular-nums">{l.minutos > 0 ? formatMinutos(l.minutos) : '—'}</td>
-                        <td className="px-6 py-4">
-                          {l.rh != null ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-slate-800">{formatBRL(l.rh)}</span>
-                              {ind && <span className={clsx('text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full', ind.cor)}>{ind.label}</span>}
-                            </div>
-                          ) : (
-                            <span className="text-sm text-slate-300">—</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-700">{l.tickets.length}</td>
-                        <td className="px-6 py-4 text-right">
-                          <span className={clsx('text-slate-300 text-lg transition-transform inline-block', isOpen && 'rotate-180')}>⌄</span>
-                        </td>
-                      </tr>
+                          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
+                            <span>{l.tipo === 'fixo' ? 'Fixo' : 'Avulso'}</span>
+                            <span className="text-slate-200">·</span>
+                            <span className="text-slate-600 font-medium">{formatBRL(l.receita)}</span>
+                            <span className="text-slate-200">·</span>
+                            <span>{l.minutos > 0 ? formatMinutos(l.minutos) : 'sem tempo'}</span>
+                            <span className="text-slate-200">·</span>
+                            <span>{l.tickets.length} dem.</span>
+                          </div>
+                        </div>
+
+                        <span className={clsx('text-slate-300 text-lg transition-transform flex-shrink-0', isOpen && 'rotate-180')}>⌄</span>
+                      </button>
+
                       {isOpen && l.tickets.length > 0 && (
-                        <tr>
-                          <td colSpan={6} className="px-6 py-3 bg-slate-50">
-                            <div className="space-y-1">
-                              {l.tickets.map(t => (
-                                <div
-                                  key={t.id}
-                                  onClick={() => router.push(`/admin/chamado/${t.id}`)}
-                                  className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg hover:bg-white cursor-pointer text-sm"
-                                >
-                                  <div className="flex items-center gap-3 min-w-0">
-                                    <span className="text-xs text-slate-400 w-16 flex-shrink-0">{format(new Date(t.created_at), 'd MMM', { locale: ptBR })}</span>
-                                    <span className="text-slate-800 truncate">{t.title}</span>
-                                  </div>
-                                  <div className="flex items-center gap-3 flex-shrink-0">
-                                    <span className="text-xs text-slate-500 tabular-nums">{formatMinutos(minutosPorTicket.get(t.id) ?? 0)}</span>
-                                    {t.budget_value != null && <span className="text-xs font-semibold text-green-600">{formatBRL(t.budget_value)}</span>}
-                                  </div>
-                                </div>
-                              ))}
+                        <div className="px-4 py-2 bg-slate-50 space-y-1">
+                          {l.tickets.map(t => (
+                            <div
+                              key={t.id}
+                              onClick={() => router.push(`/admin/chamado/${t.id}`)}
+                              className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md hover:bg-white active:bg-white cursor-pointer"
+                            >
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <span className="text-[10px] text-slate-400 flex-shrink-0">{format(new Date(t.created_at), 'd MMM', { locale: ptBR })}</span>
+                                <span className="text-xs text-slate-800 truncate">{t.title}</span>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className="text-[10px] text-slate-500 tabular-nums">{formatMinutos(minutosPorTicket.get(t.id) ?? 0)}</span>
+                                {t.budget_value != null && <span className="text-[10px] font-semibold text-green-600">{formatBRL(t.budget_value)}</span>}
+                              </div>
                             </div>
-                          </td>
-                        </tr>
+                          ))}
+                        </div>
                       )}
                     </Fragment>
                   )
                 })}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
 
@@ -408,10 +477,10 @@ export default function ClientesPage() {
 
 function Card({ label, value, sub, color, highlight }: { label: string; value: string; sub?: string; color: string; highlight?: boolean }) {
   return (
-    <div className={clsx('rounded-xl p-4 border', highlight ? 'bg-white/15 border-white/30' : 'bg-white/5 border-white/10', 'backdrop-blur-sm')}>
-      <p className="text-xs uppercase tracking-wider text-white/60 mb-2">{label}</p>
-      <p className={clsx('text-2xl font-bold leading-tight', color)}>{value}</p>
-      {sub && <p className="text-[11px] text-white/50 mt-1.5 leading-tight">{sub}</p>}
+    <div className={clsx('rounded-xl p-3 md:p-4 border min-w-0', highlight ? 'bg-white/15 border-white/30' : 'bg-white/5 border-white/10', 'backdrop-blur-sm')}>
+      <p className="text-[10px] md:text-xs uppercase tracking-wider text-white/60 mb-1 md:mb-2 truncate">{label}</p>
+      <p className={clsx('text-base md:text-2xl font-bold leading-tight break-words', color)}>{value}</p>
+      {sub && <p className="text-[10px] md:text-[11px] text-white/50 mt-1 md:mt-1.5 leading-tight">{sub}</p>}
     </div>
   )
 }
