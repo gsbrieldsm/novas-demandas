@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gabriel Moraes & Co — Processos com Propósito</title>
+  <meta name="description" content="Marketing estratégico que aparece no seu faturamento. Vídeo, social media e estratégia integrados em um sistema com propósito." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080c10;
+      --bg2: #0d1117;
+      --bg3: #111820;
+      --surface: #141c26;
+      --surface2: #1a2333;
+      --border: rgba(255,255,255,0.07);
+      --accent: #c9a96e;
+      --accent2: #e8c987;
+      --text: #f0f4f8;
+      --text2: #8b9eb5;
+      --text3: #5a6e84;
+      --white: #ffffff;
+      --radius: 12px;
+      --radius-lg: 20px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ─────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 0 40px;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(8,12,16,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: background .3s;
+    }
+
+    .nav-logo {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--white);
+    }
+    .nav-logo span { color: var(--accent); }
+
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--text2);
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+
+    .nav-cta {
+      background: var(--accent);
+      color: #080c10;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 10px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background .2s, transform .2s;
+    }
+    .nav-cta:hover { background: var(--accent2); transform: translateY(-1px); }
+
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .nav-hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text2);
+      border-radius: 2px;
+      transition: .3s;
+    }
+
+    /* ── HERO ────────────────────────────────── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-grid-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201,169,110,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,169,110,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black, transparent);
+    }
+
+    .hero-glow {
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 700px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(201,169,110,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(201,169,110,0.1);
+      border: 1px solid rgba(201,169,110,0.2);
+      padding: 8px 18px;
+      border-radius: 100px;
+      margin-bottom: 40px;
+      position: relative;
+    }
+    .hero-label::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .5; transform: scale(1.4); }
+    }
+
+    .hero-h1 {
+      font-size: clamp(40px, 7vw, 86px);
+      font-weight: 900;
+      line-height: 1.04;
+      letter-spacing: -.03em;
+      max-width: 820px;
+      color: var(--white);
+      position: relative;
+    }
+    .hero-h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      margin-top: 28px;
+      font-size: clamp(16px, 2vw, 19px);
+      font-weight: 400;
+      color: var(--text2);
+      max-width: 540px;
+      line-height: 1.65;
+      position: relative;
+    }
+
+    .hero-actions {
+      margin-top: 48px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #080c10;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 16px 36px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background .2s, transform .2s, box-shadow .2s;
+      box-shadow: 0 0 30px rgba(201,169,110,0.25);
+    }
+    .btn-primary:hover {
+      background: var(--accent2);
+      transform: translateY(-2px);
+      box-shadow: 0 0 50px rgba(201,169,110,0.4);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 16px 36px;
+      border-radius: 8px;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      transition: border-color .2s, color .2s;
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
+
+    .hero-metrics {
+      margin-top: 80px;
+      display: flex;
+      gap: 60px;
+      justify-content: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    .metric {
+      text-align: center;
+    }
+    .metric-value {
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: -.02em;
+    }
+    .metric-value span { color: var(--accent); }
+    .metric-label {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-top: 6px;
+    }
+    .metric-divider {
+      width: 1px;
+      background: var(--border);
+      align-self: stretch;
+    }
+
+    /* ── SECTIONS SHARED ─────────────────────── */
+    section { padding: 100px 24px; }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: clamp(32px, 4.5vw, 54px);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -.025em;
+      color: var(--white);
+    }
+    .section-title em { font-style: normal; color: var(--accent); }
+
+    .section-desc {
+      margin-top: 20px;
+      font-size: 17px;
+      color: var(--text2);
+      line-height: 1.7;
+      max-width: 560px;
+    }
+
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── PRINCÍPIO ───────────────────────────── */
+    #principio {
+      background: var(--bg2);
+    }
+
+    .principio-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .principio-quote {
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 800;
+      line-height: 1.25;
+      color: var(--white);
+      border-left: 3px solid var(--accent);
+      padding-left: 28px;
+    }
+
+    .compare-table {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .compare-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .compare-cell {
+      padding: 16px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.5;
+      border-bottom: 1px solid var(--border);
+    }
+    .compare-row:last-child .compare-cell { border-bottom: none; }
+
+    .compare-header .compare-cell {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      background: var(--surface);
+    }
+    .compare-header .compare-cell:first-child { color: var(--text3); }
+    .compare-header .compare-cell:last-child { color: var(--accent); }
+
+    .compare-cell.bad {
+      color: var(--text3);
+      background: var(--bg2);
+    }
+    .compare-cell.bad::before { content: '✕  '; color: #5a6e84; }
+    .compare-cell.good {
+      color: var(--text);
+      background: var(--surface);
+    }
+    .compare-cell.good::before { content: '→  '; color: var(--accent); }
+
+    /* ── PROCESSO ────────────────────────────── */
+    #processo { background: var(--bg); }
+
+    .processo-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      margin-top: 64px;
+      background: var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .processo-card {
+      background: var(--bg2);
+      padding: 40px 32px;
+      transition: background .3s;
+      cursor: default;
+    }
+    .processo-card:hover { background: var(--surface); }
+
+    .processo-num {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .processo-title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 20px;
+    }
+
+    .processo-why {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .processo-why-text {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .processo-what {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 8px;
+    }
+
+    .processo-what-text {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.6;
+    }
+
+    /* ── SERVIÇOS ────────────────────────────── */
+    #servicos { background: var(--bg2); }
+
+    .servicos-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      margin-top: 64px;
+      background: var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .servico-card {
+      background: var(--bg3);
+      padding: 48px 44px;
+      position: relative;
+      transition: background .3s;
+    }
+    .servico-card:hover { background: var(--surface); }
+
+    .servico-icon {
+      width: 44px;
+      height: 44px;
+      background: rgba(201,169,110,0.1);
+      border: 1px solid rgba(201,169,110,0.2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+      font-size: 20px;
+    }
+
+    .servico-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 12px;
+    }
+
+    .servico-why {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .servico-desc {
+      font-size: 15px;
+      color: var(--text2);
+      line-height: 1.7;
+    }
+
+    /* ── AUDIOVISUAL ─────────────────────────── */
+    #audiovisual {
+      background: #f0ebe0;
+      color: #0d0f0a;
+    }
+    #audiovisual .section-label { color: #8a6e3a; }
+    #audiovisual .section-title { color: #0d0f0a; }
+    #audiovisual .section-title em { color: #8a6e3a; }
+    #audiovisual .section-desc { color: #4a4035; }
+
+    .av-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: #8a6e3a;
+      background: rgba(138,110,58,0.12);
+      border: 1px solid rgba(138,110,58,0.25);
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 48px;
+    }
+
+    .av-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      margin-top: 56px;
+      background: rgba(138,110,58,0.15);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .av-card {
+      background: #f8f4ec;
+      padding: 40px 32px;
+      transition: background .3s;
+    }
+    .av-card:hover { background: #fff; }
+
+    .av-icon {
+      font-size: 32px;
+      margin-bottom: 20px;
+      line-height: 1;
+    }
+
+    .av-card-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #0d0f0a;
+      margin-bottom: 12px;
+    }
+
+    .av-card-desc {
+      font-size: 14px;
+      color: #5a5040;
+      line-height: 1.7;
+    }
+
+    .av-statement {
+      margin-top: 56px;
+      padding: 48px;
+      background: #0d0f0a;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .av-statement-text {
+      font-size: clamp(20px, 2.5vw, 28px);
+      font-weight: 800;
+      color: #f0ebe0;
+      line-height: 1.25;
+      max-width: 600px;
+    }
+    .av-statement-text em { font-style: normal; color: var(--accent); }
+
+    .av-statement-cta {
+      flex-shrink: 0;
+      background: var(--accent);
+      color: #0d0f0a;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 16px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background .2s, transform .2s;
+    }
+    .av-statement-cta:hover { background: var(--accent2); transform: translateY(-2px); }
+
+    /* ── CLIENTES ───────────────────────────── */
+    #clientes {
+      background: #f0ebe0;
+      padding: 80px 0;
+      overflow: hidden;
+    }
+
+    .clientes-header {
+      text-align: center;
+      padding: 0 24px 56px;
+    }
+
+    .clientes-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: #8a6e3a;
+      margin-bottom: 14px;
+    }
+
+    .clientes-title {
+      font-size: clamp(26px, 3.5vw, 40px);
+      font-weight: 900;
+      color: #0d0f0a;
+      letter-spacing: -.025em;
+      line-height: 1.1;
+    }
+    .clientes-title em { font-style: normal; color: #8a6e3a; }
+
+    .clientes-count {
+      margin-top: 12px;
+      font-size: 15px;
+      color: #5a5040;
+    }
+    .clientes-count strong { color: #0d0f0a; font-weight: 800; }
+
+    .marquee-wrapper {
+      position: relative;
+    }
+    .marquee-wrapper::before,
+    .marquee-wrapper::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 160px;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .marquee-wrapper::before {
+      left: 0;
+      background: linear-gradient(to right, #f0ebe0, transparent);
+    }
+    .marquee-wrapper::after {
+      right: 0;
+      background: linear-gradient(to left, #f0ebe0, transparent);
+    }
+
+    .marquee-track {
+      display: flex;
+      gap: 16px;
+      width: max-content;
+      animation: marquee 50s linear infinite;
+      margin-bottom: 16px;
+    }
+    .marquee-track.reverse {
+      animation: marquee-reverse 55s linear infinite;
+    }
+    .marquee-track:hover { animation-play-state: paused; }
+
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    @keyframes marquee-reverse {
+      from { transform: translateX(-50%); }
+      to   { transform: translateX(0); }
+    }
+
+    .logo-pill {
+      flex-shrink: 0;
+      background: #fff;
+      border: 1px solid rgba(138,110,58,0.15);
+      border-radius: 12px;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 160px;
+      height: 72px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .logo-pill:hover {
+      border-color: rgba(138,110,58,0.4);
+      box-shadow: 0 4px 20px rgba(138,110,58,0.12);
+    }
+
+    .logo-pill img {
+      max-height: 36px;
+      max-width: 120px;
+      object-fit: contain;
+      filter: grayscale(100%);
+      opacity: .6;
+      transition: filter .2s, opacity .2s;
+    }
+    .logo-pill:hover img { filter: grayscale(0%); opacity: 1; }
+
+    /* fallback texto quando não tem imagem */
+    .logo-pill span {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: #5a5040;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    /* ── DIFERENCIAIS ────────────────────────── */
+    #diferenciais { background: var(--bg); }
+
+    .diferenciais-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      margin-top: 64px;
+      background: var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .diferencial-card {
+      background: var(--bg2);
+      padding: 44px 36px;
+      transition: background .3s;
+    }
+    .diferencial-card:hover { background: var(--surface); }
+
+    .diferencial-num {
+      font-size: 42px;
+      font-weight: 900;
+      color: rgba(201,169,110,0.55);
+      letter-spacing: -.04em;
+      margin-bottom: 20px;
+      line-height: 1;
+    }
+
+    .diferencial-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 14px;
+      line-height: 1.3;
+    }
+
+    .diferencial-desc {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.7;
+    }
+
+    /* ── PARA QUEM ───────────────────────────── */
+    #paraquem { background: var(--bg2); }
+
+    .paraquem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      margin-top: 64px;
+      background: var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .paraquem-col {
+      background: var(--bg3);
+      padding: 48px 44px;
+    }
+
+    .paraquem-col-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      margin-bottom: 36px;
+    }
+    .paraquem-col-title.yes { color: var(--accent); }
+    .paraquem-col-title.no { color: var(--text3); }
+
+    .paraquem-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .paraquem-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 15px;
+      line-height: 1.55;
+    }
+    .paraquem-item.yes { color: var(--text); }
+    .paraquem-item.no { color: var(--text3); }
+
+    .paraquem-icon {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+    .paraquem-icon.yes { background: rgba(201,169,110,0.15); color: var(--accent); }
+    .paraquem-icon.no { background: rgba(90,110,132,0.15); color: var(--text3); }
+
+    /* ── CTA ─────────────────────────────────── */
+    #contato {
+      background: var(--bg);
+      text-align: center;
+    }
+
+    .cta-box {
+      max-width: 760px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 80px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      top: -100px; left: 50%;
+      transform: translateX(-50%);
+      width: 500px; height: 300px;
+      background: radial-gradient(ellipse, rgba(201,169,110,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-title {
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 900;
+      letter-spacing: -.03em;
+      line-height: 1.1;
+      color: var(--white);
+      margin-bottom: 20px;
+    }
+    .cta-title em { font-style: normal; color: var(--accent); }
+
+    .cta-desc {
+      font-size: 17px;
+      color: var(--text2);
+      line-height: 1.65;
+      margin-bottom: 48px;
+    }
+
+    .cta-contacts {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .cta-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 32px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 600;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .cta-link:hover { transform: translateY(-2px); }
+
+    .cta-link.whatsapp {
+      background: var(--accent);
+      color: #080c10;
+      box-shadow: 0 0 30px rgba(201,169,110,0.2);
+    }
+    .cta-link.whatsapp:hover { box-shadow: 0 0 50px rgba(201,169,110,0.35); }
+
+    .cta-link.instagram {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .cta-link.instagram:hover { border-color: rgba(255,255,255,0.15); }
+
+    .cta-note {
+      margin-top: 28px;
+      font-size: 13px;
+      color: var(--text3);
+    }
+
+    /* ── FOOTER ──────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 24px;
+      background: var(--bg);
+    }
+
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-logo {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--white);
+    }
+    .footer-logo span { color: var(--accent); }
+
+    .footer-tagline {
+      font-size: 13px;
+      color: var(--text3);
+    }
+
+    .footer-copy {
+      font-size: 13px;
+      color: var(--text3);
+    }
+
+    /* ── ANIMATIONS ──────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── RESPONSIVE ──────────────────────────── */
+    @media (max-width: 900px) {
+      nav { padding: 0 20px; }
+      .nav-links, .nav-cta { display: none; }
+      .nav-hamburger { display: flex; }
+
+      .principio-grid { grid-template-columns: 1fr; gap: 48px; }
+      .processo-grid { grid-template-columns: 1fr 1fr; }
+      .servicos-grid { grid-template-columns: 1fr; }
+      .diferenciais-grid { grid-template-columns: 1fr 1fr; }
+      .paraquem-grid { grid-template-columns: 1fr; }
+      .cta-box { padding: 48px 28px; }
+
+      .hero-metrics { gap: 32px; }
+      .metric-divider { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      section { padding: 72px 20px; }
+      .processo-grid { grid-template-columns: 1fr; }
+      .diferenciais-grid { grid-template-columns: 1fr; }
+      .servico-card, .paraquem-col { padding: 36px 28px; }
+      .nav-cta-mobile { display: block; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="navbar">
+    <div class="nav-logo">Gabriel Moraes <span>&</span> Co</div>
+    <ul class="nav-links">
+      <li><a href="#principio">Princípio</a></li>
+      <li><a href="#processo">Processo</a></li>
+      <li><a href="#servicos">Serviços</a></li>
+      <li><a href="#diferenciais">Diferenciais</a></li>
+      <li><a href="#paraquem">Para quem</a></li>
+    </ul>
+    <a href="#contato" class="nav-cta">Conversar</a>
+    <div class="nav-hamburger" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-grid-bg"></div>
+    <div class="hero-glow"></div>
+
+    <div class="hero-label">Negócios & Pessoas · Marketing que faz a diferença</div>
+
+    <h1 class="hero-h1">
+      Nada do que fazemos<br />existe <em>por acaso.</em>
+    </h1>
+
+    <p class="hero-sub">
+      Cada ação que entregamos tem um porquê estratégico claro.
+      Marketing que aparece no seu faturamento — não só no engajamento.
+    </p>
+
+    <div class="hero-actions">
+      <a href="#contato" class="btn-primary">Começar uma conversa</a>
+      <a href="#processo" class="btn-ghost">Como trabalhamos</a>
+    </div>
+
+    <div class="hero-metrics">
+      <div class="metric">
+        <div class="metric-value"><span>4</span> etapas</div>
+        <div class="metric-label">Processo estruturado</div>
+      </div>
+      <div class="metric-divider"></div>
+      <div class="metric">
+        <div class="metric-value"><span>100%</span></div>
+        <div class="metric-label">Intenção antes de execução</div>
+      </div>
+      <div class="metric-divider"></div>
+      <div class="metric">
+        <div class="metric-value"><span>Semanal</span></div>
+        <div class="metric-label">Ciclos de revisão e ajuste</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRINCÍPIO -->
+  <section id="principio">
+    <div class="container">
+      <div class="principio-grid reveal">
+        <div>
+          <div class="section-label">O princípio que guia tudo</div>
+          <blockquote class="principio-quote">
+            A maioria das empresas faz ações.<br />Nós construímos <em style="font-style:normal; color:var(--accent)">sistemas.</em>
+          </blockquote>
+          <p class="section-desc" style="margin-top:32px;">
+            Processo sem propósito é só custo. Propósito sem processo é só intenção.
+            A diferença está em integrar os dois — toda semana, sem exceção.
+          </p>
+        </div>
+
+        <div class="compare-table">
+          <div class="compare-row compare-header">
+            <div class="compare-cell">Sem propósito</div>
+            <div class="compare-cell">Com processos com propósito</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-cell bad">Posts publicados para 'não ficar parado'</div>
+            <div class="compare-cell good">Cada conteúdo tem objetivo e intenção</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-cell bad">Vídeos bonitos que não convertem</div>
+            <div class="compare-cell good">Vídeo, copy e estratégia integrados</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-cell bad">Métricas que ninguém sabe interpretar</div>
+            <div class="compare-cell good">Métricas ligadas a metas de negócio</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-cell bad">Ações desconectadas da estratégia</div>
+            <div class="compare-cell good">Reunião semanal para alinhar direção</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-cell bad">Resultado que não aparece no faturamento</div>
+            <div class="compare-cell good">Marketing que aparece no faturamento</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCESSO -->
+  <section id="processo">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label">Nossa estrutura de trabalho</div>
+        <h2 class="section-title">4 processos.<br />Cada um com um <em>porquê.</em></h2>
+      </div>
+
+      <div class="processo-grid reveal" style="transition-delay:.1s">
+        <div class="processo-card">
+          <div class="processo-num">01</div>
+          <div class="processo-title">Diagnóstico</div>
+          <div class="processo-why">Por quê</div>
+          <p class="processo-why-text">Sem entender onde você está, qualquer ação é chute.</p>
+          <div class="processo-what">O quê</div>
+          <p class="processo-what-text">Mapeamos mercado, concorrência, posicionamento e metas reais de crescimento.</p>
+        </div>
+
+        <div class="processo-card">
+          <div class="processo-num">02</div>
+          <div class="processo-title">Estratégia</div>
+          <div class="processo-why">Por quê</div>
+          <p class="processo-why-text">Toda semana tem uma direção clara — não improvisamos.</p>
+          <div class="processo-what">O quê</div>
+          <p class="processo-what-text">Planejamento editorial, objetivos por canal e conexão direta com suas metas comerciais.</p>
+        </div>
+
+        <div class="processo-card">
+          <div class="processo-num">03</div>
+          <div class="processo-title">Execução</div>
+          <div class="processo-why">Por quê</div>
+          <p class="processo-why-text">Consistência gera autoridade. Autoridade gera vendas.</p>
+          <div class="processo-what">O quê</div>
+          <p class="processo-what-text">Captação de vídeo, edição, design e publicação com qualidade e cadência.</p>
+        </div>
+
+        <div class="processo-card">
+          <div class="processo-num">04</div>
+          <div class="processo-title">Análise</div>
+          <div class="processo-why">Por quê</div>
+          <p class="processo-why-text">O que não é medido não é gerenciado — e não melhora.</p>
+          <div class="processo-what">O quê</div>
+          <p class="processo-what-text">Reunião semanal com revisão de métricas, aprendizados e próximo ciclo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVIÇOS -->
+  <section id="servicos">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label">Por dentro de cada entrega</div>
+        <h2 class="section-title">O porquê de cada serviço<br />que <em>oferecemos.</em></h2>
+      </div>
+
+      <div class="servicos-grid reveal" style="transition-delay:.1s">
+        <div class="servico-card">
+          <div class="servico-icon">🎬</div>
+          <div class="servico-title">Captação & Vídeo</div>
+          <div class="servico-why">Por quê</div>
+          <p class="servico-desc">Vídeo é o canal de maior alcance e conversão — mas só quando tem estratégia por trás. Roteirização, captação e edição orientadas ao posicionamento da marca e à jornada do cliente.</p>
+        </div>
+
+        <div class="servico-card">
+          <div class="servico-icon">📱</div>
+          <div class="servico-title">Social Media</div>
+          <div class="servico-why">Por quê</div>
+          <p class="servico-desc">Presença sem consistência não gera autoridade. Autoridade é o que fecha contratos. Calendário editorial, copy e design alinhados à estratégia — publicados na cadência certa.</p>
+        </div>
+
+        <div class="servico-card">
+          <div class="servico-icon">📊</div>
+          <div class="servico-title">Estratégia Semanal</div>
+          <div class="servico-why">Por quê</div>
+          <p class="servico-desc">O mercado muda. A estratégia precisa acompanhar — toda semana, não todo trimestre. Reunião de 60 min: revisão de métricas, aprendizados, próximas ações e ajuste de rota.</p>
+        </div>
+
+        <div class="servico-card">
+          <div class="servico-icon">🧭</div>
+          <div class="servico-title">Consultoria Comercial</div>
+          <div class="servico-why">Por quê</div>
+          <p class="servico-desc">Marketing sem entender o negócio é desperdício. Precisamos saber onde você quer chegar. Diagnóstico completo: SWOT, posicionamento, persona, funil e metas de faturamento.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUDIOVISUAL -->
+  <section id="audiovisual">
+    <div class="container">
+      <div class="reveal">
+        <div class="av-tag">✦ Produção Audiovisual</div>
+        <div class="section-label">Criatividade em movimento</div>
+        <h2 class="section-title">Imagem que <em>vende.</em><br />Áudio que <em>impacta.</em></h2>
+        <p class="section-desc">Drone, captação criativa, áudio de alta qualidade e cobertura de eventos. Cada produção pensada para contar a história certa — do ângulo certo.</p>
+      </div>
+
+      <div class="av-grid reveal" style="transition-delay:.1s">
+        <div class="av-card">
+          <div class="av-icon">🚁</div>
+          <div class="av-card-title">Filmagem com Drone</div>
+          <p class="av-card-desc">Perspectivas aéreas que elevam a percepção da sua marca e entregam impacto visual imediato.</p>
+        </div>
+
+        <div class="av-card">
+          <div class="av-icon">🎙️</div>
+          <div class="av-card-title">Áudio de Qualidade</div>
+          <p class="av-card-desc">Captação e tratamento de áudio profissional. Porque o som comunica tanto quanto a imagem.</p>
+        </div>
+
+        <div class="av-card">
+          <div class="av-icon">🎬</div>
+          <div class="av-card-title">Captação Criativa</div>
+          <p class="av-card-desc">Enquadramentos, movimentos de câmera e direção de cena que traduzem o posicionamento da sua marca.</p>
+        </div>
+
+        <div class="av-card">
+          <div class="av-icon">🎪</div>
+          <div class="av-card-title">Cobertura de Eventos</div>
+          <p class="av-card-desc">Do lançamento ao institucional — documentamos cada momento com a narrativa que o seu negócio merece.</p>
+        </div>
+      </div>
+
+      <div class="av-statement reveal" style="transition-delay:.2s">
+        <div class="av-statement-text">
+          Produção audiovisual não é ornamento.<br />É <em>argumento de venda em movimento.</em>
+        </div>
+        <a href="https://wa.me/5547988194822?text=Vim%20atrav%C3%A9s%20do%20site%20e%20gostaria%20de%20conhecer%20o%20seu%20neg%C3%B3cio" target="_blank" rel="noopener" class="av-statement-cta">Quero uma produção</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLIENTES -->
+  <section id="clientes">
+    <div class="clientes-header reveal">
+      <div class="clientes-eyebrow">Nossa história</div>
+      <h2 class="clientes-title">Mais de <em>120 empresas</em><br />já fizeram parte dessa história.</h2>
+      <p class="clientes-count">De pequenos negócios a grandes marcas — <strong>resultados que aparecem no faturamento.</strong></p>
+    </div>
+
+    <div class="marquee-wrapper">
+      <!-- FILA 1 — esquerda -->
+      <div class="marquee-track">
+        <div class="logo-pill"><span>Schornstein</span></div>
+        <div class="logo-pill"><span>Corrêa Materiais Elétricos</span></div>
+        <div class="logo-pill"><span>Porto Valente Construtora</span></div>
+        <div class="logo-pill"><span>JDL Imóveis</span></div>
+        <div class="logo-pill"><span>Artesani</span></div>
+        <div class="logo-pill"><span>Tomato</span></div>
+        <div class="logo-pill"><span>EverFit</span></div>
+        <div class="logo-pill"><span>Zilli Engenharia</span></div>
+        <div class="logo-pill"><span>Ana Maria</span></div>
+        <div class="logo-pill"><span>Batatelle</span></div>
+        <div class="logo-pill"><span>Artwood Marcenaria</span></div>
+        <div class="logo-pill"><span>Madero</span></div>
+        <div class="logo-pill"><span>Beonn Internacional</span></div>
+        <div class="logo-pill"><span>Sá Metalúrgica</span></div>
+        <div class="logo-pill"><span>Ademicon Consórcios</span></div>
+        <div class="logo-pill"><span>Cia do Verde Floricultura</span></div>
+        <div class="logo-pill"><span>Suport Life</span></div>
+        <div class="logo-pill"><span>DecorCollors</span></div>
+        <div class="logo-pill"><span>Madrugadão</span></div>
+        <div class="logo-pill"><span>Oktobier</span></div>
+        <div class="logo-pill"><span>Casarão Decor</span></div>
+        <div class="logo-pill"><span>Schornstein</span></div>
+        <div class="logo-pill"><span>Corrêa Materiais Elétricos</span></div>
+        <div class="logo-pill"><span>Porto Valente Construtora</span></div>
+        <div class="logo-pill"><span>JDL Imóveis</span></div>
+        <div class="logo-pill"><span>Artesani</span></div>
+        <div class="logo-pill"><span>Tomato</span></div>
+        <div class="logo-pill"><span>EverFit</span></div>
+        <div class="logo-pill"><span>Zilli Engenharia</span></div>
+        <div class="logo-pill"><span>Ana Maria</span></div>
+        <div class="logo-pill"><span>Batatelle</span></div>
+        <div class="logo-pill"><span>Artwood Marcenaria</span></div>
+        <div class="logo-pill"><span>Madero</span></div>
+        <div class="logo-pill"><span>Beonn Internacional</span></div>
+        <div class="logo-pill"><span>Sá Metalúrgica</span></div>
+        <div class="logo-pill"><span>Ademicon Consórcios</span></div>
+        <div class="logo-pill"><span>Cia do Verde Floricultura</span></div>
+        <div class="logo-pill"><span>Suport Life</span></div>
+        <div class="logo-pill"><span>DecorCollors</span></div>
+        <div class="logo-pill"><span>Madrugadão</span></div>
+        <div class="logo-pill"><span>Oktobier</span></div>
+        <div class="logo-pill"><span>Casarão Decor</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- DIFERENCIAIS -->
+  <section id="diferenciais">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label">O que nos diferencia</div>
+        <h2 class="section-title">Não fazemos ações.<br />Construímos <em>movimento.</em></h2>
+      </div>
+
+      <div class="diferenciais-grid reveal" style="transition-delay:.1s">
+        <div class="diferencial-card">
+          <div class="diferencial-num">01</div>
+          <div class="diferencial-title">Intenção antes de execução</div>
+          <p class="diferencial-desc">Antes de gravar, postar ou veicular qualquer coisa, definimos o objetivo daquela ação — e o resultado esperado.</p>
+        </div>
+
+        <div class="diferencial-card">
+          <div class="diferencial-num">02</div>
+          <div class="diferencial-title">Tudo conectado</div>
+          <p class="diferencial-desc">Vídeo, social media e estratégia não são produtos separados. São partes de um sistema que funciona junto.</p>
+        </div>
+
+        <div class="diferencial-card">
+          <div class="diferencial-num">03</div>
+          <div class="diferencial-title">Cadência que gera resultado</div>
+          <p class="diferencial-desc">Trabalhamos com ciclos semanais. Planejamos, executamos, medimos e ajustamos — toda semana, sem exceção.</p>
+        </div>
+
+        <div class="diferencial-card">
+          <div class="diferencial-num">04</div>
+          <div class="diferencial-title">Parceria, não fornecimento</div>
+          <p class="diferencial-desc">Você tem acesso direto, reunião semanal e visibilidade total sobre o que está sendo feito e por quê.</p>
+        </div>
+
+        <div class="diferencial-card">
+          <div class="diferencial-num">05</div>
+          <div class="diferencial-title">Foco em faturamento</div>
+          <p class="diferencial-desc">Não entregamos relatórios bonitos. Entregamos ações que impactam sua receita — e medimos isso com você.</p>
+        </div>
+
+        <div class="diferencial-card">
+          <div class="diferencial-num">06</div>
+          <div class="diferencial-title">Selecionamos com quem trabalhamos</div>
+          <p class="diferencial-desc">Não atendemos qualquer empresa. Trabalhamos com quem quer crescer — e está comprometido com o processo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARA QUEM -->
+  <section id="paraquem">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label">Para quem esse trabalho faz sentido</div>
+        <h2 class="section-title">Processo com propósito exige<br /><em>comprometimento</em> dos dois lados.</h2>
+      </div>
+
+      <div class="paraquem-grid reveal" style="transition-delay:.1s">
+        <div class="paraquem-col">
+          <div class="paraquem-col-title yes">✓ &nbsp;Esse trabalho é para você se...</div>
+          <ul class="paraquem-list">
+            <li class="paraquem-item yes">
+              <div class="paraquem-icon yes">→</div>
+              Sua empresa fatura e quer escalar com consistência
+            </li>
+            <li class="paraquem-item yes">
+              <div class="paraquem-icon yes">→</div>
+              Você entende que marketing é processo, não evento
+            </li>
+            <li class="paraquem-item yes">
+              <div class="paraquem-icon yes">→</div>
+              Está aberto a ser questionado estrategicamente
+            </li>
+            <li class="paraquem-item yes">
+              <div class="paraquem-icon yes">→</div>
+              Quer um parceiro que entenda de negócio, não só de post
+            </li>
+            <li class="paraquem-item yes">
+              <div class="paraquem-icon yes">→</div>
+              Busca resultado no faturamento, não só no engajamento
+            </li>
+          </ul>
+        </div>
+
+        <div class="paraquem-col" style="background: var(--bg2);">
+          <div class="paraquem-col-title no">✕ &nbsp;Não trabalhamos se...</div>
+          <ul class="paraquem-list">
+            <li class="paraquem-item no">
+              <div class="paraquem-icon no">✕</div>
+              Quer presença digital só para 'existir no mercado'
+            </li>
+            <li class="paraquem-item no">
+              <div class="paraquem-icon no">✕</div>
+              Não tem disposição para acompanhar o processo
+            </li>
+            <li class="paraquem-item no">
+              <div class="paraquem-icon no">✕</div>
+              Enxerga marketing como custo a minimizar
+            </li>
+            <li class="paraquem-item no">
+              <div class="paraquem-icon no">✕</div>
+              Quer resultado imediato sem construção estratégica
+            </li>
+            <li class="paraquem-item no">
+              <div class="paraquem-icon no">✕</div>
+              Não valoriza reuniões de alinhamento e análise
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA / CONTATO -->
+  <section id="contato">
+    <div class="container">
+      <div class="cta-box reveal">
+        <div class="section-label" style="margin-bottom:16px">O próximo passo</div>
+        <h2 class="cta-title">
+          Toda grande transformação<br />começa com uma <em>conversa.</em>
+        </h2>
+        <p class="cta-desc">
+          Sem compromisso. Apenas uma conversa honesta sobre onde você está
+          e onde quer chegar.
+        </p>
+        <div class="cta-contacts">
+          <a href="https://wa.me/5547988194822?text=Vim%20atrav%C3%A9s%20do%20site%20e%20gostaria%20de%20conhecer%20o%20seu%20neg%C3%B3cio" target="_blank" rel="noopener" class="cta-link whatsapp">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            (47) 98819-4822
+          </a>
+          <a href="https://instagram.com/gabrieldsm.mkt" target="_blank" rel="noopener" class="cta-link instagram">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            @gabrieldsm.mkt
+          </a>
+        </div>
+        <p class="cta-note">Gabriel Moraes & Co · Negócios & Pessoas · Marketing que faz a diferença</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">Gabriel Moraes <span>&</span> Co</div>
+      <div class="footer-tagline">Negócios & Pessoas · Marketing que faz a diferença</div>
+      <div class="footer-copy">© 2025 Gabriel Moraes & Co</div>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
+
+    // Nav scroll effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.style.background = window.scrollY > 40
+        ? 'rgba(8,12,16,0.97)'
+        : 'rgba(8,12,16,0.85)';
+    });
+
+    // Mobile menu
+    function toggleMenu() {
+      const links = document.querySelector('.nav-links');
+      const cta = document.querySelector('.nav-cta');
+      if (links) {
+        const open = links.style.display === 'flex';
+        links.style.cssText = open ? '' : 'display:flex;flex-direction:column;position:fixed;top:72px;left:0;right:0;background:rgba(8,12,16,0.98);padding:24px;gap:20px;border-bottom:1px solid rgba(255,255,255,0.07)';
+        if (cta) cta.style.display = open ? '' : 'block';
+      }
+    }
+  </script>
+</body>
+</html>
