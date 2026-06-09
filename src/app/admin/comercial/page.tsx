@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, useMemo, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { supabase } from '@/lib/supabase'
 import { api } from '@/lib/api'
@@ -9,6 +9,26 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import { AdminNav } from '@/components/AdminNav'
+import type { Proposta, PropostaStatus } from '@/types'
+import { PROPOSTA_STATUS_LABELS } from '@/types'
+
+type AbaComercial = 'pipeline' | 'propostas'
+
+const PROPOSTA_STATUS_DOTS: Record<PropostaStatus, string> = {
+  rascunho: 'bg-slate-400',
+  enviada: 'bg-blue-500',
+  aceita: 'bg-green-500',
+  recusada: 'bg-red-500',
+  expirada: 'bg-amber-500',
+}
+
+const PROPOSTA_STATUS_BG: Record<PropostaStatus, string> = {
+  rascunho: 'bg-slate-100 text-slate-600',
+  enviada: 'bg-blue-100 text-blue-700',
+  aceita: 'bg-green-100 text-green-700',
+  recusada: 'bg-red-100 text-red-700',
+  expirada: 'bg-amber-100 text-amber-700',
+}
 
 export type LeadStatus = 'contato' | 'proposta' | 'negociacao' | 'fechado' | 'perdido'
 export type LeadCanal = 'whatsapp' | 'pessoal' | 'indicacao' | 'outro'
@@ -111,23 +131,38 @@ function LeadCard({ lead, index }: { lead: Lead; index: number }) {
   )
 }
 
-export default function ComercialPage() {
+function ComercialContent() {
   const [leads, setLeads] = useState<Lead[]>([])
+  const [propostas, setPropostas] = useState<Proposta[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState<NovoLeadForm>({ nome: '', empresa: '', telefone: '', canal: 'pessoal', valor_estimado: '' })
+  const [filterStatus, setFilterStatus] = useState<PropostaStatus | 'todas'>('todas')
   const router = useRouter()
+  const search = useSearchParams()
+  const aba: AbaComercial = (search.get('tab') === 'propostas' ? 'propostas' : 'pipeline')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) router.push('/admin/login')
     })
-    api('/api/leads').then(r => r.json()).then(data => {
-      setLeads(data)
+    Promise.all([
+      api('/api/leads').then(r => r.json()),
+      api('/api/propostas').then(r => r.json()),
+    ]).then(([ls, ps]) => {
+      setLeads(ls)
+      setPropostas(ps)
       setLoading(false)
     })
   }, [router])
+
+  function setAba(novo: AbaComercial) {
+    const params = new URLSearchParams(search.toString())
+    if (novo === 'propostas') params.set('tab', 'propostas')
+    else params.delete('tab')
+    router.replace(`/admin/comercial${params.toString() ? '?' + params.toString() : ''}`)
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -182,69 +217,130 @@ export default function ComercialPage() {
     .filter(l => l.status !== 'perdido' && l.valor_estimado)
     .reduce((s, l) => s + (l.valor_estimado ?? 0), 0)
 
+  const propostasPipeline = propostas.filter(p => p.status === 'enviada' && p.valor).reduce((s, p) => s + Number(p.valor), 0)
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <AdminNav onLogout={handleLogout} extra={
-        <button
-          onClick={() => setShowForm(true)}
-          className="text-sm font-medium px-3 py-1.5 rounded-lg bg-[#C5A880] text-white hover:bg-[#b39470] transition-colors"
-        >
-          + Novo Lead
-        </button>
+        aba === 'pipeline' ? (
+          <button
+            onClick={() => setShowForm(true)}
+            className="text-sm font-medium px-3 py-1.5 rounded-lg bg-[#C5A880] text-white hover:bg-[#b39470] transition-colors"
+          >
+            + Novo Lead
+          </button>
+        ) : (
+          <button
+            onClick={() => router.push('/admin/proposta/nova')}
+            className="text-sm font-medium px-3 py-1.5 rounded-lg bg-[#C5A880] text-white hover:bg-[#b39470] transition-colors"
+          >
+            + Nova Proposta
+          </button>
+        )
       } />
+
+      {/* TABS */}
+      <div className="px-4 md:px-6 pt-3 md:pt-4 pb-0 border-b border-slate-100">
+        <div className="flex gap-1">
+          <button
+            onClick={() => setAba('pipeline')}
+            className={clsx(
+              'px-4 md:px-5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+              aba === 'pipeline' ? 'text-slate-900 border-[#C5A880]' : 'text-slate-400 border-transparent hover:text-slate-600'
+            )}
+          >
+            Pipeline
+            <span className="ml-2 text-[10px] tabular-nums">{leads.filter(l => l.status !== 'perdido' && !l.convertido_em).length}</span>
+          </button>
+          <button
+            onClick={() => setAba('propostas')}
+            className={clsx(
+              'px-4 md:px-5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+              aba === 'propostas' ? 'text-slate-900 border-[#C5A880]' : 'text-slate-400 border-transparent hover:text-slate-600'
+            )}
+          >
+            Propostas
+            <span className="ml-2 text-[10px] tabular-nums">{propostas.length}</span>
+          </button>
+        </div>
+      </div>
 
       {/* Pipeline value bar */}
       <div className="px-4 md:px-6 py-2.5 md:py-3 border-b border-slate-100 flex items-center gap-4 md:gap-6 flex-wrap">
-        <p className="text-[11px] md:text-xs text-slate-400">
-          Pipeline: <span className="font-semibold text-slate-700">{formatBRL(totalEstimado)}</span>
-        </p>
-        <p className="text-[11px] md:text-xs text-slate-400">
-          {leads.filter(l => l.status !== 'perdido' && !l.convertido_em).length} leads ativos
-        </p>
+        {aba === 'pipeline' ? (
+          <>
+            <p className="text-[11px] md:text-xs text-slate-400">
+              Pipeline: <span className="font-semibold text-slate-700">{formatBRL(totalEstimado)}</span>
+            </p>
+            <p className="text-[11px] md:text-xs text-slate-400">
+              {leads.filter(l => l.status !== 'perdido' && !l.convertido_em).length} leads ativos
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-[11px] md:text-xs text-slate-400">
+              Em negociação: <span className="font-semibold text-amber-600">{formatBRL(propostasPipeline)}</span>
+            </p>
+            <p className="text-[11px] md:text-xs text-slate-400">
+              {propostas.filter(p => p.status === 'aceita').length} aceitas · {propostas.filter(p => p.status === 'enviada').length} enviadas
+            </p>
+          </>
+        )}
       </div>
 
-      <div className="flex-1 overflow-x-auto p-4 md:p-6">
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex gap-3 md:gap-4 min-w-max">
-            {COLUMNS.map(col => {
-              const colLeads = leads.filter(l => l.status === col.id)
-              return (
-                <div key={col.id} className="w-64 md:w-72 flex flex-col">
-                  <div className={clsx('flex items-center justify-between px-3 py-2 rounded-xl mb-3', col.bg)}>
-                    <span className={clsx('text-sm font-semibold', col.color)}>{col.label}</span>
-                    <span className={clsx('text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center bg-white', col.color)}>
-                      {colLeads.length}
-                    </span>
+      {/* CONTEÚDO POR ABA */}
+      {aba === 'pipeline' ? (
+        <div className="flex-1 overflow-x-auto p-4 md:p-6">
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="flex gap-3 md:gap-4 min-w-max">
+              {COLUMNS.map(col => {
+                const colLeads = leads.filter(l => l.status === col.id)
+                return (
+                  <div key={col.id} className="w-64 md:w-72 flex flex-col">
+                    <div className={clsx('flex items-center justify-between px-3 py-2 rounded-xl mb-3', col.bg)}>
+                      <span className={clsx('text-sm font-semibold', col.color)}>{col.label}</span>
+                      <span className={clsx('text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center bg-white', col.color)}>
+                        {colLeads.length}
+                      </span>
+                    </div>
+
+                    <Droppable droppableId={col.id}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={clsx(
+                            'flex-1 space-y-3 min-h-[200px] rounded-2xl p-2 transition-colors',
+                            snapshot.isDraggingOver && 'bg-indigo-50/50'
+                          )}
+                        >
+                          {colLeads.map((lead, i) => (
+                            <LeadCard key={lead.id} lead={lead} index={i} />
+                          ))}
+                          {provided.placeholder}
+                          {colLeads.length === 0 && !snapshot.isDraggingOver && (
+                            <div className="flex items-center justify-center h-24 text-slate-300 text-xs border-2 border-dashed border-slate-200 rounded-xl">
+                              Nenhum lead
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </Droppable>
                   </div>
-
-                  <Droppable droppableId={col.id}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={clsx(
-                          'flex-1 space-y-3 min-h-[200px] rounded-2xl p-2 transition-colors',
-                          snapshot.isDraggingOver && 'bg-indigo-50/50'
-                        )}
-                      >
-                        {colLeads.map((lead, i) => (
-                          <LeadCard key={lead.id} lead={lead} index={i} />
-                        ))}
-                        {provided.placeholder}
-                        {colLeads.length === 0 && !snapshot.isDraggingOver && (
-                          <div className="flex items-center justify-center h-24 text-slate-300 text-xs border-2 border-dashed border-slate-200 rounded-xl">
-                            Nenhum lead
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
-              )
-            })}
-          </div>
-        </DragDropContext>
-      </div>
+                )
+              })}
+            </div>
+          </DragDropContext>
+        </div>
+      ) : (
+        <PropostasView
+          propostas={propostas}
+          filterStatus={filterStatus}
+          setFilterStatus={setFilterStatus}
+          onOpen={(id) => router.push(`/admin/proposta/${id}`)}
+          onNova={() => router.push('/admin/proposta/nova')}
+        />
+      )}
 
       {/* Modal novo lead */}
       {showForm && (
@@ -331,5 +427,104 @@ export default function ComercialPage() {
         </div>
       )}
     </div>
+  )
+}
+
+// ===== Lista de Propostas (aba interna) =====
+function PropostasView({
+  propostas, filterStatus, setFilterStatus, onOpen, onNova,
+}: {
+  propostas: Proposta[]
+  filterStatus: PropostaStatus | 'todas'
+  setFilterStatus: (s: PropostaStatus | 'todas') => void
+  onOpen: (id: string) => void
+  onNova: () => void
+}) {
+  const filtered = useMemo(() => {
+    if (filterStatus === 'todas') return propostas
+    return propostas.filter(p => p.status === filterStatus)
+  }, [propostas, filterStatus])
+
+  return (
+    <div className="flex-1 p-4 md:p-6 space-y-4 max-w-5xl mx-auto w-full">
+      {/* Filtros */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <button
+          onClick={() => setFilterStatus('todas')}
+          className={clsx('text-xs px-3 py-1.5 rounded-lg font-medium', filterStatus === 'todas' ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600')}
+        >
+          Todas ({propostas.length})
+        </button>
+        {(['rascunho', 'enviada', 'aceita', 'recusada', 'expirada'] as PropostaStatus[]).map(s => (
+          <button
+            key={s}
+            onClick={() => setFilterStatus(s)}
+            className={clsx('text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5', filterStatus === s ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600')}
+          >
+            <span className={clsx('w-1.5 h-1.5 rounded-full', PROPOSTA_STATUS_DOTS[s])} />
+            {PROPOSTA_STATUS_LABELS[s]} ({propostas.filter(p => p.status === s).length})
+          </button>
+        ))}
+      </div>
+
+      {/* Lista */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        {filtered.length === 0 ? (
+          <div className="px-6 py-12 text-center">
+            <p className="text-sm text-slate-400">
+              Nenhuma proposta {filterStatus !== 'todas' ? PROPOSTA_STATUS_LABELS[filterStatus].toLowerCase() : ''}.
+            </p>
+            <button
+              onClick={onNova}
+              className="text-xs mt-3 px-3 py-1.5 rounded-lg text-white"
+              style={{ background: '#C5A880' }}
+            >
+              + Criar primeira proposta
+            </button>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {filtered.map(p => (
+              <button
+                key={p.id}
+                onClick={() => onOpen(p.id)}
+                className="w-full text-left px-4 md:px-6 py-3 md:py-4 hover:bg-slate-50 transition-colors flex items-center gap-3 md:gap-4"
+              >
+                <span className={clsx('w-1 self-stretch rounded-full flex-shrink-0', PROPOSTA_STATUS_DOTS[p.status])} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <p className="text-sm font-semibold text-slate-800 truncate">{p.titulo}</p>
+                    <span className={clsx('text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full', PROPOSTA_STATUS_BG[p.status])}>
+                      {PROPOSTA_STATUS_LABELS[p.status]}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 flex-wrap">
+                    <span>{p.cliente_nome}{p.cliente_empresa ? ` · ${p.cliente_empresa}` : ''}</span>
+                    <span className="text-slate-300">·</span>
+                    <span className="capitalize">{p.modalidade}</span>
+                    <span className="text-slate-300">·</span>
+                    <span>{format(new Date(p.created_at), "d 'de' MMM yyyy", { locale: ptBR })}</span>
+                  </div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-sm font-bold text-slate-800 tabular-nums">
+                    {p.valor != null ? formatBRL(Number(p.valor)) : '—'}
+                  </p>
+                  <p className="text-[10px] text-slate-400">{p.modalidade === 'mensal' ? '/mês' : 'total'}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default function ComercialPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-400 text-sm">Carregando...</div>}>
+      <ComercialContent />
+    </Suspense>
   )
 }
