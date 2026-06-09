@@ -133,10 +133,14 @@ export default function ClientesPage() {
 
     // === Clientes fixos ativos ===
     clientesFixos.filter(c => c.ativo).forEach(cf => {
-      const tks = ticketsPeriodo.filter(t =>
-        t.cliente_fixo_id === cf.id ||
-        (t.is_fixed_client && t.client_name?.toLowerCase().trim() === cf.nome?.toLowerCase().trim())
-      )
+      const cfNome = cf.nome?.toLowerCase().trim()
+      const tks = ticketsPeriodo.filter(t => {
+        if (t.cliente_fixo_id === cf.id) return true
+        if (!t.is_fixed_client || !cfNome) return false
+        const cn = t.client_name?.toLowerCase().trim()
+        const co = t.company?.toLowerCase().trim()
+        return cn === cfNome || co === cfNome
+      })
       // Tempo = TODO o apontado nos tickets criados no período (independente de quando apontou)
       const min = tks.reduce((s, t) => s + (minutosPorTicket.get(t.id) ?? 0), 0)
       // Receita = valor_mensal × meses ativos no período

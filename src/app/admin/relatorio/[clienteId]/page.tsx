@@ -178,11 +178,17 @@ export default function RelatorioPage() {
   )
 
   const entregas = useMemo(() => {
+    const cfNome = cliente?.nome?.toLowerCase().trim()
     return tickets.filter(t => {
       const created = new Date(t.created_at)
       const inMonth = created >= monthStart && created <= monthEnd
+      // Pertence se:
+      // (a) tem cliente_fixo_id explícito apontando pra este cliente, OU
+      // (b) é demanda de cliente fixo E o nome do cliente bate com client_name OU company
+      const cn = t.client_name?.toLowerCase().trim()
+      const co = t.company?.toLowerCase().trim()
       const pertence = t.cliente_fixo_id === clienteId
-        || (t.is_fixed_client && cliente && t.client_name?.toLowerCase().trim() === cliente.nome?.toLowerCase().trim())
+        || (t.is_fixed_client && cfNome != null && (cn === cfNome || co === cfNome))
       return inMonth && pertence
     }).sort((x, y) => new Date(x.created_at).getTime() - new Date(y.created_at).getTime())
   }, [tickets, cliente, clienteId, monthStart, monthEnd])
