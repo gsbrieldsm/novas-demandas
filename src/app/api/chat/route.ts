@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { SYSTEM_PROMPT } from '@/lib/system-prompt'
 import { getServiceClient } from '@/lib/supabase'
-import { sendNewTicketEmail } from '@/lib/email'
+import { sendNewTicketEmail, sendClientTicketCreated } from '@/lib/email'
 import type { ChatMessage, BriefingData } from '@/types'
 
 const anthropic = new Anthropic({
@@ -54,8 +54,17 @@ export async function POST(req: Request) {
             if (data) {
               const ticketIdMarker = `\n[TICKET_ID:${data.id}]`
               controller.enqueue(new TextEncoder().encode(ticketIdMarker))
-              // Notificação por email (fire-and-forget)
+              // Notificação interna pro Gabriel (fire-and-forget)
               sendNewTicketEmail(data).catch(err => console.error('email error:', err))
+              // Confirmação pro cliente (fire-and-forget)
+              if (data.client_email) {
+                sendClientTicketCreated({
+                  ticketId: data.id,
+                  clientName: data.client_name,
+                  clientEmail: data.client_email,
+                  ticketTitle: data.title,
+                }).catch(err => console.error('email cliente error:', err))
+              }
             }
           } catch (e) {
             console.error('Erro ao criar ticket:', e)
