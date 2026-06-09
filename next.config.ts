@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
     return [
       // Site institucional (estático) na raiz
       { source: '/', destination: '/site.html' },
+      // Landing exclusiva de captação audiovisual
+      { source: '/captacao', destination: '/captacao.html' },
     ]
   },
 }
