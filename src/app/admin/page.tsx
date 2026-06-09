@@ -56,9 +56,6 @@ export default function GestaoPage() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [meta, setMeta] = useState<Meta>({ mes: 0, ano: 0, meta_fixo: 0, meta_avulso: 0 })
   const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ nome: '', email: '', valor_mensal: '', dia_vencimento: '' })
-  const [saving, setSaving] = useState(false)
   const [editingMeta, setEditingMeta] = useState<'fixo' | 'avulso' | null>(null)
   const [metaInput, setMetaInput] = useState('')
   const router = useRouter()
@@ -92,26 +89,6 @@ export default function GestaoPage() {
     router.push('/admin/login')
   }
 
-  async function addCliente() {
-    if (!form.nome || !form.valor_mensal) return
-    setSaving(true)
-    const res = await api('/api/clientes-fixos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nome: form.nome,
-        email: form.email || null,
-        valor_mensal: Number(form.valor_mensal),
-        dia_vencimento: form.dia_vencimento ? Number(form.dia_vencimento) : null,
-        ativo: true,
-      }),
-    })
-    const novo = await res.json()
-    setClientes(prev => [...prev, novo])
-    setForm({ nome: '', email: '', valor_mensal: '', dia_vencimento: '' })
-    setShowForm(false)
-    setSaving(false)
-  }
 
   async function toggleAtivo(c: ClienteFixo) {
     setClientes(prev => prev.map(x => x.id === c.id ? { ...x, ativo: !c.ativo } : x))
@@ -386,61 +363,12 @@ export default function GestaoPage() {
                 <p className="text-lg md:text-2xl font-bold text-amber-600 mt-0.5">{formatBRL(mrr)}<span className="text-xs md:text-sm font-normal text-slate-400">/mês</span></p>
               </div>
               <button
-                onClick={() => setShowForm(v => !v)}
-                className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition-opacity"
-                style={{ background: '#C5A880' }}
+                onClick={() => router.push('/admin/clientes')}
+                className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 transition-colors"
               >
-                + Adicionar
+                Gerenciar →
               </button>
             </div>
-
-            {showForm && (
-              <div className="bg-slate-50 rounded-xl p-4 mb-4 space-y-2">
-                <input
-                  placeholder="Nome do cliente"
-                  value={form.nome}
-                  onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
-                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
-                />
-                <input
-                  placeholder="E-mail (opcional)"
-                  value={form.email}
-                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
-                />
-                <div className="flex gap-2">
-                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#C5A880] flex-1">
-                    <span className="px-3 text-sm text-slate-400 bg-slate-100 border-r border-slate-200 py-2">R$</span>
-                    <input
-                      type="number"
-                      placeholder="Valor mensal"
-                      value={form.valor_mensal}
-                      onChange={e => setForm(f => ({ ...f, valor_mensal: e.target.value }))}
-                      className="flex-1 text-sm px-3 py-2 focus:outline-none"
-                    />
-                  </div>
-                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#C5A880] w-24">
-                    <span className="px-2 text-xs text-slate-400 bg-slate-100 border-r border-slate-200 py-2">Dia</span>
-                    <input
-                      type="number"
-                      min="1" max="31"
-                      placeholder="—"
-                      value={form.dia_vencimento}
-                      onChange={e => setForm(f => ({ ...f, dia_vencimento: e.target.value }))}
-                      className="w-full text-sm px-2 py-2 focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2 pt-1">
-                  <button onClick={addCliente} disabled={saving} className="flex-1 text-white text-sm py-2 rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity" style={{ background: '#C5A880' }}>
-                    {saving ? 'Salvando...' : 'Salvar'}
-                  </button>
-                  <button onClick={() => setShowForm(false)} className="text-sm text-slate-500 px-4 py-2 hover:text-slate-700">
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            )}
 
             {clientes.length === 0 ? (
               <p className="text-sm text-slate-400">Nenhum cliente fixo cadastrado.</p>

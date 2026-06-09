@@ -47,7 +47,41 @@ export default function ClientesPage() {
   const [expandido, setExpandido] = useState<string | null>(null)
   const [editingAlvo, setEditingAlvo] = useState(false)
   const [alvoInput, setAlvoInput] = useState('')
+  const [showNovoCliente, setShowNovoCliente] = useState(false)
+  const [novoCliente, setNovoCliente] = useState({ nome: '', email: '', valor_mensal: '', dia_vencimento: '', data_inicio: '' })
+  const [savingNovo, setSavingNovo] = useState(false)
+  const [erroNovo, setErroNovo] = useState<string | null>(null)
   const router = useRouter()
+
+  async function criarClienteFixo() {
+    if (!novoCliente.nome.trim() || !novoCliente.valor_mensal) {
+      setErroNovo('Nome e valor mensal são obrigatórios')
+      return
+    }
+    setSavingNovo(true)
+    setErroNovo(null)
+    const body = {
+      nome: novoCliente.nome.trim(),
+      email: novoCliente.email.trim() || null,
+      valor_mensal: parseFloat(novoCliente.valor_mensal.replace(',', '.')),
+      dia_vencimento: novoCliente.dia_vencimento ? parseInt(novoCliente.dia_vencimento, 10) : null,
+      data_inicio: novoCliente.data_inicio || null,
+      ativo: true,
+    }
+    const res = await api('/api/clientes-fixos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    if (res.ok) {
+      const novo = await res.json()
+      router.push(`/admin/cliente/${novo.id}`)
+    } else {
+      const err = await res.json().catch(() => ({ error: 'erro' }))
+      setErroNovo(`Erro: ${err.error || res.status}`)
+    }
+    setSavingNovo(false)
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -205,7 +239,15 @@ export default function ClientesPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <AdminNav onLogout={handleLogout} />
+      <AdminNav onLogout={handleLogout} extra={
+        <button
+          onClick={() => setShowNovoCliente(true)}
+          className="text-sm font-medium px-3 py-1.5 rounded-lg text-white hover:opacity-90"
+          style={{ background: '#C5A880' }}
+        >
+          + Novo Cliente Fixo
+        </button>
+      } />
 
       <div className="max-w-6xl mx-auto w-full px-4 py-4 md:px-6 md:py-8 space-y-4 md:space-y-6">
 
@@ -491,6 +533,97 @@ export default function ClientesPage() {
           <p className="pl-5">• <span className="font-medium">Avulso:</span> receita = soma dos orçamentos das demandas criadas no período</p>
         </div>
       </div>
+
+      {/* Modal Novo Cliente Fixo */}
+      {showNovoCliente && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-800">Novo Cliente Fixo</h2>
+                <p className="text-xs text-slate-400">Você vai pra página dele depois de criar</p>
+              </div>
+              <button onClick={() => setShowNovoCliente(false)} className="text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
+            </div>
+            <div className="px-6 py-5 space-y-3">
+              {erroNovo && <div className="bg-red-50 text-red-700 text-xs px-3 py-2 rounded">{erroNovo}</div>}
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 block mb-1.5">Nome *</label>
+                <input
+                  autoFocus
+                  value={novoCliente.nome}
+                  onChange={e => setNovoCliente(f => ({ ...f, nome: e.target.value }))}
+                  placeholder="ex: Schornstein"
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 block mb-1.5">E-mail (opcional)</label>
+                <input
+                  type="email"
+                  value={novoCliente.email}
+                  onChange={e => setNovoCliente(f => ({ ...f, email: e.target.value }))}
+                  placeholder="cliente@empresa.com.br"
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 block mb-1.5">Valor mensal *</label>
+                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#C5A880]">
+                    <span className="px-3 text-sm text-slate-400 bg-slate-100 border-r border-slate-200 py-2">R$</span>
+                    <input
+                      value={novoCliente.valor_mensal}
+                      onChange={e => setNovoCliente(f => ({ ...f, valor_mensal: e.target.value }))}
+                      placeholder="3000"
+                      inputMode="decimal"
+                      className="flex-1 text-sm px-3 py-2 focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 block mb-1.5">Dia do venc.</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="31"
+                    value={novoCliente.dia_vencimento}
+                    onChange={e => setNovoCliente(f => ({ ...f, dia_vencimento: e.target.value }))}
+                    placeholder="5"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 block mb-1.5">Início do contrato</label>
+                <input
+                  type="date"
+                  value={novoCliente.data_inicio}
+                  onChange={e => setNovoCliente(f => ({ ...f, data_inicio: e.target.value }))}
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">Importante pro relatório anual considerar só os meses corretos</p>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => setShowNovoCliente(false)}
+                  className="flex-1 text-sm py-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={criarClienteFixo}
+                  disabled={savingNovo || !novoCliente.nome.trim() || !novoCliente.valor_mensal}
+                  className="flex-1 text-sm py-2 rounded-lg text-white disabled:opacity-50"
+                  style={{ background: '#C5A880' }}
+                >
+                  {savingNovo ? 'Criando...' : 'Criar e abrir'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
