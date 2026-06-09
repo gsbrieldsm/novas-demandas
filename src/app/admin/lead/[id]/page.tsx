@@ -169,6 +169,27 @@ export default function LeadDetailPage() {
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Nome</p>
+              <input
+                defaultValue={lead.nome}
+                onBlur={e => {
+                  const v = e.target.value.trim()
+                  if (v && v !== lead.nome) updateField('nome', v)
+                }}
+                className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#C5A880] w-full"
+                placeholder="Nome do contato"
+              />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Empresa</p>
+              <input
+                defaultValue={lead.empresa ?? ''}
+                onBlur={e => updateField('empresa', e.target.value.trim() || null)}
+                className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#C5A880] w-full"
+                placeholder="Opcional"
+              />
+            </div>
+            <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Status</p>
               <select
                 value={lead.status}
