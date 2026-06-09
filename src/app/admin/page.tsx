@@ -456,6 +456,13 @@ export default function GestaoPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <button
+                        onClick={() => router.push(`/admin/relatorio/${c.id}`)}
+                        className="text-xs px-2.5 py-1 rounded-lg font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors"
+                        title="Ver relatório do cliente"
+                      >
+                        📄 Relatório
+                      </button>
+                      <button
                         onClick={() => toggleAtivo(c)}
                         className={clsx('text-xs px-2.5 py-1 rounded-lg font-medium transition-colors', c.ativo ? 'bg-amber-200 text-amber-800 hover:bg-amber-300' : 'bg-slate-200 text-slate-600 hover:bg-slate-300')}
                       >
