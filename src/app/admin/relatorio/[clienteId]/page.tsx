@@ -102,7 +102,6 @@ export default function RelatorioPage() {
       setTempo(tm)
       setMetricas(ms)
 
-      // Preenche o form com a métrica do mês selecionado, se existir
       const atual = (ms as Metrica[]).find(x => x.mes === m && x.ano === a)
       setMetricaForm({
         seguidores: atual?.seguidores?.toString() ?? '',
@@ -178,7 +177,6 @@ export default function RelatorioPage() {
     [metricas, mesAnterior]
   )
 
-  // Entregas do cliente no mês
   const entregas = useMemo(() => {
     return tickets.filter(t => {
       const created = new Date(t.created_at)
@@ -200,13 +198,14 @@ export default function RelatorioPage() {
   }, [tempo])
 
   const tempoTotal = entregas.reduce((s, t) => s + (minutosPorTicket.get(t.id) ?? 0), 0)
+  const concluidas = entregas.filter(t => t.status === 'concluido').length
 
-  function calcGrowth(atual: number | null | undefined, anterior: number | null | undefined): { pct: number; color: string; arrow: string } | null {
+  function calcGrowth(atual: number | null | undefined, anterior: number | null | undefined): { pct: number; isPositive: boolean; arrow: string } | null {
     if (atual == null || anterior == null || anterior === 0) return null
     const pct = ((atual - anterior) / anterior) * 100
-    if (pct > 0) return { pct, color: 'text-green-600', arrow: '▲' }
-    if (pct < 0) return { pct, color: 'text-red-500', arrow: '▼' }
-    return { pct: 0, color: 'text-slate-400', arrow: '•' }
+    if (pct > 0) return { pct, isPositive: true, arrow: '↑' }
+    if (pct < 0) return { pct, isPositive: false, arrow: '↓' }
+    return { pct: 0, isPositive: true, arrow: '—' }
   }
 
   if (loading || !cliente) {
@@ -221,23 +220,22 @@ export default function RelatorioPage() {
   const mesAnteriorLabel = format(mesAnterior, "MMM", { locale: ptBR })
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col print:bg-white">
-      {/* Header (escondido no print) */}
+    <>
+      {/* Header admin (escondido no print) */}
       <div className="print:hidden">
         <AdminNav onLogout={handleLogout} />
       </div>
 
-      <div className="max-w-4xl mx-auto w-full px-4 md:px-6 py-4 md:py-8 print:px-0 print:py-0 print:max-w-full">
+      <div className="bg-[#f5f6f8] min-h-screen print:bg-white print:min-h-0">
 
         {/* Toolbar (escondida no print) */}
-        <div className="print:hidden flex items-center justify-between gap-3 flex-wrap mb-4">
+        <div className="print:hidden max-w-[860px] mx-auto px-4 md:px-6 pt-4 md:pt-6 flex items-center justify-between gap-3 flex-wrap">
           <button
             onClick={() => router.back()}
             className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1"
           >
             ← Voltar
           </button>
-
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 mr-2">
               <button onClick={() => setMes(d => subMonths(d, 1))} className="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500">‹</button>
@@ -252,7 +250,7 @@ export default function RelatorioPage() {
             </button>
             <button
               onClick={() => window.print()}
-              className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90"
+              className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90 font-medium"
               style={{ background: '#C5A880' }}
             >
               🖨 Imprimir / PDF
@@ -260,228 +258,291 @@ export default function RelatorioPage() {
           </div>
         </div>
 
-        {/* RELATÓRIO */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden print:shadow-none print:border-none print:rounded-none">
-
-          {/* Cabeçalho */}
-          <div
-            className="px-6 md:px-10 py-6 md:py-8 text-white"
-            style={{
-              background: 'radial-gradient(ellipse 70% 100% at 90% 50%, #C5A880 0%, #6B4C28 45%, #1c1a18 80%), #100E0B',
-            }}
-          >
-            <div className="flex items-center gap-3 mb-4 md:mb-6">
-              <Image
-                src="/logo-symbol.png"
-                alt="GM&Co"
-                width={36}
-                height={36}
-                style={{ filter: 'brightness(0) invert(1)' }}
+        {/* Form de edição (escondido no print) */}
+        {editando && (
+          <div className="print:hidden max-w-[860px] mx-auto px-4 md:px-6 pt-4 space-y-3">
+            <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+              <label className="text-[10px] font-bold tracking-[0.18em] text-slate-400 uppercase block mb-2">Escopo mensal</label>
+              <textarea
+                value={escopoInput}
+                onChange={e => setEscopoInput(e.target.value)}
+                rows={4}
+                className="w-full text-sm border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
+                placeholder={'• 2 posts no Instagram por semana\n• 3 diárias gravadas no mês\n• 1 reunião estratégica mensal'}
               />
-              <div>
-                <p className="text-xs font-semibold tracking-[0.2em] text-white/60 uppercase">Gabriel Moraes & Co</p>
-                <p className="text-[10px] tracking-wider text-white/40">Marketing &amp; Estratégia</p>
-              </div>
+              <label className="text-[10px] font-bold tracking-[0.18em] text-slate-400 uppercase block mb-2 mt-3">
+                Observações internas
+                <span className="ml-2 font-normal normal-case tracking-normal text-slate-400">(não vai pro relatório)</span>
+              </label>
+              <textarea
+                value={obsInput}
+                onChange={e => setObsInput(e.target.value)}
+                rows={2}
+                className="w-full text-sm border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
+                placeholder="Coisas que só você precisa saber..."
+              />
+              <button
+                onClick={salvarEscopo}
+                className="mt-3 text-sm px-4 py-2 rounded-lg text-white"
+                style={{ background: '#C5A880' }}
+              >
+                Salvar escopo + observações
+              </button>
             </div>
-            <p className="text-[10px] md:text-xs font-semibold tracking-[0.2em] text-[#C5A880] uppercase mb-1">Relatório Mensal</p>
-            <h1 className="text-2xl md:text-3xl font-bold text-white capitalize">{cliente.nome}</h1>
-            <p className="text-base md:text-lg text-white/70 mt-1 capitalize">{mesLabel}</p>
           </div>
+        )}
 
-          <div className="px-6 md:px-10 py-6 md:py-8 space-y-7">
+        {/* Form de métricas (escondido no print) */}
+        <div className="print:hidden max-w-[860px] mx-auto px-4 md:px-6 pt-4 pb-2">
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <p className="text-[10px] font-bold tracking-[0.18em] text-slate-400 uppercase">Métricas de {mesLabel}</p>
+              <button
+                onClick={salvarMetrica}
+                className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-white hover:bg-slate-700"
+              >
+                Salvar métricas
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <MetricaInput label="Seguidores" value={metricaForm.seguidores} onChange={v => setMetricaForm(f => ({ ...f, seguidores: v }))} type="number" />
+              <MetricaInput label="Engajamento (%)" value={metricaForm.engajamento_percent} onChange={v => setMetricaForm(f => ({ ...f, engajamento_percent: v }))} type="decimal" />
+              <MetricaInput label="Alcance" value={metricaForm.alcance} onChange={v => setMetricaForm(f => ({ ...f, alcance: v }))} type="number" />
+              <MetricaInput label="Visualizações" value={metricaForm.visualizacoes} onChange={v => setMetricaForm(f => ({ ...f, visualizacoes: v }))} type="number" />
+            </div>
+            <textarea
+              value={metricaForm.observacoes}
+              onChange={e => setMetricaForm(f => ({ ...f, observacoes: e.target.value }))}
+              rows={2}
+              className="w-full text-sm border border-slate-200 rounded-lg p-2.5 mt-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
+              placeholder="Observações estratégicas do mês (opcional)..."
+            />
+          </div>
+        </div>
 
-            {/* ESCOPO CONTRATADO */}
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Escopo Contratado</h2>
-                <span className="text-xs text-slate-400">{formatBRL(Number(cliente.valor_mensal))}/mês</span>
-              </div>
-              {editando ? (
-                <textarea
-                  value={escopoInput}
-                  onChange={e => setEscopoInput(e.target.value)}
-                  rows={5}
-                  className="w-full text-sm border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
-                  placeholder={'• 2 posts no Instagram por semana\n• 3 diárias gravadas no mês\n• 1 reunião estratégica mensal'}
-                />
-              ) : cliente.escopo_mensal ? (
-                <div className="bg-slate-50 rounded-xl p-4 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
-                  {cliente.escopo_mensal}
-                </div>
-              ) : (
-                <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-700">
-                  ⚠️ Escopo ainda não definido. Clica em &quot;Editar escopo&quot; pra preencher.
-                </div>
-              )}
-            </section>
+        {/* ========== RELATÓRIO (visível no PDF) ========== */}
+        <div className="report-document max-w-[860px] mx-auto px-4 md:px-6 py-4 md:py-6 print:px-0 print:py-0 print:max-w-full">
+          <article
+            className="report-paper bg-white shadow-[0_8px_32px_rgba(8,12,16,0.12)] overflow-hidden print:shadow-none"
+            style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}
+          >
 
-            {/* MÉTRICAS / CRESCIMENTO */}
-            <section>
-              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Resultados do mês</h2>
-                <div className="print:hidden">
-                  <button
-                    onClick={salvarMetrica}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-white hover:bg-slate-700"
-                  >
-                    Salvar métricas
-                  </button>
-                </div>
-              </div>
+            {/* ===== CAPA / HEADER ===== */}
+            <header
+              className="relative px-8 md:px-14 py-12 md:py-16 text-white overflow-hidden"
+              style={{
+                background: '#080c10',
+              }}
+            >
+              {/* Glow dourado de fundo (como o hero do site) */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: 'radial-gradient(ellipse 65% 90% at 85% 0%, rgba(201,169,110,0.18) 0%, transparent 55%), radial-gradient(ellipse 50% 70% at 10% 100%, rgba(107,76,40,0.25) 0%, transparent 50%)',
+                }}
+              />
 
-              {/* Form de métricas (oculto no print) */}
-              <div className="print:hidden bg-slate-50 rounded-xl p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-                <MetricaInput
-                  label="Seguidores"
-                  value={metricaForm.seguidores}
-                  onChange={v => setMetricaForm(f => ({ ...f, seguidores: v }))}
-                  type="number"
-                />
-                <MetricaInput
-                  label="Engajamento (%)"
-                  value={metricaForm.engajamento_percent}
-                  onChange={v => setMetricaForm(f => ({ ...f, engajamento_percent: v }))}
-                  type="decimal"
-                />
-                <MetricaInput
-                  label="Alcance"
-                  value={metricaForm.alcance}
-                  onChange={v => setMetricaForm(f => ({ ...f, alcance: v }))}
-                  type="number"
-                />
-                <MetricaInput
-                  label="Visualizações"
-                  value={metricaForm.visualizacoes}
-                  onChange={v => setMetricaForm(f => ({ ...f, visualizacoes: v }))}
-                  type="number"
-                />
-                <div className="col-span-2 md:col-span-4">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">Observações estratégicas</label>
-                  <textarea
-                    value={metricaForm.observacoes}
-                    onChange={e => setMetricaForm(f => ({ ...f, observacoes: e.target.value }))}
-                    rows={2}
-                    className="w-full text-sm border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none bg-white"
-                    placeholder="Contexto do crescimento, destaques, próximos passos..."
+              {/* Grid sutil */}
+              <div
+                className="absolute inset-0 opacity-[0.04] pointer-events-none"
+                style={{
+                  backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+                  backgroundSize: '40px 40px',
+                }}
+              />
+
+              <div className="relative">
+                {/* Marca */}
+                <div className="flex items-center gap-3 mb-12 md:mb-16">
+                  <Image
+                    src="/logo-symbol.png"
+                    alt="GM&Co"
+                    width={32}
+                    height={32}
+                    style={{ filter: 'brightness(0) invert(1)' }}
                   />
+                  <div>
+                    <p className="text-[11px] font-bold tracking-[0.22em] text-white uppercase leading-none">
+                      Gabriel Moraes <span style={{ color: '#c9a96e' }}>&amp;</span> Co
+                    </p>
+                    <p className="text-[9px] tracking-[0.18em] text-white/40 uppercase mt-1">
+                      Marketing &amp; Estratégia
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Tabela de crescimento */}
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-100">
-                    <th className="text-left py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Métrica</th>
-                    <th className="text-right py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider capitalize">{mesAnteriorLabel}</th>
-                    <th className="text-right py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Agora</th>
-                    <th className="text-right py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Crescimento</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  <MetricaRow label="Seguidores" prev={metricaAnterior?.seguidores} curr={metricaAtual?.seguidores} format={formatNum} growth={calcGrowth} />
-                  <MetricaRow label="Engajamento" prev={metricaAnterior?.engajamento_percent} curr={metricaAtual?.engajamento_percent} format={(v) => v == null ? '—' : `${Number(v).toFixed(2)}%`} growth={calcGrowth} />
-                  <MetricaRow label="Alcance" prev={metricaAnterior?.alcance} curr={metricaAtual?.alcance} format={formatNum} growth={calcGrowth} />
-                  <MetricaRow label="Visualizações" prev={metricaAnterior?.visualizacoes} curr={metricaAtual?.visualizacoes} format={formatNum} growth={calcGrowth} />
-                </tbody>
-              </table>
-
-              {metricaAtual?.observacoes && (
-                <div className="bg-slate-50 rounded-xl p-3 mt-3 text-xs text-slate-600 italic leading-relaxed">
-                  &ldquo;{metricaAtual.observacoes}&rdquo;
-                </div>
-              )}
-            </section>
-
-            {/* ENTREGAS DO MÊS */}
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Entregas Realizadas</h2>
-                <span className="text-xs text-slate-400">{entregas.length} demandas · {formatMinutos(tempoTotal)}</span>
-              </div>
-              {entregas.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-6">Nenhuma demanda criada para este cliente no mês.</p>
-              ) : (
-                <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
-                  {entregas.map(t => {
-                    const min = minutosPorTicket.get(t.id) ?? 0
-                    const concluido = t.status === 'concluido'
-                    return (
-                      <div key={t.id} className="px-4 py-3 flex items-center gap-3">
-                        <span className={clsx('w-2 h-2 rounded-full flex-shrink-0', concluido ? 'bg-green-500' : 'bg-amber-400')} />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-slate-800 truncate">{t.title}</p>
-                          <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
-                            <span>{format(new Date(t.created_at), "d 'de' MMM", { locale: ptBR })}</span>
-                            <span className="text-slate-200">·</span>
-                            <span>{REQUEST_TYPE_LABELS[t.request_type]}</span>
-                            {min > 0 && <>
-                              <span className="text-slate-200">·</span>
-                              <span>{formatMinutos(min)}</span>
-                            </>}
-                          </div>
-                        </div>
-                        {concluido ? (
-                          <span className="text-[10px] uppercase tracking-wider text-green-600 font-semibold">✓ Entregue</span>
-                        ) : (
-                          <span className="text-[10px] uppercase tracking-wider text-amber-600 font-semibold">Em curso</span>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </section>
-
-            {/* OBSERVAÇÕES INTERNAS (só você vê) */}
-            {editando && (
-              <section className="print:hidden">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                  Observações internas
-                  <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case">(não aparece no relatório do cliente)</span>
-                </h2>
-                <textarea
-                  value={obsInput}
-                  onChange={e => setObsInput(e.target.value)}
-                  rows={3}
-                  className="w-full text-sm border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
-                  placeholder="Coisas que só você precisa saber sobre este cliente..."
-                />
-                <button
-                  onClick={salvarEscopo}
-                  className="mt-2 text-sm px-4 py-2 rounded-lg text-white hover:opacity-90"
-                  style={{ background: '#C5A880' }}
+                {/* Etiqueta */}
+                <div
+                  className="inline-block px-3 py-1.5 rounded-full mb-6"
+                  style={{ background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(201,169,110,0.3)' }}
                 >
-                  Salvar escopo + observações
-                </button>
-              </section>
-            )}
+                  <p className="text-[10px] font-bold tracking-[0.22em] uppercase" style={{ color: '#e8c987' }}>
+                    Relatório Mensal · {format(mes, 'MM/yyyy')}
+                  </p>
+                </div>
 
-            {/* RODAPÉ */}
-            <div className="border-t border-slate-100 pt-5 mt-2 text-center">
-              <p className="text-xs text-slate-400">
-                Próximo relatório: {format(addMonths(mes, 1), "MMMM 'de' yyyy", { locale: ptBR })}
-              </p>
-              <p className="text-[10px] text-slate-300 mt-2 tracking-wider uppercase">Gabriel Moraes &amp; Co · Marketing &amp; Estratégia</p>
+                {/* Título — estilo hero */}
+                <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-2 capitalize tracking-tight">
+                  {cliente.nome}
+                </h1>
+                <p className="text-lg md:text-xl text-white/60 capitalize">
+                  <em style={{ color: '#c9a96e', fontStyle: 'italic' }}>
+                    {format(mes, "MMMM", { locale: ptBR })}
+                  </em> de {format(mes, 'yyyy')}
+                </p>
+
+                {/* Linha de stats no rodapé do header */}
+                <div className="mt-10 md:mt-12 pt-6 border-t border-white/10 grid grid-cols-3 gap-4">
+                  <HeaderStat label="Contrato" value={formatBRL(Number(cliente.valor_mensal))} />
+                  <HeaderStat label="Entregas" value={String(concluidas)} sub={`de ${entregas.length}`} />
+                  <HeaderStat label="Tempo investido" value={formatMinutos(tempoTotal)} />
+                </div>
+              </div>
+            </header>
+
+            {/* ===== CORPO ===== */}
+            <div className="px-8 md:px-14 py-10 md:py-14 space-y-12">
+
+              {/* ESCOPO */}
+              <section>
+                <SectionHeader number="01" label="Escopo Contratado" />
+                {cliente.escopo_mensal ? (
+                  <div
+                    className="text-[15px] leading-[1.85] whitespace-pre-wrap"
+                    style={{ color: '#2a3340' }}
+                  >
+                    {cliente.escopo_mensal}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">
+                    Escopo ainda não definido. Use o botão &quot;Editar escopo&quot; pra preencher.
+                  </p>
+                )}
+              </section>
+
+              {/* MÉTRICAS / RESULTADOS */}
+              <section>
+                <SectionHeader number="02" label="Resultados do Mês" />
+
+                <div className="space-y-3">
+                  <MetricaRow label="Seguidores" prev={metricaAnterior?.seguidores} curr={metricaAtual?.seguidores} format={formatNum} growth={calcGrowth} mesAnteriorLabel={mesAnteriorLabel} />
+                  <MetricaRow label="Engajamento" prev={metricaAnterior?.engajamento_percent} curr={metricaAtual?.engajamento_percent} format={(v) => v == null ? '—' : `${Number(v).toFixed(2)}%`} growth={calcGrowth} mesAnteriorLabel={mesAnteriorLabel} />
+                  <MetricaRow label="Alcance" prev={metricaAnterior?.alcance} curr={metricaAtual?.alcance} format={formatNum} growth={calcGrowth} mesAnteriorLabel={mesAnteriorLabel} />
+                  <MetricaRow label="Visualizações" prev={metricaAnterior?.visualizacoes} curr={metricaAtual?.visualizacoes} format={formatNum} growth={calcGrowth} mesAnteriorLabel={mesAnteriorLabel} />
+                </div>
+
+                {metricaAtual?.observacoes && (
+                  <div
+                    className="mt-6 px-5 py-4 border-l-2 italic text-[15px] leading-relaxed"
+                    style={{ borderColor: '#c9a96e', color: '#5a6e84' }}
+                  >
+                    {metricaAtual.observacoes}
+                  </div>
+                )}
+              </section>
+
+              {/* ENTREGAS */}
+              <section>
+                <SectionHeader number="03" label="Entregas Realizadas" />
+
+                {entregas.length === 0 ? (
+                  <p className="text-sm text-slate-400 italic">Nenhuma demanda registrada para este cliente no mês.</p>
+                ) : (
+                  <div className="space-y-0">
+                    {entregas.map((t, i) => {
+                      const min = minutosPorTicket.get(t.id) ?? 0
+                      const concluido = t.status === 'concluido'
+                      return (
+                        <div
+                          key={t.id}
+                          className={clsx(
+                            'flex items-baseline gap-4 py-3',
+                            i !== entregas.length - 1 && 'border-b border-slate-100'
+                          )}
+                        >
+                          <span
+                            className="text-[10px] font-bold tracking-[0.15em] uppercase w-12 flex-shrink-0 tabular-nums"
+                            style={{ color: '#c9a96e' }}
+                          >
+                            {format(new Date(t.created_at), "d 'mai'", { locale: ptBR }).replace(/mai$/, format(new Date(t.created_at), 'MMM', { locale: ptBR }))}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[15px] font-medium leading-tight" style={{ color: '#2a3340' }}>
+                              {t.title}
+                            </p>
+                            <p className="text-[11px] text-slate-400 mt-0.5">
+                              {REQUEST_TYPE_LABELS[t.request_type]}
+                              {min > 0 && ` · ${formatMinutos(min)}`}
+                            </p>
+                          </div>
+                          <span
+                            className={clsx(
+                              'text-[10px] font-bold tracking-[0.15em] uppercase flex-shrink-0',
+                              concluido ? 'text-emerald-600' : 'text-amber-500'
+                            )}
+                          >
+                            {concluido ? '✓ Entregue' : '· em curso'}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </section>
             </div>
-          </div>
+
+            {/* ===== RODAPÉ ===== */}
+            <footer
+              className="px-8 md:px-14 py-8 text-center border-t"
+              style={{ borderColor: '#eef0f3', background: '#fafbfc' }}
+            >
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <div className="h-px w-12" style={{ background: '#c9a96e' }} />
+                <Image
+                  src="/logo-symbol.png"
+                  alt=""
+                  width={20}
+                  height={20}
+                  style={{ filter: 'invert(60%) sepia(28%) saturate(488%) hue-rotate(2deg) brightness(91%) contrast(90%)' }}
+                />
+                <div className="h-px w-12" style={{ background: '#c9a96e' }} />
+              </div>
+              <p className="text-[11px] font-bold tracking-[0.22em] uppercase" style={{ color: '#2a3340' }}>
+                Gabriel Moraes <span style={{ color: '#c9a96e' }}>&amp;</span> Co
+              </p>
+              <p className="text-[9px] tracking-[0.18em] text-slate-400 uppercase mt-1">
+                Próximo relatório · {format(addMonths(mes, 1), 'MM/yyyy')}
+              </p>
+            </footer>
+          </article>
         </div>
       </div>
 
       <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
         @media print {
-          @page { margin: 1.5cm; }
-          body { background: white !important; }
-          .min-h-screen { min-height: 0 !important; }
+          @page {
+            size: A4;
+            margin: 0;
+          }
+          html, body { background: white !important; margin: 0 !important; padding: 0 !important; }
+          .report-document { padding: 0 !important; max-width: 100% !important; }
+          .report-paper { box-shadow: none !important; border-radius: 0 !important; }
+          /* Garante que as cores de fundo apareçam no PDF */
+          .report-paper, .report-paper * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
       `}</style>
-    </div>
+    </>
   )
 }
+
+// ============ Subcomponentes ============
 
 function MetricaInput({ label, value, onChange, type }: { label: string; value: string; onChange: (v: string) => void; type: 'number' | 'decimal' }) {
   return (
     <div>
-      <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">{label}</label>
+      <label className="text-[10px] font-bold tracking-[0.18em] uppercase text-slate-400 block mb-1.5">{label}</label>
       <input
         type="text"
         value={value}
@@ -494,30 +555,77 @@ function MetricaInput({ label, value, onChange, type }: { label: string; value: 
   )
 }
 
+function HeaderStat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div>
+      <p className="text-[9px] font-bold tracking-[0.22em] uppercase text-white/40 mb-1.5">{label}</p>
+      <p className="text-xl md:text-2xl font-bold text-white leading-none tabular-nums">{value}</p>
+      {sub && <p className="text-[10px] tracking-wider text-white/40 mt-1">{sub}</p>}
+    </div>
+  )
+}
+
+function SectionHeader({ number, label }: { number: string; label: string }) {
+  return (
+    <div className="flex items-baseline gap-3 mb-6">
+      <span
+        className="text-[10px] font-bold tracking-[0.22em] uppercase tabular-nums"
+        style={{ color: '#c9a96e' }}
+      >
+        {number}
+      </span>
+      <div className="h-px flex-1" style={{ background: '#e8ebf0' }} />
+      <h2
+        className="text-[11px] font-bold tracking-[0.22em] uppercase"
+        style={{ color: '#2a3340' }}
+      >
+        {label}
+      </h2>
+    </div>
+  )
+}
+
 function MetricaRow({
-  label, prev, curr, format: fmt, growth,
+  label, prev, curr, format: fmt, growth, mesAnteriorLabel,
 }: {
   label: string
   prev: number | null | undefined
   curr: number | null | undefined
   format: (v: number | null | undefined) => string
-  growth: (a: number | null | undefined, b: number | null | undefined) => { pct: number; color: string; arrow: string } | null
+  growth: (a: number | null | undefined, b: number | null | undefined) => { pct: number; isPositive: boolean; arrow: string } | null
+  mesAnteriorLabel: string
 }) {
   const g = growth(curr, prev)
   return (
-    <tr>
-      <td className="py-2.5 text-slate-700">{label}</td>
-      <td className="py-2.5 text-right text-slate-500 tabular-nums">{fmt(prev)}</td>
-      <td className="py-2.5 text-right font-semibold text-slate-800 tabular-nums">{fmt(curr)}</td>
-      <td className="py-2.5 text-right tabular-nums">
+    <div
+      className="flex items-end justify-between gap-4 py-3 border-b"
+      style={{ borderColor: '#f0f2f5' }}
+    >
+      <div className="min-w-0">
+        <p className="text-[10px] font-bold tracking-[0.18em] uppercase text-slate-400 mb-1">{label}</p>
+        <p className="text-2xl font-bold tabular-nums leading-none" style={{ color: '#2a3340' }}>
+          {fmt(curr)}
+        </p>
+      </div>
+      <div className="text-right flex-shrink-0">
+        <p className="text-[9px] tracking-wider text-slate-300 uppercase mb-1 capitalize">
+          vs {mesAnteriorLabel}: <span className="tabular-nums">{fmt(prev)}</span>
+        </p>
         {g ? (
-          <span className={clsx('font-semibold', g.color)}>
+          <span
+            className={clsx(
+              'inline-flex items-center gap-1 text-xs font-bold tabular-nums px-2 py-1 rounded-md',
+              g.isPositive
+                ? 'bg-emerald-50 text-emerald-700'
+                : 'bg-red-50 text-red-600'
+            )}
+          >
             {g.arrow} {Math.abs(g.pct).toFixed(1)}%
           </span>
         ) : (
-          <span className="text-slate-300">—</span>
+          <span className="text-xs text-slate-300 tabular-nums">—</span>
         )}
-      </td>
-    </tr>
+      </div>
+    </div>
   )
 }
