@@ -111,6 +111,7 @@ export default function DemandasPage() {
   const [filter, setFilter] = useState<RequestType | 'todos'>('todos')
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
   const [form, setForm] = useState({
     modo: 'avulso' as 'avulso' | 'fixo',
     cliente_fixo_id: '',
@@ -147,6 +148,7 @@ export default function DemandasPage() {
     if (form.modo === 'avulso' && !form.client_name.trim()) return
 
     setSaving(true)
+    setCreateError(null)
     const cf = clientesFixos.find(c => c.id === form.cliente_fixo_id)
 
     const body: Record<string, unknown> = {
@@ -177,21 +179,33 @@ export default function DemandasPage() {
       body.budget_value = form.budget_value ? parseFloat(form.budget_value.replace(',', '.')) : null
     }
 
-    const res = await api('/api/tickets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-    if (res.ok) {
-      const novo = await res.json()
-      setTickets(prev => [novo, ...prev])
-      setShowForm(false)
-      setForm({
-        modo: 'avulso', cliente_fixo_id: '', client_name: '', company: '',
-        title: '', description: '', request_type: 'estrategia',
-        priority: 'normal', deadline: '', budget_value: '',
-        where_used: '', purpose: '',
+    try {
+      const res = await api('/api/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       })
+      if (res.ok) {
+        const novo = await res.json()
+        setTickets(prev => [novo, ...prev])
+        setShowForm(false)
+        setCreateError(null)
+        setForm({
+          modo: 'avulso', cliente_fixo_id: '', client_name: '', company: '',
+          title: '', description: '', request_type: 'estrategia',
+          priority: 'normal', deadline: '', budget_value: '',
+          where_used: '', purpose: '',
+        })
+      } else {
+        const err = await res.json().catch(() => ({ error: 'erro desconhecido' }))
+        const msg = `Falha ao criar (${res.status}): ${err.error || res.statusText}`
+        console.error('Erro ao criar demanda:', { status: res.status, body, err })
+        setCreateError(msg)
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      console.error('Erro de rede ao criar demanda:', e)
+      setCreateError(`Erro de rede: ${msg}`)
     }
     setSaving(false)
   }
@@ -468,6 +482,12 @@ export default function DemandasPage() {
                   className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
                 />
               </div>
+
+              {createError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700">
+                  {createError}
+                </div>
+              )}
 
               <div className="flex items-center gap-3 pt-2">
                 <button
