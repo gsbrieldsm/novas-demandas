@@ -397,6 +397,49 @@
     }
     .cream-block .processo-numero { color: rgba(139,104,64,0.4) !important; }
 
+    /* ── Overrides específicos para cream blocks ─── */
+    .cream-block .principio-quote,
+    .cream-block .servico-title,
+    .cream-block .diferencial-title,
+    .cream-block .paraquem-title,
+    .cream-block .processo-title,
+    .cream-block .hero-h1,
+    .cream-block .av-card-title,
+    .cream-block .av-statement-text,
+    .cream-block strong {
+      color: var(--cream-text) !important;
+    }
+    .cream-block .principio-quote em,
+    .cream-block .servico-title em,
+    .cream-block .av-statement-text em,
+    .cream-block .processo-title em,
+    .cream-block .section-title em {
+      color: #8B6840 !important;
+    }
+    .cream-block .principio-source,
+    .cream-block .servico-desc,
+    .cream-block .diferencial-desc,
+    .cream-block .paraquem-desc,
+    .cream-block .processo-desc,
+    .cream-block .av-card-desc,
+    .cream-block ul li,
+    .cream-block ol li {
+      color: var(--cream-text2) !important;
+    }
+    .cream-block .principio-quote::before {
+      color: rgba(139,104,64,0.3) !important;
+    }
+    .cream-block hr,
+    .cream-block .divider { border-color: rgba(139,104,64,0.2) !important; }
+
+    /* Comparações/cards escuros DENTRO de cream — manter texto branco */
+    .cream-block .principio-compare,
+    .cream-block .principio-compare * {
+      color: var(--text) !important;
+    }
+    .cream-block .principio-compare strong,
+    .cream-block .principio-compare em { color: var(--accent2) !important; }
+
     .dark-warm-block {
       background:
         radial-gradient(ellipse 60% 80% at 90% 20%, rgba(201,169,110,0.20) 0%, transparent 55%),
