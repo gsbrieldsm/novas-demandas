@@ -456,11 +456,11 @@ export default function GestaoPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => router.push(`/admin/relatorio/${c.id}`)}
+                        onClick={() => router.push(`/admin/cliente/${c.id}`)}
                         className="text-xs px-2.5 py-1 rounded-lg font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors"
-                        title="Ver relatório do cliente"
+                        title="Ver detalhes do cliente"
                       >
-                        📄 Relatório
+                        Abrir →
                       </button>
                       <button
                         onClick={() => toggleAtivo(c)}

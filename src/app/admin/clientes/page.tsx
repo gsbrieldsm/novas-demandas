@@ -351,7 +351,16 @@ export default function ClientesPage() {
                               <span className={clsx('text-xs font-medium px-2 py-0.5 rounded-full', l.tipo === 'fixo' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700')}>
                                 {l.tipo === 'fixo' ? 'Fixo' : 'Avulso'}
                               </span>
-                              <span className="text-sm font-medium text-slate-800">{l.nome}</span>
+                              {l.tipo === 'fixo' ? (
+                                <span
+                                  onClick={(e) => { e.stopPropagation(); router.push(`/admin/cliente/${l.key.replace('fixo-', '')}`) }}
+                                  className="text-sm font-medium text-slate-800 hover:text-[#C5A880] hover:underline cursor-pointer"
+                                >
+                                  {l.nome}
+                                </span>
+                              ) : (
+                                <span className="text-sm font-medium text-slate-800">{l.nome}</span>
+                              )}
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm font-semibold text-slate-800">{formatBRL(l.receita)}</td>
@@ -420,7 +429,14 @@ export default function ClientesPage() {
 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-baseline gap-2">
-                            <p className="text-sm font-semibold text-slate-800 truncate flex-1">{l.nome}</p>
+                            {l.tipo === 'fixo' ? (
+                              <p
+                                onClick={(e) => { e.stopPropagation(); router.push(`/admin/cliente/${l.key.replace('fixo-', '')}`) }}
+                                className="text-sm font-semibold text-slate-800 truncate flex-1 hover:text-[#C5A880] hover:underline"
+                              >{l.nome}</p>
+                            ) : (
+                              <p className="text-sm font-semibold text-slate-800 truncate flex-1">{l.nome}</p>
+                            )}
                             {l.rh != null && (
                               <span className={clsx('text-sm font-bold whitespace-nowrap', ind?.label === 'alto' ? 'text-green-600' : ind?.label === 'médio' ? 'text-amber-600' : 'text-red-500')}>
                                 {formatBRL(l.rh)}/h
