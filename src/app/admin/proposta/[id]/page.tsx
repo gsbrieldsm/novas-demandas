@@ -44,10 +44,12 @@ export default function PropostaPage() {
     modalidade: 'mensal' as PropostaModalidade,
     valor: '',
     prazo_dias: '',
+    apresentacao: '',
     escopo: '',
     observacoes: '',
     validade: '',
   })
+  const [linkCopiado, setLinkCopiado] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -63,6 +65,7 @@ export default function PropostaPage() {
         modalidade: data.modalidade,
         valor: data.valor ? String(data.valor) : '',
         prazo_dias: data.prazo_dias ? String(data.prazo_dias) : '',
+        apresentacao: data.apresentacao ?? '',
         escopo: data.escopo ?? '',
         observacoes: data.observacoes ?? '',
         validade: data.validade ?? '',
@@ -87,6 +90,7 @@ export default function PropostaPage() {
       modalidade: form.modalidade,
       valor: form.valor ? parseFloat(form.valor.replace(',', '.')) : null,
       prazo_dias: form.prazo_dias ? parseInt(form.prazo_dias, 10) : null,
+      apresentacao: form.apresentacao.trim() || null,
       escopo: form.escopo.trim() || null,
       observacoes: form.observacoes.trim() || null,
       validade: form.validade || null,
@@ -211,6 +215,50 @@ export default function PropostaPage() {
           </div>
         </div>
 
+        {/* Link público + status do cliente */}
+        <div className="print:hidden max-w-[860px] mx-auto px-4 md:px-6 pt-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center gap-3 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mb-1">Link público pra mandar pro cliente</p>
+              <p className="text-xs text-slate-700 font-mono truncate">
+                {typeof window !== 'undefined' ? `${window.location.origin}/proposta/${id}` : `/proposta/${id}`}
+              </p>
+              <div className="flex items-center gap-3 mt-2 text-[11px]">
+                {proposta.visto_em ? (
+                  <span className="text-green-700 font-medium">
+                    ✓ Cliente visualizou em {format(new Date(proposta.visto_em), "d 'de' MMM 'às' HH:mm", { locale: ptBR })}
+                  </span>
+                ) : (
+                  <span className="text-slate-400">Cliente ainda não abriu o link</span>
+                )}
+                {proposta.aceito_por_nome && (
+                  <>
+                    <span className="text-slate-200">·</span>
+                    <span className="text-green-700 font-medium">Aceita por {proposta.aceito_por_nome}</span>
+                  </>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/proposta/${id}`)
+                setLinkCopiado(true)
+                setTimeout(() => setLinkCopiado(false), 2000)
+              }}
+              className="text-xs px-3 py-2 rounded-lg text-white font-medium whitespace-nowrap"
+              style={{ background: '#C5A880' }}
+            >
+              {linkCopiado ? '✓ Copiado!' : '📋 Copiar link'}
+            </button>
+            <button
+              onClick={() => window.open(`/proposta/${id}`, '_blank')}
+              className="text-xs px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 whitespace-nowrap"
+            >
+              ↗ Abrir
+            </button>
+          </div>
+        </div>
+
         {/* Form de edição (escondido no print) */}
         {editando && (
           <div className="print:hidden max-w-[860px] mx-auto px-4 md:px-6 pt-4">
@@ -247,6 +295,19 @@ export default function PropostaPage() {
                   <input value={form.validade} onChange={e => setForm(f => ({ ...f, validade: e.target.value }))} type="date" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]" />
                 </Field>
               </div>
+              <Field label="Apresentação (00) — vende você antes do escopo">
+                <textarea
+                  value={form.apresentacao}
+                  onChange={e => setForm(f => ({ ...f, apresentacao: e.target.value }))}
+                  rows={5}
+                  className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none italic"
+                  placeholder={'Marketing sem propósito é custo, não investimento. Cada ação que entregamos tem um porquê estratégico claro.\n\nSe você chegou aqui, é porque acredita que sua marca pode crescer com intencionalidade. Vamos juntos.'}
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Aparece como seção 00 antes do escopo. Use pra apresentar sua filosofia. Pode deixar vazio pra renovação de cliente fixo.
+                </p>
+              </Field>
+
               <Field label="Escopo detalhado">
                 <textarea
                   value={form.escopo}
@@ -349,6 +410,25 @@ export default function PropostaPage() {
 
             {/* CORPO */}
             <div className="px-8 md:px-14 py-10 md:py-14 space-y-12">
+
+              {/* 00 APRESENTAÇÃO (se preenchida) */}
+              {proposta.apresentacao && (
+                <section>
+                  <SectionHeader number="00" label="Antes de tudo" />
+                  <div
+                    className="text-[16px] leading-[1.85] whitespace-pre-wrap font-light italic"
+                    style={{ color: '#3a4452' }}
+                  >
+                    {proposta.apresentacao}
+                  </div>
+                  <div className="flex items-center gap-2 mt-6">
+                    <div className="h-px w-8" style={{ background: '#c9a96e' }} />
+                    <p className="text-[10px] font-bold tracking-[0.22em] uppercase" style={{ color: '#c9a96e' }}>
+                      Gabriel Moraes &amp; Co
+                    </p>
+                  </div>
+                </section>
+              )}
 
               {/* 01 ESCOPO */}
               <section>

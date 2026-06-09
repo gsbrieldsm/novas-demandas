@@ -41,6 +41,7 @@ export interface Proposta {
   cliente_email: string | null
   titulo: string
   modalidade: PropostaModalidade
+  apresentacao: string | null
   escopo: string | null
   valor: number | null
   prazo_dias: number | null
@@ -49,6 +50,9 @@ export interface Proposta {
   status: PropostaStatus
   enviada_em: string | null
   resposta_em: string | null
+  visto_em: string | null
+  aceito_por_nome: string | null
+  aceito_por_email: string | null
 }
 
 export const PROPOSTA_STATUS_LABELS: Record<PropostaStatus, string> = {

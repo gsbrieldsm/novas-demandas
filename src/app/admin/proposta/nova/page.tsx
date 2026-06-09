@@ -18,6 +18,8 @@ function NovaPropostaForm() {
   const [erro, setErro] = useState<string | null>(null)
   const [preLoad, setPreLoad] = useState(true)
 
+  const APRESENTACAO_PADRAO = 'Marketing sem propósito é custo, não investimento. Cada ação que entregamos tem um porquê estratégico claro.\n\nSe você chegou aqui, é porque acredita que sua marca pode crescer com intencionalidade. Vamos juntos.'
+
   const [form, setForm] = useState({
     titulo: '',
     cliente_nome: '',
@@ -26,6 +28,7 @@ function NovaPropostaForm() {
     modalidade: 'mensal' as PropostaModalidade,
     valor: '',
     prazo_dias: '',
+    apresentacao: APRESENTACAO_PADRAO,
     escopo: '',
     observacoes: '',
     validade: format(addDays(new Date(), 15), 'yyyy-MM-dd'),
@@ -95,6 +98,7 @@ function NovaPropostaForm() {
       modalidade: form.modalidade,
       valor: form.valor ? parseFloat(form.valor.replace(',', '.')) : null,
       prazo_dias: form.prazo_dias ? parseInt(form.prazo_dias, 10) : null,
+      apresentacao: form.apresentacao.trim() || null,
       escopo: form.escopo.trim() || null,
       observacoes: form.observacoes.trim() || null,
       validade: form.validade || null,
@@ -228,6 +232,19 @@ function NovaPropostaForm() {
               />
             </Field>
           )}
+
+          <Field label="Apresentação (vende você antes do escopo)">
+            <textarea
+              value={form.apresentacao}
+              onChange={e => setForm(f => ({ ...f, apresentacao: e.target.value }))}
+              rows={5}
+              className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none italic"
+              placeholder="Aparece como seção 00, antes do escopo..."
+            />
+            <p className="text-[10px] text-slate-400 mt-1">
+              Texto padrão já preenchido (sua filosofia). Edite ou apague se preferir não ter.
+            </p>
+          </Field>
 
           <Field label="Escopo detalhado">
             <textarea
