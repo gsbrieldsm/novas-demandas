@@ -31,6 +31,7 @@ export function AdminNav({ onLogout, extra }: { onLogout: () => void; extra?: Re
     { label: 'Demandas', href: '/admin/demandas' },
     { label: 'Agenda', href: '/admin/agenda' },
     { label: 'Comercial', href: '/admin/comercial' },
+    { label: 'Propostas', href: '/admin/propostas' },
   ]
 
   // Verifica timer ativo

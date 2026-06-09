@@ -9,7 +9,16 @@ import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import { AdminNav } from '@/components/AdminNav'
 import { formatMinutos, valorHora } from '@/lib/tempo'
-import type { Ticket, TempoApontamento } from '@/types'
+import type { Ticket, TempoApontamento, Proposta, PropostaStatus } from '@/types'
+import { PROPOSTA_STATUS_LABELS } from '@/types'
+
+const PROPOSTA_STATUS_COLORS: Record<PropostaStatus, string> = {
+  rascunho: 'bg-slate-100 text-slate-600',
+  enviada: 'bg-blue-100 text-blue-700',
+  aceita: 'bg-green-100 text-green-700',
+  recusada: 'bg-red-100 text-red-700',
+  expirada: 'bg-amber-100 text-amber-700',
+}
 
 function formatBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -50,6 +59,7 @@ export default function ClienteDetailPage() {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [tempo, setTempo] = useState<TempoApontamento[]>([])
   const [metricas, setMetricas] = useState<Metrica[]>([])
+  const [propostas, setPropostas] = useState<Proposta[]>([])
   const [loading, setLoading] = useState(true)
   const [editingIdent, setEditingIdent] = useState(false)
   const [editingEscopo, setEditingEscopo] = useState(false)
@@ -70,17 +80,19 @@ export default function ClienteDetailPage() {
 
   const loadAll = useCallback(async () => {
     setLoading(true)
-    const [cs, ts, tm, ms] = await Promise.all([
+    const [cs, ts, tm, ms, ps] = await Promise.all([
       api('/api/clientes-fixos').then(r => r.json()),
       api('/api/tickets').then(r => r.json()),
       api('/api/tempo').then(r => r.json()),
       api(`/api/metricas?cliente_id=${id}`).then(r => r.json()),
+      api(`/api/propostas?cliente_fixo_id=${id}`).then(r => r.json()),
     ])
     const cf = (cs as ClienteFixo[]).find(c => c.id === id)
     setCliente(cf ?? null)
     setTickets(ts)
     setTempo(tm)
     setMetricas(ms)
+    setPropostas(ps)
     if (cf) {
       setIdentForm({
         nome: cf.nome,
@@ -292,6 +304,12 @@ export default function ClienteDetailPage() {
           >
             🖨 Gerar relatório do mês
           </button>
+          <button
+            onClick={() => router.push(`/admin/proposta/nova?cliente_fixo_id=${id}`)}
+            className="text-sm font-medium px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+          >
+            📄 Nova proposta
+          </button>
           {isCancelled ? (
             <button
               onClick={reativarCliente}
@@ -463,6 +481,54 @@ export default function ClienteDetailPage() {
             </div>
           )}
         </SectionCard>
+
+        {/* PROPOSTAS */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
+          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-700">Propostas ({propostas.length})</h2>
+            <button
+              onClick={() => router.push(`/admin/proposta/nova?cliente_fixo_id=${id}`)}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg text-white hover:opacity-90"
+              style={{ background: '#C5A880' }}
+            >
+              + Nova
+            </button>
+          </div>
+          <div className="px-4 md:px-6 py-4 md:py-5">
+            {propostas.length === 0 ? (
+              <p className="text-xs text-slate-400 italic text-center py-4">Nenhuma proposta para este cliente ainda.</p>
+            ) : (
+              <div className="space-y-2">
+                {propostas.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => router.push(`/admin/proposta/${p.id}`)}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors text-left"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{p.titulo}</p>
+                        <span className={clsx('text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full', PROPOSTA_STATUS_COLORS[p.status])}>
+                          {PROPOSTA_STATUS_LABELS[p.status]}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        {p.modalidade === 'mensal' ? 'Mensal' : 'Pontual'} ·{' '}
+                        {format(new Date(p.created_at), "d 'de' MMM yyyy", { locale: ptBR })}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm font-bold text-slate-800 tabular-nums">
+                        {p.valor != null ? formatBRL(p.valor) : '—'}
+                      </p>
+                      <p className="text-[10px] text-slate-400">{p.modalidade === 'mensal' ? '/mês' : 'total'}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* MÉTRICAS RECENTES */}
         <SectionCard title={`Métricas registradas (${metricas.length})`}>

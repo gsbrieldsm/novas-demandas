@@ -27,6 +27,38 @@ export interface Ticket {
   chat_transcript: ChatMessage[]
 }
 
+export type PropostaModalidade = 'mensal' | 'pontual'
+export type PropostaStatus = 'rascunho' | 'enviada' | 'aceita' | 'recusada' | 'expirada'
+
+export interface Proposta {
+  id: string
+  created_at: string
+  updated_at: string
+  cliente_fixo_id: string | null
+  lead_id: string | null
+  cliente_nome: string
+  cliente_empresa: string | null
+  cliente_email: string | null
+  titulo: string
+  modalidade: PropostaModalidade
+  escopo: string | null
+  valor: number | null
+  prazo_dias: number | null
+  observacoes: string | null
+  validade: string | null
+  status: PropostaStatus
+  enviada_em: string | null
+  resposta_em: string | null
+}
+
+export const PROPOSTA_STATUS_LABELS: Record<PropostaStatus, string> = {
+  rascunho: 'Rascunho',
+  enviada: 'Enviada',
+  aceita: 'Aceita',
+  recusada: 'Recusada',
+  expirada: 'Expirada',
+}
+
 export interface TempoApontamento {
   id: string
   created_at: string
