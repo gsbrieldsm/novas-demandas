@@ -1736,6 +1736,36 @@
       html { scroll-padding-top: 16px; }
       #investimento, #sobre, #faq, #contato { scroll-margin-top: 16px; }
     }
+
+    /* 1️⃣1️⃣ — AUDIOVISUAL GRID vira swipe horizontal no mobile */
+    @media (max-width: 760px) {
+      .av-grid {
+        grid-template-columns: none !important;
+        display: flex !important;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 12px !important;
+        padding: 4px 24px 20px !important;
+        margin: 32px -24px 0 !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        scrollbar-width: none;
+      }
+      .av-grid::-webkit-scrollbar { display: none; }
+      .av-card {
+        flex: 0 0 calc(78% - 12px);
+        scroll-snap-align: center;
+        border-radius: 18px;
+        padding: 32px 24px !important;
+        background: #f8f4ec !important;
+      }
+      .av-card-desc { font-size: 14px !important; }
+      .av-statement {
+        margin: 0 24px !important;
+        text-align: center;
+      }
+      .av-statement-text { font-size: clamp(20px, 6vw, 28px) !important; }
+    }
   </style>
 </head>
 <body>
@@ -1985,6 +2015,8 @@
           <p class="av-card-desc">Do lançamento ao institucional — documentamos cada momento com a narrativa que o seu negócio merece.</p>
         </div>
       </div>
+
+      <div class="swipe-hint" style="margin-top:8px">Arraste para ver os 4 serviços</div>
 
       <div class="av-statement reveal" style="transition-delay:.2s">
         <div class="av-statement-text">
