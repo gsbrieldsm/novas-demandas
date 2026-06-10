@@ -32,3 +32,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 *.save
+
+# Vídeos brutos (originais sem compressão)
+/public/videos/*.MOV
+/public/videos/*.mov
+/public/videos/dji_fly_*.MP4
+/public/videos/copy_*.mp4
+/public/videos/IMG_*.PNG
