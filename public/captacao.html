@@ -255,6 +255,15 @@
         radial-gradient(ellipse 60% 50% at 50% 50%, rgba(201,169,110,0.15) 0%, transparent 70%),
         repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(201,169,110,0.05) 2px, rgba(201,169,110,0.05) 3px);
     }
+    .film-frame video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+    .film-frame::after { z-index: 1; pointer-events: none; }
     .film-frame .label {
       position: absolute;
       bottom: 18px;
@@ -265,6 +274,7 @@
       letter-spacing: .22em;
       text-transform: uppercase;
       z-index: 2;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
     }
     .film-frame.f1 {
       top: 0; left: 0;
@@ -997,9 +1007,24 @@
 
     <div class="hero-visual">
       <div class="film-stack">
-        <div class="film-frame f1"><span class="label">Drone · 4K</span></div>
-        <div class="film-frame f2"><span class="label">Áudio Pro</span></div>
-        <div class="film-frame f3"><span class="label">Edição Cinematográfica</span></div>
+        <div class="film-frame f1">
+          <video autoplay muted loop playsinline preload="auto">
+            <source src="/videos/projeto-2.mp4" type="video/mp4" />
+          </video>
+          <span class="label">Drone · 4K</span>
+        </div>
+        <div class="film-frame f2">
+          <video autoplay muted loop playsinline preload="auto">
+            <source src="/videos/projeto-1.mp4" type="video/mp4" />
+          </video>
+          <span class="label">Áudio Pro</span>
+        </div>
+        <div class="film-frame f3">
+          <video autoplay muted loop playsinline preload="auto">
+            <source src="/videos/projeto-3.mp4" type="video/mp4" />
+          </video>
+          <span class="label">Edição Cinematográfica</span>
+        </div>
       </div>
     </div>
   </section>
