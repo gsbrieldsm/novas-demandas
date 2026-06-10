@@ -765,6 +765,184 @@
       opacity: 1;
       transform: none;
     }
+
+    /* ═════════════════════════════════════════════════════════
+       MOBILE EXCLUSIVAS — sem mexer no desktop
+       ═════════════════════════════════════════════════════════ */
+
+    /* SCROLL PROGRESS */
+    .scroll-progress {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(to right, var(--accent), var(--accent2));
+      z-index: 250;
+      width: 0%;
+      transition: width .08s linear;
+      box-shadow: 0 0 12px rgba(201,169,110,0.6);
+      pointer-events: none;
+      display: none;
+    }
+
+    /* BOTTOM-STICKY CTA BAR */
+    .mobile-cta-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 90;
+      display: none;
+      gap: 10px;
+      padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+      background: rgba(16,12,8,0.95);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(201,169,110,0.25);
+      transform: translateY(110%);
+      transition: transform .35s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: 0 -20px 40px rgba(0,0,0,0.4);
+    }
+    .mobile-cta-bar.visible { transform: translateY(0); }
+    .mobile-cta-bar .cta {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 12px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      min-height: 50px;
+    }
+    .mobile-cta-bar .cta.primary {
+      background: linear-gradient(135deg, var(--accent), #8B6840);
+      color: #100c08;
+    }
+    .mobile-cta-bar .cta.whats {
+      background: #25D366;
+      color: white;
+      flex: 1.4;
+    }
+    .mobile-cta-bar .cta svg { width: 20px; height: 20px; }
+
+    .swipe-hint {
+      text-align: center;
+      font-size: 10px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--text2);
+      margin-top: 12px;
+      opacity: .6;
+      display: none;
+    }
+    .swipe-hint::after { content: ' ⇢'; color: var(--accent); }
+
+    @media (max-width: 760px) {
+      .scroll-progress { display: block; }
+      .mobile-cta-bar { display: flex; }
+      .swipe-hint { display: block; }
+      .whatsapp-float { bottom: 96px !important; }
+      body { padding-bottom: 70px; }
+
+      /* HERO mobile beefier */
+      .hero-h1 {
+        font-size: clamp(40px, 11vw, 64px) !important;
+        line-height: .96 !important;
+        letter-spacing: -.035em !important;
+      }
+      .hero-sub { font-size: 16px !important; line-height: 1.55 !important; }
+      .hero-actions {
+        gap: 10px;
+        flex-direction: column;
+        width: 100%;
+      }
+      .hero-actions .btn-primary,
+      .hero-actions .btn-ghost {
+        width: 100%;
+        padding: 18px 22px !important;
+        justify-content: center;
+        font-size: 14px !important;
+        min-height: 56px;
+      }
+      .film-stack { max-width: 320px !important; }
+
+      /* PACOTES — carrossel swipe */
+      .pacotes-grid {
+        grid-template-columns: none !important;
+        display: flex !important;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 14px;
+        padding: 8px 24px 24px;
+        margin: 0 -24px;
+        scrollbar-width: none;
+      }
+      .pacotes-grid::-webkit-scrollbar { display: none; }
+      .pacote-card {
+        flex: 0 0 calc(86% - 14px);
+        scroll-snap-align: center;
+      }
+      .pacote-card.featured { transform: none !important; }
+
+      /* PORTFOLIO — carrossel swipe horizontal */
+      .portfolio-grid {
+        grid-template-columns: none !important;
+        display: flex !important;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 12px;
+        padding: 0 24px 16px;
+        margin: 0 -24px;
+        scrollbar-width: none;
+      }
+      .portfolio-grid::-webkit-scrollbar { display: none; }
+      .portfolio-item {
+        flex: 0 0 calc(72% - 12px);
+        scroll-snap-align: center;
+        aspect-ratio: 3/4;
+      }
+
+      /* DIFERENCIAIS — 2x2 grid mobile */
+      .diferenciais-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px;
+      }
+      .diferencial-card { padding: 24px 16px; }
+      .diferencial-title { font-size: 14px; }
+      .diferencial-desc { font-size: 12px; }
+
+      /* PROCESSO — vertical com linha conectando */
+      .processo-grid { grid-template-columns: 1fr !important; gap: 32px; }
+      .processo-step { position: relative; padding-left: 70px; }
+      .processo-number {
+        position: absolute;
+        left: 0;
+        top: 0;
+        font-size: 48px;
+      }
+
+      /* FAQ tap targets grandes */
+      .faq-question {
+        font-size: 16px !important;
+        min-height: 52px;
+        padding: 6px 0;
+        line-height: 1.35;
+      }
+      .faq-item { padding: 18px 0; }
+      .faq-answer { font-size: 15px !important; }
+
+      /* CTA FINAL botão massivo */
+      .cta-final { padding: 100px 24px; }
+      .cta-final-btn {
+        width: 100%;
+        max-width: 380px;
+        justify-content: center;
+        padding: 22px 28px !important;
+        font-size: 15px !important;
+      }
+      .section-title { font-size: clamp(28px, 7.5vw, 44px) !important; }
+      .section { padding: 80px 24px !important; }
+    }
   </style>
 </head>
 <body>
@@ -872,6 +1050,8 @@
         <a href="https://wa.me/5547988194822?text=Tenho%20um%20evento%20e%20quero%20cobertura%20audiovisual" target="_blank" rel="noopener" class="pacote-cta">Quero orçamento</a>
       </div>
     </div>
+
+    <div class="swipe-hint" style="margin-top:24px">Arraste para ver os 3 pacotes</div>
   </section>
 
   <!-- PORTFOLIO -->
@@ -908,6 +1088,8 @@
         </div>
       </div>
     </div>
+
+    <div class="swipe-hint">Arraste para ver mais</div>
 
     <p class="portfolio-note">
       Quer ver mais? <a href="https://instagram.com/gabrieldsm.mkt" target="_blank" rel="noopener">@gabrieldsm.mkt</a>
@@ -1046,6 +1228,20 @@
     <div class="copy">gmeco.com.br · Marketing &amp; Estratégia</div>
   </footer>
 
+  <!-- 📱 SCROLL PROGRESS BAR (só mobile) -->
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <!-- 📱 BOTTOM-STICKY CTA BAR (só mobile) -->
+  <div class="mobile-cta-bar" id="mobileCta">
+    <a href="#pacotes" class="cta primary">
+      Ver pacotes
+    </a>
+    <a href="https://wa.me/5547988194822?text=Vim%20pela%20p%C3%A1gina%20de%20capta%C3%A7%C3%A3o%20e%20quero%20conversar" target="_blank" rel="noopener" class="cta whats">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+      WhatsApp
+    </a>
+  </div>
+
   <!-- WHATSAPP FLUTUANTE -->
   <a href="https://wa.me/5547988194822?text=Vim%20pela%20p%C3%A1gina%20de%20capta%C3%A7%C3%A3o%20e%20quero%20conversar" target="_blank" rel="noopener" class="whatsapp-float" aria-label="Falar no WhatsApp">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
@@ -1063,6 +1259,47 @@
       });
     }, { threshold: 0.15 });
     reveals.forEach(el => observer.observe(el));
+
+    /* ═══════════ MOBILE EXCLUSIVES ═══════════ */
+    const isMobile = () => window.matchMedia('(max-width: 760px)').matches;
+
+    // SCROLL PROGRESS
+    const progressBar = document.querySelector('.scroll-progress');
+    function updateProgress() {
+      const h = document.documentElement;
+      const scrolled = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+      if (progressBar) progressBar.style.width = Math.min(100, Math.max(0, scrolled)) + '%';
+    }
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+
+    // BOTTOM CTA BAR aparece depois do hero
+    const ctaBar = document.getElementById('mobileCta');
+    const heroEl = document.getElementById('hero');
+    if (ctaBar && heroEl) {
+      new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (isMobile()) {
+            if (!entry.isIntersecting) ctaBar.classList.add('visible');
+            else ctaBar.classList.remove('visible');
+          }
+        });
+      }, { threshold: 0.05 }).observe(heroEl);
+    }
+
+    // Centraliza pacote featured no carousel mobile
+    const pacotesGrid = document.querySelector('.pacotes-grid');
+    if (pacotesGrid) {
+      window.addEventListener('load', () => {
+        if (isMobile()) {
+          const featured = pacotesGrid.querySelector('.pacote-card.featured');
+          if (featured) {
+            const offset = featured.offsetLeft - (pacotesGrid.clientWidth - featured.clientWidth) / 2;
+            pacotesGrid.scrollLeft = Math.max(0, offset);
+          }
+        }
+      });
+    }
   </script>
 </body>
 </html>

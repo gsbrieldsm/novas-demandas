@@ -1540,6 +1540,202 @@
       .servico-card, .paraquem-col { padding: 36px 28px; }
       .nav-cta-mobile { display: block; }
     }
+
+    /* ═════════════════════════════════════════════════════════
+       MOBILE EXCLUSIVAS — fora-da-curva, sem mexer no desktop
+       ═════════════════════════════════════════════════════════ */
+
+    /* 1️⃣ — SCROLL PROGRESS no topo */
+    .scroll-progress {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(to right, var(--accent), var(--accent2));
+      z-index: 250;
+      width: 0%;
+      transition: width .08s linear;
+      box-shadow: 0 0 12px rgba(201,169,110,0.6);
+      pointer-events: none;
+      display: none;
+    }
+
+    /* 2️⃣ — BOTTOM-STICKY CTA BAR */
+    .mobile-cta-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 90;
+      display: none;
+      gap: 10px;
+      padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+      background: rgba(16,12,8,0.95);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(201,169,110,0.25);
+      transform: translateY(110%);
+      transition: transform .35s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: 0 -20px 40px rgba(0,0,0,0.4);
+    }
+    .mobile-cta-bar.visible { transform: translateY(0); }
+    .mobile-cta-bar .cta {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 12px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      min-height: 50px;
+    }
+    .mobile-cta-bar .cta.primary {
+      background: linear-gradient(135deg, var(--accent), #8B6840);
+      color: #100c08;
+      flex: 1.5;
+    }
+    .mobile-cta-bar .cta.whats {
+      background: #25D366;
+      color: white;
+      flex: 0 0 56px;
+      padding: 14px;
+    }
+    .mobile-cta-bar .cta svg { width: 20px; height: 20px; }
+
+    @media (max-width: 760px) {
+      .scroll-progress { display: block; }
+      .mobile-cta-bar { display: flex; }
+      .whatsapp-float { bottom: 96px !important; }
+      body:not(.no-cta-bar) { padding-bottom: 70px; }
+    }
+
+    /* 3️⃣ — HERO TIPOGRAFIA MAIS PESADA NO MOBILE */
+    @media (max-width: 760px) {
+      .hero-h1 {
+        font-size: clamp(40px, 11vw, 64px) !important;
+        line-height: .96 !important;
+        letter-spacing: -.035em !important;
+      }
+      .hero-content { padding-top: 4px; }
+      .hero-tag { font-size: 10px !important; padding: 6px 14px !important; }
+      .hero-sub { font-size: 16px !important; line-height: 1.55 !important; }
+      .hero-actions {
+        gap: 10px;
+        flex-direction: column;
+        width: 100%;
+        max-width: 320px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .hero-actions .btn-primary,
+      .hero-actions .btn-ghost {
+        width: 100%;
+        padding: 18px 22px !important;
+        justify-content: center;
+        text-align: center;
+        font-size: 14px !important;
+        min-height: 56px;
+        display: flex;
+        align-items: center;
+      }
+      .hero-microcopy { font-size: 13px !important; }
+      .chat-preview { transform: none !important; max-width: 100% !important; }
+    }
+
+    /* 4️⃣ — INVESTIMENTO: CARROSSEL SWIPE NO MOBILE */
+    @media (max-width: 760px) {
+      .investimento-grid {
+        grid-template-columns: none !important;
+        display: flex !important;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 14px !important;
+        padding: 8px 24px 28px !important;
+        margin: 0 -24px;
+        scrollbar-width: none;
+      }
+      .investimento-grid::-webkit-scrollbar { display: none; }
+      .investimento-card {
+        flex: 0 0 calc(86% - 14px);
+        scroll-snap-align: center;
+      }
+      .investimento-card.featured { transform: none !important; }
+      .investimento-block { padding: 90px 0 !important; }
+      .investimento-container { padding: 0 24px; }
+      .investimento-grid + .investimento-capacity {
+        text-align: center;
+        margin: 24px 24px 0;
+      }
+      .swipe-hint {
+        text-align: center;
+        font-size: 10px;
+        letter-spacing: .22em;
+        text-transform: uppercase;
+        color: var(--text2);
+        margin-top: 12px;
+        opacity: .6;
+      }
+      .swipe-hint::after { content: ' ⇢'; color: var(--accent); }
+    }
+    @media (min-width: 761px) { .swipe-hint { display: none; } }
+
+    /* 5️⃣ — FAQ COM TAP TARGETS GRANDES */
+    @media (max-width: 760px) {
+      .faq-question {
+        font-size: 16px !important;
+        min-height: 52px;
+        padding: 6px 0;
+        line-height: 1.35;
+      }
+      .faq-item { padding: 18px 0; }
+      .faq-answer { font-size: 15px !important; }
+    }
+
+    /* 6️⃣ — SECTION SPACING + SOBRE MOBILE */
+    @media (max-width: 760px) {
+      .sobre-container { padding: 0 8px; }
+      .sobre-photo-wrap { aspect-ratio: 4/4.5; max-width: 320px; margin: 0 auto; }
+      .sobre-title { font-size: clamp(28px, 8vw, 40px) !important; }
+      .investimento-title, .section-title { font-size: clamp(28px, 7.5vw, 44px) !important; }
+    }
+
+    /* 7️⃣ — CONTATO MOBILE OTIMIZADO */
+    @media (max-width: 760px) {
+      .cta-title { font-size: clamp(28px, 8vw, 42px) !important; }
+      .cta-contacts { gap: 10px; flex-direction: column; }
+      .cta-link { width: 100%; justify-content: center; min-height: 54px; }
+    }
+
+    /* 8️⃣ — WHATSAPP FLOAT MAIOR + MAGNÉTICO MOBILE */
+    @media (max-width: 760px) {
+      .whatsapp-float {
+        width: 58px;
+        height: 58px;
+        right: 16px;
+      }
+      .whatsapp-float svg { width: 28px; height: 28px; }
+    }
+
+    /* 9️⃣ — CHAT PREVIEW ANIMATION (mensagens aparecem on-scroll) */
+    @media (max-width: 760px) {
+      .chat-msg {
+        opacity: 0;
+        transform: translateY(12px);
+        transition: opacity .55s, transform .55s;
+      }
+      .chat-preview.animated .chat-msg { opacity: 1; transform: none; }
+      .chat-preview.animated .chat-msg:nth-child(1) { transition-delay: .1s; }
+      .chat-preview.animated .chat-msg:nth-child(2) { transition-delay: .55s; }
+      .chat-preview.animated .chat-msg:nth-child(3) { transition-delay: 1.05s; }
+      .chat-preview.animated .chat-msg:nth-child(4) { transition-delay: 1.55s; }
+      .chat-preview.animated .chat-msg:nth-child(5) { transition-delay: 2.05s; }
+    }
+
+    /* 🔟 — SCROLL SNAP suave entre seções principais */
+    @media (max-width: 760px) {
+      html { scroll-padding-top: 16px; }
+      #investimento, #sobre, #faq, #contato { scroll-margin-top: 16px; }
+    }
   </style>
 </head>
 <body>
@@ -1890,6 +2086,8 @@
         </div>
       </div>
 
+      <div class="swipe-hint">Arraste para ver mais</div>
+
       <div class="investimento-capacity reveal" style="transition-delay:.25s">
         ⓘ Vagas limitadas · <strong>10 clientes/mês</strong> em marketing completo + <strong>5 captações avulsas</strong>
       </div>
@@ -2163,6 +2361,19 @@
     </div>
   </footer>
 
+  <!-- 📱 SCROLL PROGRESS BAR (só mobile) -->
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <!-- 📱 BOTTOM-STICKY CTA BAR (só mobile) -->
+  <div class="mobile-cta-bar" id="mobileCta">
+    <a href="/chat" class="cta primary">
+      ⚡ Adiantar conversa
+    </a>
+    <a href="https://wa.me/5547988194822?text=Vim%20pelo%20site%20e%20quero%20conversar" target="_blank" rel="noopener" class="cta whats" aria-label="WhatsApp">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+    </a>
+  </div>
+
   <!-- WHATSAPP FLUTUANTE -->
   <a href="https://wa.me/5547988194822?text=Vim%20pelo%20site%20da%20Gabriel%20Moraes%20%26%20Co%20e%20quero%20saber%20mais" target="_blank" rel="noopener" class="whatsapp-float" aria-label="Falar no WhatsApp">
     <span class="whatsapp-tooltip">Fala direto com o Gabriel</span>
@@ -2188,6 +2399,65 @@
         ? 'rgba(8,12,16,0.97)'
         : 'rgba(8,12,16,0.85)';
     });
+
+    /* ═══════════════════════════════════════════════════
+       ✨ MOBILE EXCLUSIVES — só ativam em telas pequenas
+       ═══════════════════════════════════════════════════ */
+    const isMobile = () => window.matchMedia('(max-width: 760px)').matches;
+
+    // 📊 SCROLL PROGRESS BAR
+    const progressBar = document.querySelector('.scroll-progress');
+    function updateProgress() {
+      const h = document.documentElement;
+      const scrolled = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+      if (progressBar) progressBar.style.width = Math.min(100, Math.max(0, scrolled)) + '%';
+    }
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+
+    // 📱 BOTTOM-STICKY CTA BAR — aparece depois que rola o hero
+    const ctaBar = document.getElementById('mobileCta');
+    const heroEl = document.getElementById('hero');
+    if (ctaBar && heroEl) {
+      new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (isMobile()) {
+            if (!entry.isIntersecting) {
+              ctaBar.classList.add('visible');
+            } else {
+              ctaBar.classList.remove('visible');
+            }
+          }
+        });
+      }, { threshold: 0.05 }).observe(heroEl);
+    }
+
+    // 💬 CHAT PREVIEW ANIMA quando entra na view
+    const chatPreview = document.querySelector('.chat-preview');
+    if (chatPreview) {
+      new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            chatPreview.classList.add('animated');
+          }
+        });
+      }, { threshold: 0.3 }).observe(chatPreview);
+    }
+
+    // 🎬 INVESTIMENTO CARDS — snap visual no scroll mobile (haptic-like)
+    const investGrid = document.querySelector('.investimento-grid');
+    if (investGrid) {
+      // Centraliza o card "featured" como inicial no mobile
+      window.addEventListener('load', () => {
+        if (isMobile()) {
+          const featured = investGrid.querySelector('.investimento-card.featured');
+          if (featured) {
+            const offset = featured.offsetLeft - (investGrid.clientWidth - featured.clientWidth) / 2;
+            investGrid.scrollLeft = Math.max(0, offset);
+          }
+        }
+      });
+    }
 
     // Mobile menu
     function toggleMenu() {
