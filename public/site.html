@@ -1161,6 +1161,19 @@
       transition: background .2s, transform .2s;
     }
     .av-statement-cta:hover { background: var(--accent2); transform: translateY(-2px); }
+    .av-statement-actions {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .av-statement-cta.ghost {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid rgba(201,169,110,0.45);
+    }
+    .av-statement-cta.ghost:hover { background: rgba(201,169,110,0.12); }
 
     /* ── CLIENTES ───────────────────────────── */
     #clientes {
@@ -1765,6 +1778,8 @@
         text-align: center;
       }
       .av-statement-text { font-size: clamp(20px, 6vw, 28px) !important; }
+      .av-statement-actions { width: 100%; flex-direction: column; }
+      .av-statement-actions .av-statement-cta { width: 100%; text-align: center; }
     }
   </style>
 </head>
@@ -2022,7 +2037,10 @@
         <div class="av-statement-text">
           Produção audiovisual não é ornamento.<br />É <em>argumento de venda em movimento.</em>
         </div>
-        <a href="https://wa.me/5547988194822?text=Vim%20atrav%C3%A9s%20do%20site%20e%20gostaria%20de%20conhecer%20o%20seu%20neg%C3%B3cio" target="_blank" rel="noopener" class="av-statement-cta">Quero uma produção</a>
+        <div class="av-statement-actions">
+          <a href="/captacao" class="av-statement-cta">Ver pacotes e portfólio</a>
+          <a href="https://wa.me/5547988194822?text=Vim%20atrav%C3%A9s%20do%20site%20e%20gostaria%20de%20conhecer%20o%20seu%20neg%C3%B3cio" target="_blank" rel="noopener" class="av-statement-cta ghost">Quero uma produção</a>
+        </div>
       </div>
     </div>
   </section>
