@@ -50,6 +50,13 @@ export default function PropostaPage() {
     validade: '',
   })
   const [linkCopiado, setLinkCopiado] = useState(false)
+  const [campoCopiado, setCampoCopiado] = useState<string | null>(null)
+
+  function copiarCampo(campo: string, valor: string) {
+    navigator.clipboard.writeText(valor)
+    setCampoCopiado(campo)
+    setTimeout(() => setCampoCopiado(null), 2000)
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -258,6 +265,33 @@ export default function PropostaPage() {
             </button>
           </div>
         </div>
+
+        {/* Dados fiscais (NF/boleto) */}
+        {proposta.status === 'aceita' && (
+          <div className="print:hidden max-w-[860px] mx-auto px-4 md:px-6 pt-4">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mb-3">Dados para Nota Fiscal e Boleto</p>
+              {proposta.dados_fiscais_status === 'preenchido' ? (
+                <div className="space-y-2">
+                  <CampoCopiavel label="CNPJ" valor={proposta.cliente_cnpj ?? ''} campo="cnpj" campoCopiado={campoCopiado} onCopy={copiarCampo} />
+                  <CampoCopiavel label="Razão Social" valor={proposta.cliente_razao_social ?? ''} campo="razao_social" campoCopiado={campoCopiado} onCopy={copiarCampo} />
+                  {proposta.cliente_telefone && (
+                    <CampoCopiavel label="Telefone" valor={proposta.cliente_telefone} campo="telefone" campoCopiado={campoCopiado} onCopy={copiarCampo} />
+                  )}
+                  {proposta.dados_fiscais_em && (
+                    <p className="text-[11px] text-slate-400 pt-1">
+                      Enviado em {format(new Date(proposta.dados_fiscais_em), "d 'de' MMM 'às' HH:mm", { locale: ptBR })}
+                    </p>
+                  )}
+                </div>
+              ) : proposta.dados_fiscais_status === 'nao_necessario' ? (
+                <p className="text-sm text-slate-500">Cliente indicou que não precisa de contrato/nota fiscal.</p>
+              ) : (
+                <p className="text-sm text-slate-400">Aguardando o cliente preencher os dados fiscais.</p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Form de edição (escondido no print) */}
         {editando && (
@@ -536,6 +570,35 @@ export default function PropostaPage() {
         }
       `}</style>
     </>
+  )
+}
+
+function CampoCopiavel({
+  label,
+  valor,
+  campo,
+  campoCopiado,
+  onCopy,
+}: {
+  label: string
+  valor: string
+  campo: string
+  campoCopiado: string | null
+  onCopy: (campo: string, valor: string) => void
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 bg-slate-50 rounded-lg px-3 py-2">
+      <div className="min-w-0">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">{label}</p>
+        <p className="text-sm text-slate-700 font-mono truncate">{valor}</p>
+      </div>
+      <button
+        onClick={() => onCopy(campo, valor)}
+        className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-white whitespace-nowrap flex-shrink-0"
+      >
+        {campoCopiado === campo ? '✓ Copiado' : '📋 Copiar'}
+      </button>
+    </div>
   )
 }
 

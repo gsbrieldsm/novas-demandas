@@ -17,7 +17,7 @@ export async function GET(
 
   const { data, error } = await db
     .from('propostas')
-    .select('id, created_at, cliente_nome, cliente_empresa, cliente_email, titulo, modalidade, apresentacao, escopo, valor, prazo_dias, observacoes, validade, status, enviada_em, resposta_em, visto_em, aceito_por_nome, aceito_por_email')
+    .select('id, created_at, cliente_nome, cliente_empresa, cliente_email, titulo, modalidade, apresentacao, escopo, valor, prazo_dias, observacoes, validade, status, enviada_em, resposta_em, visto_em, aceito_por_nome, aceito_por_email, dados_fiscais_status, cliente_cnpj, cliente_razao_social, cliente_telefone')
     .eq('id', id)
     .single()
 

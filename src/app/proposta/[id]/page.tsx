@@ -30,6 +30,28 @@ interface PublicProposta {
   resposta_em: string | null
   aceito_por_nome: string | null
   aceito_por_email: string | null
+  dados_fiscais_status: 'pendente' | 'preenchido' | 'nao_necessario'
+  cliente_cnpj: string | null
+  cliente_razao_social: string | null
+  cliente_telefone: string | null
+}
+
+function formatCNPJ(value: string) {
+  return value
+    .replace(/\D/g, '')
+    .slice(0, 14)
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1/$2')
+    .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+}
+
+function formatTelefone(value: string) {
+  const d = value.replace(/\D/g, '').slice(0, 11)
+  if (d.length <= 2) return d
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
 }
 
 export default function PublicPropostaPage() {
@@ -44,6 +66,9 @@ export default function PublicPropostaPage() {
   const [aceiteForm, setAceiteForm] = useState({ nome: '', email: '' })
   const [aceiteErro, setAceiteErro] = useState<string | null>(null)
   const [aceitouAgora, setAceitouAgora] = useState(false)
+  const [fiscalForm, setFiscalForm] = useState({ cnpj: '', razao_social: '', telefone: '' })
+  const [enviandoFiscal, setEnviandoFiscal] = useState(false)
+  const [fiscalErro, setFiscalErro] = useState<string | null>(null)
 
   useEffect(() => {
     fetch(`/api/public/proposta/${id}`)
@@ -94,6 +119,37 @@ export default function PublicPropostaPage() {
       setAceiteErro(err.error || 'Não foi possível aceitar')
     }
     setAceitando(false)
+  }
+
+  async function enviarDadosFiscais(tipo: 'preenchido' | 'nao_necessario') {
+    if (tipo === 'preenchido') {
+      if (!fiscalForm.cnpj.trim() || !fiscalForm.razao_social.trim()) {
+        setFiscalErro('CNPJ e Razão Social são obrigatórios')
+        return
+      }
+    }
+    setEnviandoFiscal(true)
+    setFiscalErro(null)
+    const res = await fetch(`/api/public/proposta/${id}/dados-fiscais`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo, ...fiscalForm }),
+    })
+    if (res.ok) {
+      if (proposta) {
+        setProposta({
+          ...proposta,
+          dados_fiscais_status: tipo,
+          cliente_cnpj: tipo === 'preenchido' ? fiscalForm.cnpj.trim() : null,
+          cliente_razao_social: tipo === 'preenchido' ? fiscalForm.razao_social.trim() : null,
+          cliente_telefone: tipo === 'preenchido' ? (fiscalForm.telefone.trim() || null) : null,
+        })
+      }
+    } else {
+      const err = await res.json().catch(() => ({ error: 'Erro' }))
+      setFiscalErro(err.error || 'Não foi possível enviar')
+    }
+    setEnviandoFiscal(false)
   }
 
   if (loading) {
@@ -368,6 +424,80 @@ export default function PublicPropostaPage() {
                   <p className="text-sm text-slate-400 text-center italic">Esta proposta não está disponível para aceite.</p>
                 )}
               </section>
+
+              {/* 05 DADOS FISCAIS */}
+              {aceita && (
+                <section className="print:hidden">
+                  <SectionHeader number={proposta.observacoes ? '05' : '04'} label="Nota Fiscal e Boleto" />
+
+                  {proposta.dados_fiscais_status === 'preenchido' ? (
+                    <div className="max-w-md mx-auto bg-green-50 border border-green-200 rounded-2xl p-6 text-center">
+                      <p className="text-sm font-semibold text-green-900 mb-1">✓ Dados recebidos</p>
+                      <p className="text-xs text-green-700">
+                        {proposta.cliente_razao_social} · CNPJ {proposta.cliente_cnpj}
+                      </p>
+                      <p className="text-xs text-green-700 mt-3">
+                        Em breve você recebe o boleto e a nota fiscal por e-mail.
+                      </p>
+                    </div>
+                  ) : proposta.dados_fiscais_status === 'nao_necessario' ? (
+                    <div className="max-w-md mx-auto bg-slate-50 rounded-2xl p-6 text-center">
+                      <p className="text-sm text-slate-500">Sem necessidade de contrato ou nota fiscal para este projeto.</p>
+                    </div>
+                  ) : (
+                    <div className="max-w-md mx-auto bg-slate-50 rounded-2xl p-6">
+                      <p className="text-sm text-slate-700 mb-4 text-center">
+                        Pra emitir a nota fiscal e o boleto, preencha os dados da empresa:
+                      </p>
+                      {fiscalErro && <div className="bg-red-50 text-red-700 text-xs px-3 py-2 rounded mb-3">{fiscalErro}</div>}
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 block mb-1">CNPJ *</label>
+                          <input
+                            value={fiscalForm.cnpj}
+                            onChange={e => setFiscalForm(f => ({ ...f, cnpj: formatCNPJ(e.target.value) }))}
+                            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                            placeholder="00.000.000/0000-00"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 block mb-1">Razão Social *</label>
+                          <input
+                            value={fiscalForm.razao_social}
+                            onChange={e => setFiscalForm(f => ({ ...f, razao_social: e.target.value }))}
+                            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                            placeholder="Razão social da empresa"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 block mb-1">Telefone (opcional)</label>
+                          <input
+                            value={fiscalForm.telefone}
+                            onChange={e => setFiscalForm(f => ({ ...f, telefone: formatTelefone(e.target.value) }))}
+                            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                            placeholder="(00) 00000-0000"
+                          />
+                        </div>
+                        <button
+                          onClick={() => enviarDadosFiscais('preenchido')}
+                          disabled={enviandoFiscal || !fiscalForm.cnpj.trim() || !fiscalForm.razao_social.trim()}
+                          className="w-full text-sm py-2 rounded-lg text-white disabled:opacity-50 font-bold"
+                          style={{ background: 'linear-gradient(135deg, #c9a96e 0%, #8B6840 100%)' }}
+                        >
+                          {enviandoFiscal ? 'Enviando...' : 'Enviar dados'}
+                        </button>
+                        <button
+                          onClick={() => enviarDadosFiscais('nao_necessario')}
+                          disabled={enviandoFiscal}
+                          className="w-full text-xs text-slate-400 hover:text-slate-600 underline disabled:opacity-50"
+                        >
+                          Não vou precisar de contrato/nota fiscal para este projeto
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </section>
+              )}
             </div>
 
             {/* RODAPÉ */}

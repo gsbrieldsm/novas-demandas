@@ -67,3 +67,12 @@ create policy "Público pode ler tickets por ID"
 create index tickets_status_idx on public.tickets(status);
 create index tickets_created_at_idx on public.tickets(created_at desc);
 create index tickets_client_email_idx on public.tickets(client_email);
+
+-- Migração: dados fiscais para emissão de NF/boleto (tabela propostas)
+-- A tabela propostas já existe no banco mas não está versionada neste arquivo.
+alter table public.propostas
+  add column if not exists dados_fiscais_status text not null default 'pendente',
+  add column if not exists cliente_cnpj text,
+  add column if not exists cliente_razao_social text,
+  add column if not exists cliente_telefone text,
+  add column if not exists dados_fiscais_em timestamp with time zone;

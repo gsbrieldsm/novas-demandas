@@ -29,6 +29,7 @@ export interface Ticket {
 
 export type PropostaModalidade = 'mensal' | 'pontual'
 export type PropostaStatus = 'rascunho' | 'enviada' | 'aceita' | 'recusada' | 'expirada'
+export type PropostaDadosFiscaisStatus = 'pendente' | 'preenchido' | 'nao_necessario'
 
 export interface Proposta {
   id: string
@@ -53,6 +54,11 @@ export interface Proposta {
   visto_em: string | null
   aceito_por_nome: string | null
   aceito_por_email: string | null
+  dados_fiscais_status: PropostaDadosFiscaisStatus
+  cliente_cnpj: string | null
+  cliente_razao_social: string | null
+  cliente_telefone: string | null
+  dados_fiscais_em: string | null
 }
 
 export const PROPOSTA_STATUS_LABELS: Record<PropostaStatus, string> = {

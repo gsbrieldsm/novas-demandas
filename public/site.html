@@ -204,34 +204,6 @@
       filter: blur(40px);
     }
 
-    .hero-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--accent);
-      background: rgba(201,169,110,0.1);
-      border: 1px solid rgba(201,169,110,0.2);
-      padding: 8px 18px;
-      border-radius: 100px;
-      margin-bottom: 40px;
-      position: relative;
-    }
-    .hero-label::before {
-      content: '';
-      width: 6px; height: 6px;
-      background: var(--accent);
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: .5; transform: scale(1.4); }
-    }
-
     .hero-h1 {
       font-size: clamp(40px, 6.4vw, 82px);
       font-weight: 900;
@@ -1810,8 +1782,6 @@
     <div class="hero-glow-2"></div>
 
     <div class="hero-content">
-      <div class="hero-label">Negócios & Pessoas · Marketing que faz a diferença</div>
-
       <h1 class="hero-h1">
         Nada do que fazemos<br />existe <em>por acaso.</em>
       </h1>
