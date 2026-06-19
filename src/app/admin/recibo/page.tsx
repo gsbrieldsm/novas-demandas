@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
@@ -13,7 +13,7 @@ function formatBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-export default function ReciboPage() {
+function ReciboContent() {
   const router = useRouter()
   const search = useSearchParams()
 
@@ -122,6 +122,14 @@ export default function ReciboPage() {
         }
       `}</style>
     </div>
+  )
+}
+
+export default function ReciboPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-400 text-sm">Carregando...</div>}>
+      <ReciboContent />
+    </Suspense>
   )
 }
 
