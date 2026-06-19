@@ -12,7 +12,45 @@ import { AdminNav } from '@/components/AdminNav'
 import type { Proposta, PropostaStatus } from '@/types'
 import { PROPOSTA_STATUS_LABELS } from '@/types'
 
-type AbaComercial = 'pipeline' | 'propostas'
+type AbaComercial = 'pipeline' | 'propostas' | 'parceiros'
+
+export type ParceiroStatus = 'novo' | 'aprovado' | 'ativo' | 'inativo' | 'rejeitado'
+
+export interface Parceiro {
+  id: string
+  created_at: string
+  nome: string
+  email: string
+  whatsapp: string
+  cidade: string | null
+  como: string | null
+  status: ParceiroStatus
+  observacoes_internas: string | null
+}
+
+const PARCEIRO_STATUS_LABELS: Record<ParceiroStatus, string> = {
+  novo: 'Novo',
+  aprovado: 'Aprovado',
+  ativo: 'Ativo',
+  inativo: 'Inativo',
+  rejeitado: 'Rejeitado',
+}
+
+const PARCEIRO_STATUS_COLORS: Record<ParceiroStatus, string> = {
+  novo: 'bg-blue-100 text-blue-700',
+  aprovado: 'bg-amber-100 text-amber-700',
+  ativo: 'bg-green-100 text-green-700',
+  inativo: 'bg-slate-100 text-slate-500',
+  rejeitado: 'bg-red-100 text-red-700',
+}
+
+const COMO_LABELS: Record<string, string> = {
+  rede_pessoal: 'Rede de contatos pessoal',
+  redes_sociais: 'Redes sociais / conteúdo',
+  consultor: 'Consultor de negócios',
+  agencia: 'Agência / profissional de marketing',
+  outro: 'Outro',
+}
 
 const PROPOSTA_STATUS_DOTS: Record<PropostaStatus, string> = {
   rascunho: 'bg-slate-400',
@@ -134,6 +172,7 @@ function LeadCard({ lead, index }: { lead: Lead; index: number }) {
 function ComercialContent() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [propostas, setPropostas] = useState<Proposta[]>([])
+  const [parceiros, setParceiros] = useState<Parceiro[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -141,7 +180,8 @@ function ComercialContent() {
   const [filterStatus, setFilterStatus] = useState<PropostaStatus | 'todas'>('todas')
   const router = useRouter()
   const search = useSearchParams()
-  const aba: AbaComercial = (search.get('tab') === 'propostas' ? 'propostas' : 'pipeline')
+  const tabParam = search.get('tab')
+  const aba: AbaComercial = tabParam === 'propostas' ? 'propostas' : tabParam === 'parceiros' ? 'parceiros' : 'pipeline'
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -150,16 +190,30 @@ function ComercialContent() {
     Promise.all([
       api('/api/leads').then(r => r.json()),
       api('/api/propostas').then(r => r.json()),
-    ]).then(([ls, ps]) => {
+      api('/api/parceiros').then(r => r.json()),
+    ]).then(([ls, ps, prs]) => {
       setLeads(ls)
       setPropostas(ps)
+      setParceiros(prs)
       setLoading(false)
     })
   }, [router])
 
+  async function atualizarParceiro(id: string, body: Record<string, unknown>) {
+    const res = await api(`/api/parceiros/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    if (res.ok) {
+      const atualizado = await res.json()
+      setParceiros(prev => prev.map(p => p.id === id ? atualizado : p))
+    }
+  }
+
   function setAba(novo: AbaComercial) {
     const params = new URLSearchParams(search.toString())
-    if (novo === 'propostas') params.set('tab', 'propostas')
+    if (novo !== 'pipeline') params.set('tab', novo)
     else params.delete('tab')
     router.replace(`/admin/comercial${params.toString() ? '?' + params.toString() : ''}`)
   }
@@ -262,6 +316,20 @@ function ComercialContent() {
             Propostas
             <span className="ml-2 text-[10px] tabular-nums">{propostas.length}</span>
           </button>
+          <button
+            onClick={() => setAba('parceiros')}
+            className={clsx(
+              'px-4 md:px-5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+              aba === 'parceiros' ? 'text-slate-900 border-[#C5A880]' : 'text-slate-400 border-transparent hover:text-slate-600'
+            )}
+          >
+            Parceiros
+            {parceiros.filter(p => p.status === 'novo').length > 0 && (
+              <span className="ml-2 text-[10px] tabular-nums px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                {parceiros.filter(p => p.status === 'novo').length} novo{parceiros.filter(p => p.status === 'novo').length > 1 ? 's' : ''}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -276,7 +344,7 @@ function ComercialContent() {
               {leads.filter(l => l.status !== 'perdido' && !l.convertido_em).length} leads ativos
             </p>
           </>
-        ) : (
+        ) : aba === 'propostas' ? (
           <>
             <p className="text-[11px] md:text-xs text-slate-400">
               Em negociação: <span className="font-semibold text-amber-600">{formatBRL(propostasPipeline)}</span>
@@ -284,6 +352,21 @@ function ComercialContent() {
             <p className="text-[11px] md:text-xs text-slate-400">
               {propostas.filter(p => p.status === 'aceita').length} aceitas · {propostas.filter(p => p.status === 'enviada').length} enviadas
             </p>
+          </>
+        ) : (
+          <>
+            <p className="text-[11px] md:text-xs text-slate-400">
+              {parceiros.length} cadastrados
+            </p>
+            <p className="text-[11px] md:text-xs text-slate-400">
+              {parceiros.filter(p => p.status === 'ativo').length} ativos
+            </p>
+            <button
+              onClick={() => window.open('/parceiros.html', '_blank')}
+              className="text-[11px] md:text-xs text-[#C5A880] hover:underline ml-auto"
+            >
+              ↗ Ver página pública
+            </button>
           </>
         )}
       </div>
@@ -332,7 +415,7 @@ function ComercialContent() {
             </div>
           </DragDropContext>
         </div>
-      ) : (
+      ) : aba === 'propostas' ? (
         <PropostasView
           propostas={propostas}
           filterStatus={filterStatus}
@@ -340,6 +423,8 @@ function ComercialContent() {
           onOpen={(id) => router.push(`/admin/proposta/${id}`)}
           onNova={() => router.push('/admin/proposta/nova')}
         />
+      ) : (
+        <ParceirosView parceiros={parceiros} onUpdate={atualizarParceiro} />
       )}
 
       {/* Modal novo lead */}
@@ -517,6 +602,81 @@ function PropostasView({
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+// ===== Lista de Parceiros (aba interna) =====
+function ParceirosView({
+  parceiros, onUpdate,
+}: {
+  parceiros: Parceiro[]
+  onUpdate: (id: string, body: Record<string, unknown>) => void
+}) {
+  const [obsDraft, setObsDraft] = useState<Record<string, string>>({})
+
+  if (parceiros.length === 0) {
+    return (
+      <div className="flex-1 p-4 md:p-6 max-w-5xl mx-auto w-full">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm px-6 py-12 text-center">
+          <p className="text-sm text-slate-400">Nenhum cadastro de parceiro ainda.</p>
+          <p className="text-xs text-slate-300 mt-1">Cadastros feitos em /parceiros.html aparecem aqui automaticamente.</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1 p-4 md:p-6 space-y-3 max-w-5xl mx-auto w-full">
+      {parceiros.map(p => (
+        <div key={p.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-5">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-sm font-semibold text-slate-800">{p.nome}</p>
+                <span className={clsx('text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full', PARCEIRO_STATUS_COLORS[p.status])}>
+                  {PARCEIRO_STATUS_LABELS[p.status]}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 mt-1 text-[12px] text-slate-500 flex-wrap">
+                <a href={`mailto:${p.email}`} className="hover:underline">{p.email}</a>
+                <span className="text-slate-300">·</span>
+                <a href={`https://wa.me/55${p.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener" className="hover:underline text-green-600">
+                  {p.whatsapp}
+                </a>
+                {p.cidade && <><span className="text-slate-300">·</span><span>{p.cidade}</span></>}
+              </div>
+              <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400 flex-wrap">
+                <span>{format(new Date(p.created_at), "d 'de' MMM yyyy", { locale: ptBR })}</span>
+                {p.como && <><span className="text-slate-300">·</span><span>{COMO_LABELS[p.como] ?? p.como}</span></>}
+              </div>
+            </div>
+            <select
+              value={p.status}
+              onChange={e => onUpdate(p.id, { status: e.target.value })}
+              className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white flex-shrink-0"
+            >
+              {(['novo', 'aprovado', 'ativo', 'inativo', 'rejeitado'] as ParceiroStatus[]).map(s => (
+                <option key={s} value={s}>{PARCEIRO_STATUS_LABELS[s]}</option>
+              ))}
+            </select>
+          </div>
+          <div className="mt-3">
+            <textarea
+              value={obsDraft[p.id] ?? p.observacoes_internas ?? ''}
+              onChange={e => setObsDraft(d => ({ ...d, [p.id]: e.target.value }))}
+              onBlur={e => {
+                if (e.target.value !== (p.observacoes_internas ?? '')) {
+                  onUpdate(p.id, { observacoes_internas: e.target.value.trim() || null })
+                }
+              }}
+              placeholder="Observações internas (só você vê)..."
+              rows={2}
+              className="w-full text-xs border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none placeholder:text-slate-400"
+            />
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

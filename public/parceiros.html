@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Programa de Parceiros — Gabriel Moraes & Co</title>
+  <meta name="description" content="Indique clientes pra Gabriel Moraes & Co e ganhe até 30% de comissão sobre marketing, social media, captação de vídeo, drone e consultoria." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #1a1310;
+      --bg2: #211a14;
+      --bg3: #2a2018;
+      --surface: #2f2419;
+      --surface2: #38291c;
+      --border: rgba(201,169,110,0.12);
+      --accent: #c9a96e;
+      --accent2: #e8c987;
+      --accent3: #f5d9a0;
+      --text: #f5ede0;
+      --text2: #b8a78d;
+      --text3: #7a6a55;
+      --white: #ffffff;
+      --cream: #f7f0e3;
+      --cream2: #efe5d2;
+      --cream-text: #2a1f17;
+      --cream-text2: #5a4736;
+      --cream-text3: #8a7461;
+      --radius: 12px;
+      --radius-lg: 20px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 0 24px; height: 72px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(8,12,16,0.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { font-size: 15px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--white); text-decoration: none; }
+    .nav-logo span { color: var(--accent); }
+    .nav-cta {
+      background: var(--accent); color: #080c10; font-size: 13px; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase; padding: 10px 22px;
+      border-radius: 6px; text-decoration: none; transition: background .2s, transform .2s;
+      display: inline-block;
+    }
+    .nav-cta:hover { background: var(--accent2); transform: translateY(-1px); }
+
+    section { padding: 120px 24px 100px; position: relative; }
+    .wrap { max-width: 1080px; margin: 0 auto; }
+    .wrap-sm { max-width: 760px; margin: 0 auto; }
+
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--accent); background: rgba(201,169,110,0.1);
+      border: 1px solid rgba(201,169,110,0.25); padding: 7px 16px; border-radius: 100px;
+      margin-bottom: 24px;
+    }
+    .eyebrow::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
+
+    h1 { font-size: clamp(36px, 6vw, 64px); font-weight: 900; line-height: 1.05; letter-spacing: -.01em; }
+    h2 { font-size: clamp(28px, 4vw, 42px); font-weight: 800; line-height: 1.15; letter-spacing: -.01em; }
+    .lead { font-size: 18px; color: var(--text2); line-height: 1.7; }
+
+    em { color: var(--accent2); font-style: italic; }
+
+    /* HERO */
+    #hero {
+      padding-top: 160px;
+      background:
+        radial-gradient(ellipse 60% 60% at 85% 0%, rgba(201,169,110,0.16) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 50% at 5% 100%, rgba(107,76,40,0.2) 0%, transparent 50%);
+    }
+    .hero-stats { display: flex; gap: 40px; margin-top: 44px; flex-wrap: wrap; }
+    .hero-stats div p:first-child { font-size: 30px; font-weight: 900; color: var(--accent); }
+    .hero-stats div p:last-child { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+    .cta-row { display: flex; gap: 14px; margin-top: 36px; flex-wrap: wrap; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #8B6840 100%);
+      color: #fff; font-weight: 700; font-size: 15px; padding: 16px 30px;
+      border-radius: 12px; text-decoration: none; display: inline-block;
+      box-shadow: 0 8px 24px rgba(201,169,110,0.25);
+    }
+    .btn-ghost {
+      color: var(--accent2); border: 1px solid rgba(201,169,110,0.3);
+      font-weight: 600; font-size: 15px; padding: 16px 28px; border-radius: 12px;
+      text-decoration: none; display: inline-block; background: rgba(201,169,110,0.05);
+    }
+
+    /* SERVIÇOS */
+    #servicos { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .servicos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 48px; }
+    .servico-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 24px 20px;
+    }
+    .servico-card .ic { font-size: 26px; margin-bottom: 14px; }
+    .servico-card p.t { font-weight: 700; font-size: 15px; color: var(--text); margin-bottom: 6px; }
+    .servico-card p.d { font-size: 13px; color: var(--text3); line-height: 1.5; }
+
+    .aviso-box {
+      margin-top: 36px; background: rgba(201,169,110,0.06); border: 1px solid rgba(201,169,110,0.2);
+      border-radius: var(--radius-lg); padding: 20px 24px; font-size: 14px; color: var(--text2); line-height: 1.7;
+    }
+    .aviso-box strong { color: var(--accent2); }
+
+    /* COMO FUNCIONA */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 48px; }
+    .step-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px 20px; }
+    .step-num { width: 32px; height: 32px; border-radius: 8px; background: var(--accent); color: #080c10; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+    .step-card p.t { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+    .step-card p.d { font-size: 13px; color: var(--text3); line-height: 1.5; }
+
+    /* COMISSÃO */
+    #comissao { background: var(--cream); color: var(--cream-text); }
+    #comissao .eyebrow { background: rgba(42,31,23,0.06); border-color: rgba(42,31,23,0.15); color: #8a6a30; }
+    #comissao .eyebrow::before { background: #8a6a30; }
+    #comissao .lead { color: var(--cream-text2); }
+    .tier-table { margin-top: 44px; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid rgba(42,31,23,0.12); }
+    .tier-row { display: grid; grid-template-columns: 1.2fr 1fr; background: #fff; border-top: 1px solid rgba(42,31,23,0.08); }
+    .tier-row:first-child { border-top: none; background: var(--cream-text); }
+    .tier-row:first-child .tc { color: #fff; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; }
+    .tier-row.destaque { background: rgba(201,169,110,0.12); }
+    .tc { padding: 16px 22px; display: flex; align-items: center; gap: 8px; font-size: 14px; }
+    .tier-row:not(:first-child) .tc:first-child { font-weight: 700; }
+    .tier-row:not(:first-child) .tc:last-child { font-weight: 800; color: #8a6a30; font-size: 18px; }
+    .badge-popular { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; background: rgba(201,169,110,0.25); color: #6b4c28; }
+
+    /* FORM */
+    #cadastro { background: var(--bg2); border-top: 1px solid var(--border); }
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 36px; margin-top: 40px; }
+    .form-row { display: grid; gap: 16px; margin-bottom: 16px; }
+    .form-row.two { grid-template-columns: 1fr 1fr; }
+    label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: 8px; }
+    input, select {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      font-size: 14px; padding: 13px 14px; border-radius: 8px; font-family: inherit;
+    }
+    input::placeholder { color: var(--text3); }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    select option { background: var(--bg); }
+    .btn-submit {
+      width: 100%; background: linear-gradient(135deg, var(--accent) 0%, #8B6840 100%);
+      color: #fff; font-weight: 700; font-size: 15px; padding: 16px; border-radius: 10px;
+      border: none; cursor: pointer; margin-top: 8px;
+    }
+    .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+    .form-note { text-align: center; font-size: 12px; color: var(--text3); margin-top: 14px; }
+    .success-box { text-align: center; padding: 20px 0; }
+    .success-box .emoji { font-size: 48px; margin-bottom: 16px; }
+    .success-box h3 { font-size: 22px; margin-bottom: 10px; }
+    .success-box p { color: var(--text2); line-height: 1.7; }
+
+    footer { padding: 40px 24px; border-top: 1px solid var(--border); text-align: center; }
+    footer p { font-size: 12px; color: var(--text3); }
+    footer a { color: var(--accent2); text-decoration: none; }
+
+    @media (max-width: 720px) {
+      section { padding: 90px 20px 70px; }
+      .form-row.two { grid-template-columns: 1fr; }
+      .tier-row { grid-template-columns: 1.2fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/site.html" class="nav-logo">Gabriel Moraes <span>&amp;</span> Co</a>
+    <a href="#cadastro" class="nav-cta">Quero ser parceiro</a>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="wrap">
+      <div class="eyebrow">Programa de parceiros</div>
+      <h1>Indique clientes.<br />Ganhe até <em>30% de comissão.</em></h1>
+      <p class="lead" style="max-width: 560px; margin-top: 20px;">
+        Você conhece gente que precisa de marketing, vídeo ou consultoria estratégica. Indica pra Gabriel Moraes &amp; Co, a gente fecha o projeto, e você recebe uma comissão — sem precisar entregar nada, sem complicação.
+      </p>
+      <div class="cta-row">
+        <a href="#cadastro" class="btn-primary">📝 Quero ser parceiro</a>
+        <a href="#comissao" class="btn-ghost">Ver comissões ↓</a>
+      </div>
+      <div class="hero-stats">
+        <div><p>30%</p><p>comissão máxima</p></div>
+        <div><p>0</p><p>taxa de adesão</p></div>
+        <div><p>∞</p><p>sem limite de indicações</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVIÇOS -->
+  <section id="servicos">
+    <div class="wrap">
+      <div class="eyebrow">O que você pode indicar</div>
+      <h2>Cinco frentes pra você comercializar</h2>
+      <div class="servicos-grid">
+        <div class="servico-card">
+          <div class="ic">📈</div>
+          <p class="t">Planos de Marketing</p>
+          <p class="d">Estratégia mensal recorrente, gestão completa de marca.</p>
+        </div>
+        <div class="servico-card">
+          <div class="ic">📱</div>
+          <p class="t">Social Media</p>
+          <p class="d">Gestão de redes, criação de conteúdo e calendário editorial.</p>
+        </div>
+        <div class="servico-card">
+          <div class="ic">🎥</div>
+          <p class="t">Captação de Vídeo</p>
+          <p class="d">Diárias de filmagem, reels e conteúdo em vídeo pra redes.</p>
+        </div>
+        <div class="servico-card">
+          <div class="ic">🚁</div>
+          <p class="t">Vídeos de Drone</p>
+          <p class="d">Imagens aéreas pra eventos, imóveis, indústria e turismo.</p>
+        </div>
+        <div class="servico-card">
+          <div class="ic">🧭</div>
+          <p class="t">Consultoria de Marketing</p>
+          <p class="d">Diagnóstico e direcionamento estratégico pontual.</p>
+        </div>
+      </div>
+      <div class="aviso-box">
+        💡 <strong>Importante:</strong> aqui não existe pacote fechado com preço de tabela. Cada proposta é negociada direto com o cliente, de acordo com o escopo e a necessidade dele. Por isso sua comissão é sempre uma <strong>porcentagem sobre o valor que for efetivamente fechado</strong> naquele projeto ou contrato — quanto maior o projeto negociado, maior sua comissão.
+      </div>
+    </div>
+  </section>
+
+  <!-- COMO FUNCIONA -->
+  <section id="como-funciona">
+    <div class="wrap">
+      <div class="eyebrow">Simples assim</div>
+      <h2>Como funciona</h2>
+      <div class="steps">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <p class="t">Cadastre-se</p>
+          <p class="d">Preencha o formulário abaixo. Gabriel entra em contato em até 24h.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <p class="t">Indique o contato</p>
+          <p class="d">Apresenta o cliente pra Gabriel, por WhatsApp, e-mail ou como preferir.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <p class="t">A proposta é negociada</p>
+          <p class="d">Gabriel conversa com o cliente e fecha o escopo e o valor do projeto.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">04</div>
+          <p class="t">Você recebe a comissão</p>
+          <p class="d">Projeto fechado, você recebe sua % — recorrente todo mês se for plano mensal.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMISSÃO -->
+  <section id="comissao">
+    <div class="wrap-sm">
+      <div class="eyebrow">Comissão</div>
+      <h2>Quanto mais você indica, mais você ganha</h2>
+      <p class="lead" style="margin-top: 16px;">
+        A % de comissão sobe conforme o número de clientes ativos que você trouxe pra Gabriel Moraes &amp; Co.
+      </p>
+      <div class="tier-table">
+        <div class="tier-row">
+          <div class="tc">Clientes indicados ativos</div>
+          <div class="tc">Sua comissão</div>
+        </div>
+        <div class="tier-row">
+          <div class="tc">1–2 clientes</div>
+          <div class="tc">15%</div>
+        </div>
+        <div class="tier-row">
+          <div class="tc">3–5 clientes</div>
+          <div class="tc">20%</div>
+        </div>
+        <div class="tier-row destaque">
+          <div class="tc">6–9 clientes <span class="badge-popular">popular</span></div>
+          <div class="tc">25%</div>
+        </div>
+        <div class="tier-row">
+          <div class="tc">10+ clientes</div>
+          <div class="tc">até 30%</div>
+        </div>
+      </div>
+      <p style="font-size: 12px; color: var(--cream-text3); margin-top: 16px;">
+        * Comissão calculada sobre o valor negociado e fechado com o cliente indicado. Em contratos mensais (planos/social media), a comissão se repete todo mês enquanto o cliente estiver ativo. Em projetos pontuais (drone, captação, consultoria), a comissão é paga uma vez, na entrada do projeto.
+      </p>
+    </div>
+  </section>
+
+  <!-- FORM -->
+  <section id="cadastro">
+    <div class="wrap-sm">
+      <div class="eyebrow">Cadastro de parceiro</div>
+      <h2>Comece a indicar</h2>
+      <p class="lead" style="margin-top: 14px;">Preencha o formulário. Gabriel entra em contato em até 24h pelo WhatsApp.</p>
+
+      <div class="form-card" id="form-card">
+        <form id="form-parceiro">
+          <div class="form-row two">
+            <div>
+              <label>Seu nome *</label>
+              <input name="nome" type="text" required placeholder="Nome completo" />
+            </div>
+            <div>
+              <label>WhatsApp *</label>
+              <input name="whatsapp" type="text" required placeholder="(00) 00000-0000" />
+            </div>
+          </div>
+          <div class="form-row two">
+            <div>
+              <label>E-mail *</label>
+              <input name="email" type="email" required placeholder="seu@email.com" />
+            </div>
+            <div>
+              <label>Cidade (opcional)</label>
+              <input name="cidade" type="text" placeholder="Ex: Itajaí - SC" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div>
+              <label>Como pretende indicar? (opcional)</label>
+              <select name="como">
+                <option value="" selected disabled>Selecione uma opção</option>
+                <option value="rede_pessoal">Rede de contatos pessoal</option>
+                <option value="redes_sociais">Redes sociais / conteúdo</option>
+                <option value="consultor">Sou consultor de negócios</option>
+                <option value="agencia">Agência / outro profissional de marketing</option>
+                <option value="outro">Outro</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">🚀 Quero ser parceiro</button>
+          <p class="form-note">Sem taxa de adesão · Você só ganha quando indica</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>© <span id="ano"></span> Gabriel Moraes &amp; Co · Programa de Parceiros · <a href="/site.html">Voltar ao site</a></p>
+  </footer>
+
+  <script>
+    document.getElementById('ano').textContent = new Date().getFullYear();
+
+    const form = document.getElementById('form-parceiro');
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const btn = form.querySelector('.btn-submit');
+      const data = Object.fromEntries(new FormData(form).entries());
+      btn.disabled = true;
+      btn.textContent = '⏳ Enviando...';
+      try {
+        const res = await fetch('/api/public/parceiros', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        if (res.ok) {
+          document.getElementById('form-card').innerHTML = `
+            <div class="success-box">
+              <div class="emoji">🎉</div>
+              <h3>Cadastro recebido!</h3>
+              <p>Gabriel vai analisar e entrar em contato em até 24h pelo WhatsApp.</p>
+            </div>`;
+        } else {
+          const err = await res.json().catch(() => ({}));
+          alert(err.error || 'Erro ao enviar cadastro. Tente novamente.');
+          btn.disabled = false;
+          btn.textContent = '🚀 Quero ser parceiro';
+        }
+      } catch {
+        alert('Erro ao enviar cadastro. Tente novamente.');
+        btn.disabled = false;
+        btn.textContent = '🚀 Quero ser parceiro';
+      }
+    });
+  </script>
+</body>
+</html>

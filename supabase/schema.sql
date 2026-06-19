@@ -76,3 +76,37 @@ alter table public.propostas
   add column if not exists cliente_razao_social text,
   add column if not exists cliente_telefone text,
   add column if not exists dados_fiscais_em timestamp with time zone;
+
+-- Migração: dados fiscais para emissão de recibo (tabela clientes_fixos)
+alter table public.clientes_fixos
+  add column if not exists cnpj text,
+  add column if not exists razao_social text,
+  add column if not exists telefone text;
+
+-- Migração: programa de parceiros / indicadores
+create table if not exists public.parceiros (
+  id uuid default uuid_generate_v4() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  nome text not null,
+  email text not null,
+  whatsapp text not null,
+  cidade text,
+  como text,
+  status text not null default 'novo',
+  observacoes_internas text,
+  constraint parceiros_status_check check (status in ('novo', 'aprovado', 'ativo', 'inativo', 'rejeitado'))
+);
+
+create trigger update_parceiros_updated_at
+  before update on public.parceiros
+  for each row execute procedure public.update_updated_at_column();
+
+alter table public.parceiros enable row level security;
+
+create policy "Público pode se cadastrar como parceiro"
+  on public.parceiros for insert
+  with check (true);
+
+create index parceiros_status_idx on public.parceiros(status);
+create index parceiros_created_at_idx on public.parceiros(created_at desc);

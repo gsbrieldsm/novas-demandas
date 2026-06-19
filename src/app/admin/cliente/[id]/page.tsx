@@ -36,6 +36,27 @@ interface ClienteFixo {
   data_inicio: string | null
   data_cancelamento: string | null
   created_at: string
+  cnpj: string | null
+  razao_social: string | null
+  telefone: string | null
+}
+
+function formatCNPJ(value: string) {
+  return value
+    .replace(/\D/g, '')
+    .slice(0, 14)
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1/$2')
+    .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+}
+
+function formatTelefone(value: string) {
+  const d = value.replace(/\D/g, '').slice(0, 11)
+  if (d.length <= 2) return d
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
 }
 
 interface Metrica {
@@ -69,6 +90,7 @@ export default function ClienteDetailPage() {
   // Form states
   const [identForm, setIdentForm] = useState({
     nome: '', email: '', valor_mensal: '', dia_vencimento: '', data_inicio: '',
+    cnpj: '', razao_social: '', telefone: '',
   })
   const [escopoForm, setEscopoForm] = useState({ escopo_mensal: '', observacoes_internas: '' })
 
@@ -100,6 +122,9 @@ export default function ClienteDetailPage() {
         valor_mensal: String(cf.valor_mensal),
         dia_vencimento: cf.dia_vencimento ? String(cf.dia_vencimento) : '',
         data_inicio: cf.data_inicio ?? '',
+        cnpj: cf.cnpj ?? '',
+        razao_social: cf.razao_social ?? '',
+        telefone: cf.telefone ?? '',
       })
       setEscopoForm({
         escopo_mensal: cf.escopo_mensal ?? '',
@@ -132,6 +157,9 @@ export default function ClienteDetailPage() {
       valor_mensal: parseFloat(identForm.valor_mensal.replace(',', '.')) || 0,
       dia_vencimento: identForm.dia_vencimento ? parseInt(identForm.dia_vencimento, 10) : null,
       data_inicio: identForm.data_inicio || null,
+      cnpj: identForm.cnpj.trim() || null,
+      razao_social: identForm.razao_social.trim() || null,
+      telefone: identForm.telefone.trim() || null,
     }
     await patchCliente(body)
     setEditingIdent(false)
@@ -310,6 +338,20 @@ export default function ClienteDetailPage() {
           >
             📄 Nova proposta
           </button>
+          <button
+            onClick={() => {
+              const params = new URLSearchParams({
+                nome: cliente.razao_social || cliente.nome,
+                cnpj: cliente.cnpj ?? '',
+                valor: String(cliente.valor_mensal),
+                referente: `Mensalidade de ${format(new Date(), 'MMMM/yyyy', { locale: ptBR })}`,
+              })
+              window.open(`/admin/recibo?${params.toString()}`, '_blank')
+            }}
+            className="text-sm font-medium px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+          >
+            🧾 Gerar recibo
+          </button>
           {isCancelled ? (
             <button
               onClick={reativarCliente}
@@ -347,10 +389,19 @@ export default function ClienteDetailPage() {
                 <FormField label="Data de início do contrato">
                   <input value={identForm.data_inicio} onChange={e => setIdentForm(f => ({ ...f, data_inicio: e.target.value }))} type="date" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]" />
                 </FormField>
+                <FormField label="CNPJ">
+                  <input value={identForm.cnpj} onChange={e => setIdentForm(f => ({ ...f, cnpj: formatCNPJ(e.target.value) }))} placeholder="00.000.000/0000-00" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]" />
+                </FormField>
+                <FormField label="Razão Social">
+                  <input value={identForm.razao_social} onChange={e => setIdentForm(f => ({ ...f, razao_social: e.target.value }))} className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]" />
+                </FormField>
+                <FormField label="Telefone">
+                  <input value={identForm.telefone} onChange={e => setIdentForm(f => ({ ...f, telefone: formatTelefone(e.target.value) }))} placeholder="(00) 00000-0000" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]" />
+                </FormField>
               </div>
               <div className="flex gap-2 pt-1">
                 <button onClick={salvarIdent} className="text-sm px-4 py-2 rounded-lg text-white" style={{ background: '#C5A880' }}>Salvar</button>
-                <button onClick={() => { setEditingIdent(false); if (cliente) setIdentForm({ nome: cliente.nome, email: cliente.email ?? '', valor_mensal: String(cliente.valor_mensal), dia_vencimento: cliente.dia_vencimento ? String(cliente.dia_vencimento) : '', data_inicio: cliente.data_inicio ?? '' }) }} className="text-sm px-4 py-2 rounded-lg text-slate-500 hover:bg-slate-50">Cancelar</button>
+                <button onClick={() => { setEditingIdent(false); if (cliente) setIdentForm({ nome: cliente.nome, email: cliente.email ?? '', valor_mensal: String(cliente.valor_mensal), dia_vencimento: cliente.dia_vencimento ? String(cliente.dia_vencimento) : '', data_inicio: cliente.data_inicio ?? '', cnpj: cliente.cnpj ?? '', razao_social: cliente.razao_social ?? '', telefone: cliente.telefone ?? '' }) }} className="text-sm px-4 py-2 rounded-lg text-slate-500 hover:bg-slate-50">Cancelar</button>
               </div>
             </div>
           ) : (
@@ -361,6 +412,9 @@ export default function ClienteDetailPage() {
               <FieldDisplay label="Vencimento" value={cliente.dia_vencimento ? `Todo dia ${cliente.dia_vencimento}` : '—'} />
               <FieldDisplay label="Início do contrato" value={cliente.data_inicio ? format(new Date(cliente.data_inicio + 'T12:00:00'), "d 'de' MMM 'de' yyyy", { locale: ptBR }) : '—'} />
               <FieldDisplay label="Cancelamento" value={cliente.data_cancelamento ? format(new Date(cliente.data_cancelamento + 'T12:00:00'), "d 'de' MMM 'de' yyyy", { locale: ptBR }) : '—'} />
+              <FieldDisplay label="CNPJ" value={cliente.cnpj ?? '—'} />
+              <FieldDisplay label="Razão Social" value={cliente.razao_social ?? '—'} />
+              <FieldDisplay label="Telefone" value={cliente.telefone ?? '—'} />
             </div>
           )}
         </SectionCard>

@@ -283,6 +283,21 @@ export default function PropostaPage() {
                       Enviado em {format(new Date(proposta.dados_fiscais_em), "d 'de' MMM 'às' HH:mm", { locale: ptBR })}
                     </p>
                   )}
+                  <button
+                    onClick={() => {
+                      const params = new URLSearchParams({
+                        nome: proposta.cliente_razao_social || proposta.cliente_nome,
+                        cnpj: proposta.cliente_cnpj ?? '',
+                        valor: proposta.valor != null ? String(proposta.valor) : '',
+                        referente: proposta.titulo,
+                      })
+                      window.open(`/admin/recibo?${params.toString()}`, '_blank')
+                    }}
+                    className="text-xs px-3 py-2 rounded-lg text-white font-medium mt-1"
+                    style={{ background: '#C5A880' }}
+                  >
+                    🧾 Gerar recibo
+                  </button>
                 </div>
               ) : proposta.dados_fiscais_status === 'nao_necessario' ? (
                 <p className="text-sm text-slate-500">Cliente indicou que não precisa de contrato/nota fiscal.</p>
