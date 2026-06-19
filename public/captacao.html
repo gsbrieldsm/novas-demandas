@@ -101,8 +101,9 @@
       position: relative;
       overflow: hidden;
       background:
-        radial-gradient(ellipse 55% 80% at 95% 30%, rgba(201,169,110,0.28) 0%, transparent 55%),
-        radial-gradient(ellipse 60% 70% at 8% 95%, rgba(232,201,135,0.14) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 85% at 95% 25%, rgba(201,169,110,0.42) 0%, transparent 58%),
+        radial-gradient(ellipse 65% 75% at 5% 100%, rgba(232,201,135,0.22) 0%, transparent 62%),
+        radial-gradient(ellipse 40% 50% at 50% 0%, rgba(245,217,160,0.12) 0%, transparent 60%),
         var(--bg);
     }
     .hero-grid-bg {
@@ -117,13 +118,29 @@
     }
     .hero-glow {
       position: absolute;
-      top: 20%;
-      right: -10%;
-      width: 900px;
-      height: 700px;
-      background: radial-gradient(circle, rgba(201,169,110,0.38) 0%, rgba(201,169,110,0.08) 35%, transparent 70%);
+      top: 15%;
+      right: -12%;
+      width: 1000px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(201,169,110,0.5) 0%, rgba(201,169,110,0.12) 38%, transparent 70%);
       pointer-events: none;
       filter: blur(20px);
+      animation: glowPulse 8s ease-in-out infinite;
+    }
+    .hero-glow-2 {
+      position: absolute;
+      bottom: -15%;
+      left: -8%;
+      width: 700px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(245,217,160,0.3) 0%, rgba(201,169,110,0.06) 40%, transparent 70%);
+      pointer-events: none;
+      filter: blur(30px);
+      animation: glowPulse 10s ease-in-out infinite reverse;
+    }
+    @keyframes glowPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .65; transform: scale(1.08); }
     }
 
     .hero-content { position: relative; z-index: 2; max-width: 720px; }
@@ -165,7 +182,16 @@
     }
     .hero-h1 em {
       font-style: italic;
-      color: var(--accent);
+      background: linear-gradient(120deg, #c9a96e 0%, #f5d9a0 25%, #ffffff 50%, #f5d9a0 75%, #c9a96e 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 4s linear infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% center; }
+      100% { background-position: -200% center; }
     }
 
     .hero-sub {
@@ -1108,6 +1134,7 @@
   <section id="hero">
     <div class="hero-grid-bg"></div>
     <div class="hero-glow"></div>
+    <div class="hero-glow-2"></div>
 
     <div class="hero-content">
       <div class="hero-tag">Captação para Redes Sociais</div>
