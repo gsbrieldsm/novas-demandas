@@ -17,6 +17,8 @@ function NovaPropostaForm() {
   const [saving, setSaving] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [preLoad, setPreLoad] = useState(true)
+  const [clientesFixos, setClientesFixos] = useState<Array<{ id: string; nome: string; valor_mensal: number; email: string | null }>>([])
+  const [clienteFixoSelecionado, setClienteFixoSelecionado] = useState(clienteFixoIdParam ?? '')
 
   const APRESENTACAO_PADRAO = 'Marketing sem propósito é custo, não investimento. Cada ação que entregamos tem um porquê estratégico claro.\n\nSe você chegou aqui, é porque acredita que sua marca pode crescer com intencionalidade. Vamos juntos.'
 
@@ -41,21 +43,23 @@ function NovaPropostaForm() {
 
     // Pré-carrega dados se vier de cliente fixo ou lead
     async function preencher() {
+      const cfRes = await api(`/api/clientes-fixos`)
+      let cs: Array<Record<string, unknown>> = []
+      if (cfRes.ok) {
+        cs = await cfRes.json()
+        setClientesFixos(cs as Array<{ id: string; nome: string; valor_mensal: number; email: string | null }>)
+      }
       if (clienteFixoIdParam) {
-        const res = await api(`/api/clientes-fixos`)
-        if (res.ok) {
-          const cs = await res.json()
-          const cf = (cs as Array<Record<string, unknown>>).find(c => c.id === clienteFixoIdParam)
-          if (cf) {
-            setForm(f => ({
-              ...f,
-              titulo: `Renovação de Parceria · ${cf.nome}`,
-              cliente_nome: cf.nome as string,
-              cliente_email: (cf.email as string) ?? '',
-              valor: cf.valor_mensal ? String(cf.valor_mensal) : '',
-              escopo: (cf.escopo_mensal as string) ?? '',
-            }))
-          }
+        const cf = cs.find(c => c.id === clienteFixoIdParam)
+        if (cf) {
+          setForm(f => ({
+            ...f,
+            titulo: `Renovação de Parceria · ${cf.nome}`,
+            cliente_nome: cf.nome as string,
+            cliente_email: (cf.email as string) ?? '',
+            valor: cf.valor_mensal ? String(cf.valor_mensal) : '',
+            escopo: (cf.escopo_mensal as string) ?? '',
+          }))
         }
       }
       if (leadIdParam) {
@@ -93,7 +97,7 @@ function NovaPropostaForm() {
       cliente_nome: form.cliente_nome.trim(),
       cliente_empresa: form.cliente_empresa.trim() || null,
       cliente_email: form.cliente_email.trim() || null,
-      cliente_fixo_id: clienteFixoIdParam || null,
+      cliente_fixo_id: clienteFixoSelecionado || null,
       lead_id: leadIdParam || null,
       modalidade: form.modalidade,
       valor: form.valor ? parseFloat(form.valor.replace(',', '.')) : null,
@@ -142,6 +146,33 @@ function NovaPropostaForm() {
           </div>
 
           {erro && <div className="bg-red-50 text-red-700 text-xs px-3 py-2 rounded">{erro}</div>}
+
+          <Field label="Vincular a cliente existente (opcional)">
+            <select
+              value={clienteFixoSelecionado}
+              onChange={e => {
+                const novoId = e.target.value
+                setClienteFixoSelecionado(novoId)
+                const cf = clientesFixos.find(c => c.id === novoId)
+                if (cf) {
+                  setForm(f => ({
+                    ...f,
+                    cliente_nome: cf.nome,
+                    cliente_email: cf.email ?? '',
+                  }))
+                }
+              }}
+              className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+            >
+              <option value="">— Novo cliente (não vincular) —</option>
+              {clientesFixos.map(cf => (
+                <option key={cf.id} value={cf.id}>{cf.nome}</option>
+              ))}
+            </select>
+            <p className="text-[10px] text-slate-400 mt-1">
+              Se selecionar, essa proposta fica vinculada à tela desse cliente fixo.
+            </p>
+          </Field>
 
           <Field label="Título da proposta *">
             <input

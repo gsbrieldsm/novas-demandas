@@ -25,6 +25,23 @@ export async function POST(req: Request) {
   if ('error' in auth) return auth.error
 
   const body = await req.json()
+
+  // Sem cliente fixo nem lead vinculado: cria o lead automaticamente pra já aparecer no CRM
+  if (!body.cliente_fixo_id && !body.lead_id) {
+    const { data: lead } = await auth.db
+      .from('leads')
+      .insert({
+        nome: body.cliente_nome,
+        empresa: body.cliente_empresa ?? null,
+        canal: 'outro',
+        status: 'proposta',
+        valor_estimado: body.valor ?? null,
+      })
+      .select()
+      .single()
+    if (lead) body.lead_id = lead.id
+  }
+
   const { data, error } = await auth.db.from('propostas').insert(body).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)

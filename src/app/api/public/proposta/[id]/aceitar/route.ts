@@ -1,4 +1,5 @@
 import { getServiceClient } from '@/lib/supabase'
+import { vincularClienteFixo } from '@/lib/vincularCliente'
 import { NextResponse } from 'next/server'
 
 /**
@@ -22,7 +23,7 @@ export async function POST(
   // Confirma que a proposta existe e não foi respondida ainda
   const { data: atual } = await db
     .from('propostas')
-    .select('id, status, validade, cliente_fixo_id, modalidade, valor, cliente_nome, cliente_email, escopo')
+    .select('id, status, validade, cliente_fixo_id, modalidade, valor, cliente_nome, cliente_email, escopo, lead_id')
     .eq('id', id)
     .single()
 
@@ -63,6 +64,8 @@ export async function POST(
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  await vincularClienteFixo(db, atual)
 
   return NextResponse.json({ ok: true })
 }

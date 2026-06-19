@@ -1,4 +1,5 @@
 import { requireAuth } from '@/lib/supabase'
+import { vincularClienteFixo } from '@/lib/vincularCliente'
 import { NextResponse } from 'next/server'
 
 export async function GET(
@@ -24,8 +25,18 @@ export async function PATCH(
   const { id } = await params
   const body = await req.json()
   body.updated_at = new Date().toISOString()
+
+  const { data: antes } = await auth.db.from('propostas').select('status').eq('id', id).single()
+
   const { data, error } = await auth.db.from('propostas').update(body).eq('id', id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  if (data.status === 'aceita' && antes?.status !== 'aceita') {
+    await vincularClienteFixo(auth.db, data)
+    const { data: final } = await auth.db.from('propostas').select('*').eq('id', id).single()
+    return NextResponse.json(final ?? data)
+  }
+
   return NextResponse.json(data)
 }
 

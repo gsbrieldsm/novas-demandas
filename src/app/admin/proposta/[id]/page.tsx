@@ -120,6 +120,7 @@ export default function PropostaPage() {
 
   async function mudarStatus(novoStatus: PropostaStatus) {
     if (!proposta) return
+    const eraAceita = proposta.status === 'aceita'
     const body: Record<string, unknown> = { status: novoStatus }
     if (novoStatus === 'enviada' && !proposta.enviada_em) {
       body.enviada_em = new Date().toISOString()
@@ -136,31 +137,10 @@ export default function PropostaPage() {
       const updated = await res.json()
       setProposta(updated)
 
-      // Se aceita E mensal E não tem cliente_fixo_id → cria cliente fixo
-      if (novoStatus === 'aceita' && updated.modalidade === 'mensal' && !updated.cliente_fixo_id) {
-        if (confirm('Proposta aceita! Deseja criar este cliente como cliente fixo agora?')) {
-          const cfBody = {
-            nome: updated.cliente_nome,
-            email: updated.cliente_email,
-            valor_mensal: updated.valor ?? 0,
-            ativo: true,
-            data_inicio: format(new Date(), 'yyyy-MM-dd'),
-            escopo_mensal: updated.escopo,
-          }
-          const cfRes = await api('/api/clientes-fixos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(cfBody),
-          })
-          if (cfRes.ok) {
-            const cf = await cfRes.json()
-            await api(`/api/propostas/${id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ cliente_fixo_id: cf.id }),
-            })
-            router.push(`/admin/cliente/${cf.id}`)
-          }
+      // Aceita por aqui (admin) e é mensal → o servidor já criou/ativou o cliente fixo
+      if (novoStatus === 'aceita' && !eraAceita && updated.modalidade === 'mensal' && updated.cliente_fixo_id) {
+        if (confirm('Proposta aceita! O cliente fixo foi criado/ativado automaticamente. Quer abrir a tela dele agora?')) {
+          router.push(`/admin/cliente/${updated.cliente_fixo_id}`)
         }
       }
     }
@@ -265,6 +245,31 @@ export default function PropostaPage() {
             </button>
           </div>
         </div>
+
+        {/* Vínculos com CRM e Cliente */}
+        {(proposta.lead_id || proposta.cliente_fixo_id) && (
+          <div className="print:hidden max-w-[860px] mx-auto px-4 md:px-6 pt-4">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex items-center gap-3 flex-wrap">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Vínculos</p>
+              {proposta.lead_id && (
+                <button
+                  onClick={() => router.push(`/admin/lead/${proposta.lead_id}`)}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+                >
+                  🔗 Lead no CRM
+                </button>
+              )}
+              {proposta.cliente_fixo_id && (
+                <button
+                  onClick={() => router.push(`/admin/cliente/${proposta.cliente_fixo_id}`)}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
+                >
+                  ✓ Cliente fixo vinculado
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Dados fiscais (NF/boleto) */}
         {proposta.status === 'aceita' && (
