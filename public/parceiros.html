@@ -82,7 +82,19 @@
     h2 { font-size: clamp(28px, 4vw, 42px); font-weight: 800; line-height: 1.15; letter-spacing: -.01em; color: var(--text); }
     .lead { font-size: 18px; color: var(--text2); line-height: 1.7; }
 
-    em { color: var(--accent3); font-style: italic; }
+    em {
+      font-style: italic;
+      background: linear-gradient(120deg, #6b4c28 0%, #c9a96e 25%, #f5d9a0 50%, #c9a96e 75%, #6b4c28 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 7s linear infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% center; }
+      100% { background-position: -200% center; }
+    }
 
     /* HERO */
     #hero {
