@@ -19,6 +19,8 @@ function NovaPropostaForm() {
   const [preLoad, setPreLoad] = useState(true)
   const [clientesFixos, setClientesFixos] = useState<Array<{ id: string; nome: string; valor_mensal: number; email: string | null }>>([])
   const [clienteFixoSelecionado, setClienteFixoSelecionado] = useState(clienteFixoIdParam ?? '')
+  const [leads, setLeads] = useState<Array<{ id: string; nome: string; empresa: string | null; valor_estimado: number | null }>>([])
+  const [leadSelecionado, setLeadSelecionado] = useState(leadIdParam ?? '')
 
   const APRESENTACAO_PADRAO = 'Marketing sem propósito é custo, não investimento. Cada ação que entregamos tem um porquê estratégico claro.\n\nSe você chegou aqui, é porque acredita que sua marca pode crescer com intencionalidade. Vamos juntos.'
 
@@ -62,6 +64,11 @@ function NovaPropostaForm() {
           }))
         }
       }
+      const leadsRes = await api(`/api/leads`)
+      if (leadsRes.ok) {
+        const ls = await leadsRes.json()
+        setLeads(ls)
+      }
       if (leadIdParam) {
         const res = await api(`/api/leads/${leadIdParam}`)
         if (res.ok) {
@@ -98,7 +105,7 @@ function NovaPropostaForm() {
       cliente_empresa: form.cliente_empresa.trim() || null,
       cliente_email: form.cliente_email.trim() || null,
       cliente_fixo_id: clienteFixoSelecionado || null,
-      lead_id: leadIdParam || null,
+      lead_id: leadSelecionado || null,
       modalidade: form.modalidade,
       valor: form.valor ? parseFloat(form.valor.replace(',', '.')) : null,
       prazo_dias: form.prazo_dias ? parseInt(form.prazo_dias, 10) : null,
@@ -147,12 +154,13 @@ function NovaPropostaForm() {
 
           {erro && <div className="bg-red-50 text-red-700 text-xs px-3 py-2 rounded">{erro}</div>}
 
-          <Field label="Vincular a cliente existente (opcional)">
+          <Field label="Vincular a cliente fixo existente (opcional)">
             <select
               value={clienteFixoSelecionado}
               onChange={e => {
                 const novoId = e.target.value
                 setClienteFixoSelecionado(novoId)
+                if (novoId) setLeadSelecionado('')
                 const cf = clientesFixos.find(c => c.id === novoId)
                 if (cf) {
                   setForm(f => ({
@@ -162,7 +170,8 @@ function NovaPropostaForm() {
                   }))
                 }
               }}
-              className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+              disabled={!!leadSelecionado}
+              className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white disabled:opacity-50"
             >
               <option value="">— Novo cliente (não vincular) —</option>
               {clientesFixos.map(cf => (
@@ -171,6 +180,36 @@ function NovaPropostaForm() {
             </select>
             <p className="text-[10px] text-slate-400 mt-1">
               Se selecionar, essa proposta fica vinculada à tela desse cliente fixo.
+            </p>
+          </Field>
+
+          <Field label="Vincular a lead existente do CRM (opcional)">
+            <select
+              value={leadSelecionado}
+              onChange={e => {
+                const novoId = e.target.value
+                setLeadSelecionado(novoId)
+                if (novoId) setClienteFixoSelecionado('')
+                const lead = leads.find(l => l.id === novoId)
+                if (lead) {
+                  setForm(f => ({
+                    ...f,
+                    cliente_nome: lead.nome,
+                    cliente_empresa: lead.empresa ?? '',
+                    valor: lead.valor_estimado ? String(lead.valor_estimado) : f.valor,
+                  }))
+                }
+              }}
+              disabled={!!clienteFixoSelecionado}
+              className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white disabled:opacity-50"
+            >
+              <option value="">— Sem lead (cria um novo automaticamente) —</option>
+              {leads.map(l => (
+                <option key={l.id} value={l.id}>{l.nome}{l.empresa ? ` · ${l.empresa}` : ''}</option>
+              ))}
+            </select>
+            <p className="text-[10px] text-slate-400 mt-1">
+              Se não vincular a nenhum cliente nem lead, um novo lead é criado automaticamente no CRM.
             </p>
           </Field>
 

@@ -9,8 +9,16 @@ import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import { AdminNav } from '@/components/AdminNav'
 import type { Lead, LeadStatus, LeadCanal } from '@/app/admin/comercial/page'
-import { REQUEST_TYPE_LABELS } from '@/types'
-import type { RequestType } from '@/types'
+import { REQUEST_TYPE_LABELS, PROPOSTA_STATUS_LABELS } from '@/types'
+import type { RequestType, Proposta, PropostaStatus } from '@/types'
+
+const PROPOSTA_STATUS_COLORS: Record<PropostaStatus, string> = {
+  rascunho: 'bg-slate-100 text-slate-600',
+  enviada: 'bg-blue-100 text-blue-700',
+  aceita: 'bg-green-100 text-green-700',
+  recusada: 'bg-red-100 text-red-700',
+  expirada: 'bg-amber-100 text-amber-700',
+}
 
 const CANAL_LABELS: Record<LeadCanal, string> = {
   whatsapp: 'WhatsApp',
@@ -39,6 +47,7 @@ interface ConvertForm {
 
 export default function LeadDetailPage() {
   const [lead, setLead] = useState<Lead | null>(null)
+  const [propostas, setPropostas] = useState<Proposta[]>([])
   const [loading, setLoading] = useState(true)
   const [anotacoes, setAnotacoes] = useState('')
   const [savingNota, setSavingNota] = useState(false)
@@ -53,9 +62,13 @@ export default function LeadDetailPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) router.push('/admin/login')
     })
-    api(`/api/leads/${id}`).then(r => r.json()).then(data => {
+    Promise.all([
+      api(`/api/leads/${id}`).then(r => r.json()),
+      api(`/api/propostas?lead_id=${id}`).then(r => r.json()),
+    ]).then(([data, props]) => {
       setLead(data)
       setAnotacoes(data.anotacoes ?? '')
+      setPropostas(props)
       setLoading(false)
     })
   }, [id, router])
@@ -151,18 +164,65 @@ export default function LeadDetailPage() {
             <h1 className="text-2xl font-bold text-slate-900">{lead.nome}</h1>
             {lead.empresa && <p className="text-slate-400 text-sm mt-0.5">{lead.empresa}</p>}
           </div>
-          {lead.convertido_em ? (
-            <span className="text-xs font-medium px-3 py-1.5 rounded-full bg-green-100 text-green-700 mt-1">
-              ✓ Convertido em chamado
-            </span>
-          ) : (
+          <div className="flex items-center gap-2 flex-wrap">
             <button
-              onClick={() => setShowConvert(true)}
-              className="text-sm font-medium px-4 py-2 rounded-xl bg-[#C5A880] text-white hover:bg-[#b39470] transition-colors"
+              onClick={() => router.push(`/admin/proposta/nova?lead_id=${id}`)}
+              className="text-sm font-medium px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
             >
-              Converter em Chamado
+              📄 Nova proposta
             </button>
-          )}
+            {lead.convertido_em ? (
+              <span className="text-xs font-medium px-3 py-1.5 rounded-full bg-green-100 text-green-700">
+                ✓ Convertido em chamado
+              </span>
+            ) : (
+              <button
+                onClick={() => setShowConvert(true)}
+                className="text-sm font-medium px-4 py-2 rounded-xl bg-[#C5A880] text-white hover:bg-[#b39470] transition-colors"
+              >
+                Converter em Chamado
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Propostas vinculadas */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-700">Propostas ({propostas.length})</h2>
+          </div>
+          <div className="px-6 py-4">
+            {propostas.length === 0 ? (
+              <p className="text-xs text-slate-400 italic text-center py-2">Nenhuma proposta vinculada a este lead ainda.</p>
+            ) : (
+              <div className="space-y-2">
+                {propostas.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => router.push(`/admin/proposta/${p.id}`)}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors text-left"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{p.titulo}</p>
+                        <span className={clsx('text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full', PROPOSTA_STATUS_COLORS[p.status])}>
+                          {PROPOSTA_STATUS_LABELS[p.status]}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        {format(new Date(p.created_at), "d 'de' MMM yyyy", { locale: ptBR })}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm font-bold text-slate-800 tabular-nums">
+                        {p.valor != null ? formatBRL(p.valor) : '—'}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Info card */}
