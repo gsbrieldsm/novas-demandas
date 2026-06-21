@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { api } from '@/lib/api'
@@ -47,6 +47,9 @@ interface Despesa {
   pago: boolean
   pago_em: string | null
   vencimento: string | null
+  recorrente: boolean
+  recorrencia_meses: number | null
+  recorrencia_grupo_id: string | null
 }
 
 export default function FinanceiroPage() {
@@ -57,8 +60,9 @@ export default function FinanceiroPage() {
   const [despesas, setDespesas] = useState<Despesa[]>([])
   const [loading, setLoading] = useState(true)
   const [showDespForm, setShowDespForm] = useState(false)
-  const [despForm, setDespForm] = useState<{ tipo: DespesaTipo; descricao: string; valor: string; vencimento: string }>({ tipo: 'corporativa', descricao: '', valor: '', vencimento: '' })
+  const [despForm, setDespForm] = useState<{ tipo: DespesaTipo; descricao: string; valor: string; vencimento: string; recorrente: boolean; recorrencia_meses: string }>({ tipo: 'corporativa', descricao: '', valor: '', vencimento: '', recorrente: false, recorrencia_meses: '12' })
   const [savingDesp, setSavingDesp] = useState(false)
+  const [despesasTodas, setDespesasTodas] = useState<Despesa[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -77,11 +81,13 @@ export default function FinanceiroPage() {
       api(`/api/pagamentos?mes=${m}&ano=${a}`).then(r => r.json()),
       api('/api/tickets').then(r => r.json()),
       api(`/api/despesas?mes=${m}&ano=${a}`).then(r => r.json()),
-    ]).then(([c, p, t, d]) => {
+      api('/api/despesas').then(r => r.json()),
+    ]).then(([c, p, t, d, dTodas]) => {
       setClientes(c)
       setPagamentos(p)
       setTickets(t)
       setDespesas(d)
+      setDespesasTodas(dTodas)
       setLoading(false)
     })
   }, [mes])
@@ -139,11 +145,15 @@ export default function FinanceiroPage() {
         mes: mes.getMonth() + 1,
         ano: mes.getFullYear(),
         vencimento: despForm.vencimento || null,
+        recorrente: despForm.recorrente,
+        recorrencia_meses: despForm.recorrente ? parseInt(despForm.recorrencia_meses, 10) || 1 : null,
       }),
     })
     const nova = await res.json()
     setDespesas(prev => [nova, ...prev])
-    setDespForm({ tipo: 'corporativa', descricao: '', valor: '', vencimento: '' })
+    const dTodas = await api('/api/despesas').then(r => r.json())
+    setDespesasTodas(dTodas)
+    setDespForm({ tipo: 'corporativa', descricao: '', valor: '', vencimento: '', recorrente: false, recorrencia_meses: '12' })
     setShowDespForm(false)
     setSavingDesp(false)
   }
@@ -165,10 +175,17 @@ export default function FinanceiroPage() {
     })
   }
 
-  async function deleteDespesa(id: string) {
-    if (!confirm('Excluir esta despesa?')) return
-    setDespesas(prev => prev.filter(d => d.id !== id))
-    await api(`/api/despesas/${id}`, { method: 'DELETE' })
+  async function deleteDespesa(despesa: Despesa) {
+    let serie = false
+    if (despesa.recorrente) {
+      serie = confirm('Essa despesa é recorrente. Clique OK pra excluir ela e todos os meses futuros da recorrência, ou Cancelar pra excluir só este mês.')
+    } else if (!confirm('Excluir esta despesa?')) {
+      return
+    }
+    setDespesas(prev => prev.filter(d => d.id !== despesa.id))
+    await api(`/api/despesas/${despesa.id}${serie ? '?serie=true' : ''}`, { method: 'DELETE' })
+    const dTodas = await api('/api/despesas').then(r => r.json())
+    setDespesasTodas(dTodas)
   }
 
   // ============ Cálculos ============
@@ -208,6 +225,28 @@ export default function FinanceiroPage() {
   // Balanço considera apenas o que efetivamente saiu da conta
   const balanco = entradas - saidasPagas
   const balancoPositivo = balanco >= 0
+
+  // Projeção mês a mês até dezembro do ano atual
+  const projecao = useMemo(() => {
+    const hoje = new Date()
+    const anoAtual = hoje.getFullYear()
+    let mp = hoje.getMonth() + 1
+    let ap = anoAtual
+    const meses: { mes: number; ano: number; receita: number; despesas: number; despesasAPagar: number; saldo: number }[] = []
+    while (ap < anoAtual || (ap === anoAtual && mp <= 12)) {
+      const receita = clientesAtivos.reduce((s, c) => s + Number(c.valor_mensal), 0)
+      const despesasMes = despesasTodas.filter(d => d.mes === mp && d.ano === ap)
+      const totalDespesas = despesasMes.reduce((s, d) => s + Number(d.valor), 0)
+      const aPagar = despesasMes.filter(d => !d.pago).reduce((s, d) => s + Number(d.valor), 0)
+      meses.push({ mes: mp, ano: ap, receita, despesas: totalDespesas, despesasAPagar: aPagar, saldo: receita - totalDespesas })
+      mp++
+      if (mp > 12) { mp = 1; ap++ }
+    }
+    return meses
+  }, [clientesAtivos, despesasTodas])
+
+  const totalAPagarAteDezembro = projecao.reduce((s, p) => s + p.despesasAPagar, 0)
+  const saldoAcumuladoAteDezembro = projecao.reduce((s, p) => s + p.saldo, 0)
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -279,6 +318,69 @@ export default function FinanceiroPage() {
               color={pendente > 0 ? 'text-amber-300' : 'text-white/60'}
             />
           </div>
+        </div>
+
+        {/* PROJEÇÃO ATÉ DEZEMBRO */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-700">Projeção até Dezembro de {new Date().getFullYear()}</h2>
+              <p className="text-[11px] text-slate-400 mt-0.5">Receita fixa prevista e despesas já lançadas, mês a mês</p>
+            </div>
+            <div className="flex items-center gap-4 text-right">
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase tracking-wider">A pagar até dez.</p>
+                <p className="text-sm font-bold text-red-500">{formatBRL(totalAPagarAteDezembro)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Saldo acumulado</p>
+                <p className={clsx('text-sm font-bold', saldoAcumuladoAteDezembro >= 0 ? 'text-green-600' : 'text-red-500')}>
+                  {saldoAcumuladoAteDezembro >= 0 ? '+' : ''}{formatBRL(saldoAcumuladoAteDezembro)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <div className="flex gap-2 px-4 md:px-6 py-4 min-w-max">
+              {projecao.map(p => {
+                const dataMes = new Date(p.ano, p.mes - 1, 1)
+                const isAtual = p.mes === new Date().getMonth() + 1 && p.ano === new Date().getFullYear()
+                return (
+                  <div
+                    key={`${p.mes}-${p.ano}`}
+                    className={clsx(
+                      'rounded-xl p-3 min-w-[140px] border',
+                      isAtual ? 'bg-slate-800 border-slate-800' : 'bg-white border-slate-200'
+                    )}
+                  >
+                    <p className={clsx('text-[10px] uppercase tracking-wider font-bold mb-2', isAtual ? 'text-white/60' : 'text-slate-400')}>
+                      {format(dataMes, 'MMM yyyy', { locale: ptBR })}
+                    </p>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={clsx('text-[10px]', isAtual ? 'text-white/50' : 'text-slate-400')}>Receita</span>
+                        <span className={clsx('text-xs font-semibold', isAtual ? 'text-green-300' : 'text-green-600')}>{formatBRL(p.receita)}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={clsx('text-[10px]', isAtual ? 'text-white/50' : 'text-slate-400')}>Despesas</span>
+                        <span className={clsx('text-xs font-semibold', isAtual ? 'text-red-300' : 'text-red-500')}>{formatBRL(p.despesas)}</span>
+                      </div>
+                      <div className={clsx('flex items-center justify-between gap-2 pt-1 border-t', isAtual ? 'border-white/10' : 'border-slate-100')}>
+                        <span className={clsx('text-[10px] font-bold', isAtual ? 'text-white/70' : 'text-slate-500')}>Saldo</span>
+                        <span className={clsx('text-xs font-bold', p.saldo >= 0 ? (isAtual ? 'text-white' : 'text-slate-800') : 'text-red-500')}>
+                          {p.saldo >= 0 ? '+' : ''}{formatBRL(p.saldo)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+          <p className="text-[11px] text-slate-400 px-4 md:px-6 pb-3 -mt-1">
+            💡 Receita prevista considera os clientes fixos ativos hoje. Despesas recorrentes já aparecem em todos os meses futuros — cadastre como recorrente na seção de Despesas abaixo.
+          </p>
         </div>
 
         {/* Tabela de clientes fixos */}
@@ -586,7 +688,33 @@ export default function FinanceiroPage() {
                   </button>
                 </div>
               </div>
-              <p className="text-xs text-slate-400 mt-2">A data de vencimento é opcional — quando preenchida, a despesa aparece na Agenda.</p>
+              <div className="flex items-center gap-3 mt-3">
+                <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={despForm.recorrente}
+                    onChange={e => setDespForm(f => ({ ...f, recorrente: e.target.checked }))}
+                    className="rounded border-slate-300 text-[#C5A880] focus:ring-[#C5A880]"
+                  />
+                  Despesa recorrente
+                </label>
+                {despForm.recorrente && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500">por quantos meses</span>
+                    <input
+                      type="number"
+                      min="2"
+                      max="60"
+                      value={despForm.recorrencia_meses}
+                      onChange={e => setDespForm(f => ({ ...f, recorrencia_meses: e.target.value }))}
+                      className="w-16 text-sm border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                    />
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-slate-400 mt-2">
+                A data de vencimento é opcional — quando preenchida, a despesa aparece na Agenda. Se marcar recorrente, a despesa já é criada em todos os meses seguintes (cada mês fica controlável separadamente).
+              </p>
             </div>
           )}
 
@@ -623,7 +751,14 @@ export default function FinanceiroPage() {
                           </span>
                         </td>
                         <td className="px-6 py-3">
-                          <p className={clsx('text-sm', d.pago ? 'text-slate-500' : 'text-slate-800')}>{d.descricao}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className={clsx('text-sm', d.pago ? 'text-slate-500' : 'text-slate-800')}>{d.descricao}</p>
+                            {d.recorrente && (
+                              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500" title={`Recorrente · ${d.recorrencia_meses} meses`}>
+                                🔁 {d.recorrencia_meses}x
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-slate-400">criada {format(new Date(d.created_at), "d 'de' MMM", { locale: ptBR })}</p>
                         </td>
                         <td className="px-6 py-3">
@@ -673,7 +808,7 @@ export default function FinanceiroPage() {
                               {d.pago ? 'Desfazer' : 'Marcar pago'}
                             </button>
                             <button
-                              onClick={() => deleteDespesa(d.id)}
+                              onClick={() => deleteDespesa(d)}
                               className="text-slate-300 hover:text-red-400 transition-colors text-lg leading-none"
                               title="Excluir"
                             >
@@ -713,7 +848,7 @@ export default function FinanceiroPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline gap-2">
                           <p className={clsx('text-sm font-medium truncate flex-1', d.pago ? 'text-slate-500' : 'text-slate-800')}>
-                            {d.descricao}
+                            {d.descricao}{d.recorrente && <span className="ml-1 text-[10px] text-slate-400">🔁{d.recorrencia_meses}x</span>}
                           </p>
                           <span className={clsx('text-sm font-bold whitespace-nowrap', d.pago ? 'text-slate-400 line-through' : 'text-red-500')}>
                             {formatBRL(Number(d.valor))}
@@ -740,7 +875,7 @@ export default function FinanceiroPage() {
 
                       {/* Lixeira pequena */}
                       <span
-                        onClick={(e) => { e.stopPropagation(); deleteDespesa(d.id) }}
+                        onClick={(e) => { e.stopPropagation(); deleteDespesa(d) }}
                         className="w-7 h-7 rounded-md text-slate-300 hover:text-red-500 flex items-center justify-center text-lg flex-shrink-0 -mr-1"
                       >
                         ×

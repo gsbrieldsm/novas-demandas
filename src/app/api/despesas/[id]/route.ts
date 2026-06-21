@@ -23,6 +23,22 @@ export async function DELETE(
   if ('error' in auth) return auth.error
 
   const { id } = await params
+  const { searchParams } = new URL(req.url)
+  const serie = searchParams.get('serie') === 'true'
+
+  if (serie) {
+    const { data: atual } = await auth.db.from('despesas').select('recorrencia_grupo_id, mes, ano').eq('id', id).single()
+    if (atual?.recorrencia_grupo_id) {
+      const { error } = await auth.db
+        .from('despesas')
+        .delete()
+        .eq('recorrencia_grupo_id', atual.recorrencia_grupo_id)
+        .or(`ano.gt.${atual.ano},and(ano.eq.${atual.ano},mes.gte.${atual.mes})`)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ ok: true })
+    }
+  }
+
   const { error } = await auth.db.from('despesas').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })

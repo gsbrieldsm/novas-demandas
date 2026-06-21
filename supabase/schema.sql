@@ -110,3 +110,11 @@ create policy "Público pode se cadastrar como parceiro"
 
 create index parceiros_status_idx on public.parceiros(status);
 create index parceiros_created_at_idx on public.parceiros(created_at desc);
+
+-- Migração: despesas recorrentes
+alter table public.despesas
+  add column if not exists recorrente boolean not null default false,
+  add column if not exists recorrencia_meses integer,
+  add column if not exists recorrencia_grupo_id uuid;
+
+create index if not exists despesas_recorrencia_grupo_idx on public.despesas(recorrencia_grupo_id);
