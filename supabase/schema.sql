@@ -118,3 +118,10 @@ alter table public.despesas
   add column if not exists recorrencia_grupo_id uuid;
 
 create index if not exists despesas_recorrencia_grupo_idx on public.despesas(recorrencia_grupo_id);
+
+-- Migração: distinguir cliente de serviço vs outras receitas recorrentes (comissão, aluguel, etc.)
+alter table public.clientes_fixos
+  add column if not exists tipo text not null default 'cliente';
+
+alter table public.clientes_fixos
+  add constraint clientes_fixos_tipo_check check (tipo in ('cliente', 'outras_receitas'));

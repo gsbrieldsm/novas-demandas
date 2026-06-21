@@ -39,6 +39,7 @@ interface ClienteFixo {
   cnpj: string | null
   razao_social: string | null
   telefone: string | null
+  tipo: 'cliente' | 'outras_receitas'
 }
 
 function formatCNPJ(value: string) {
@@ -90,7 +91,7 @@ export default function ClienteDetailPage() {
   // Form states
   const [identForm, setIdentForm] = useState({
     nome: '', email: '', valor_mensal: '', dia_vencimento: '', data_inicio: '',
-    cnpj: '', razao_social: '', telefone: '',
+    cnpj: '', razao_social: '', telefone: '', tipo: 'cliente' as 'cliente' | 'outras_receitas',
   })
   const [escopoForm, setEscopoForm] = useState({ escopo_mensal: '', observacoes_internas: '' })
 
@@ -125,6 +126,7 @@ export default function ClienteDetailPage() {
         cnpj: cf.cnpj ?? '',
         razao_social: cf.razao_social ?? '',
         telefone: cf.telefone ?? '',
+        tipo: cf.tipo,
       })
       setEscopoForm({
         escopo_mensal: cf.escopo_mensal ?? '',
@@ -160,6 +162,7 @@ export default function ClienteDetailPage() {
       cnpj: identForm.cnpj.trim() || null,
       razao_social: identForm.razao_social.trim() || null,
       telefone: identForm.telefone.trim() || null,
+      tipo: identForm.tipo,
     }
     await patchCliente(body)
     setEditingIdent(false)
@@ -288,7 +291,9 @@ export default function ClienteDetailPage() {
         >
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="min-w-0">
-              <p className="text-[10px] md:text-xs font-bold tracking-[0.22em] uppercase text-white/60 mb-1.5">Cliente Fixo</p>
+              <p className="text-[10px] md:text-xs font-bold tracking-[0.22em] uppercase text-white/60 mb-1.5">
+                {cliente.tipo === 'outras_receitas' ? 'Outras Receitas' : 'Cliente Fixo'}
+              </p>
               <h1 className="text-2xl md:text-3xl font-bold capitalize">{cliente.nome}</h1>
               <div className="flex items-center gap-2 mt-2 flex-wrap text-xs">
                 {isCancelled ? (
@@ -374,6 +379,24 @@ export default function ClienteDetailPage() {
           {editingIdent ? (
             <div className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <FormField label="Tipo">
+                  <div className="flex rounded-lg overflow-hidden border border-slate-200 text-sm">
+                    <button
+                      type="button"
+                      onClick={() => setIdentForm(f => ({ ...f, tipo: 'cliente' }))}
+                      className={`flex-1 py-2 font-medium ${identForm.tipo === 'cliente' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500'}`}
+                    >
+                      Cliente
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIdentForm(f => ({ ...f, tipo: 'outras_receitas' }))}
+                      className={`flex-1 py-2 font-medium ${identForm.tipo === 'outras_receitas' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500'}`}
+                    >
+                      Outras Receitas
+                    </button>
+                  </div>
+                </FormField>
                 <FormField label="Nome">
                   <input value={identForm.nome} onChange={e => setIdentForm(f => ({ ...f, nome: e.target.value }))} className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]" />
                 </FormField>
@@ -401,11 +424,12 @@ export default function ClienteDetailPage() {
               </div>
               <div className="flex gap-2 pt-1">
                 <button onClick={salvarIdent} className="text-sm px-4 py-2 rounded-lg text-white" style={{ background: '#C5A880' }}>Salvar</button>
-                <button onClick={() => { setEditingIdent(false); if (cliente) setIdentForm({ nome: cliente.nome, email: cliente.email ?? '', valor_mensal: String(cliente.valor_mensal), dia_vencimento: cliente.dia_vencimento ? String(cliente.dia_vencimento) : '', data_inicio: cliente.data_inicio ?? '', cnpj: cliente.cnpj ?? '', razao_social: cliente.razao_social ?? '', telefone: cliente.telefone ?? '' }) }} className="text-sm px-4 py-2 rounded-lg text-slate-500 hover:bg-slate-50">Cancelar</button>
+                <button onClick={() => { setEditingIdent(false); if (cliente) setIdentForm({ nome: cliente.nome, email: cliente.email ?? '', valor_mensal: String(cliente.valor_mensal), dia_vencimento: cliente.dia_vencimento ? String(cliente.dia_vencimento) : '', data_inicio: cliente.data_inicio ?? '', cnpj: cliente.cnpj ?? '', razao_social: cliente.razao_social ?? '', telefone: cliente.telefone ?? '', tipo: cliente.tipo }) }} className="text-sm px-4 py-2 rounded-lg text-slate-500 hover:bg-slate-50">Cancelar</button>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+              <FieldDisplay label="Tipo" value={cliente.tipo === 'outras_receitas' ? 'Outras Receitas' : 'Cliente'} />
               <FieldDisplay label="Nome" value={cliente.nome} />
               <FieldDisplay label="E-mail" value={cliente.email ?? '—'} />
               <FieldDisplay label="Valor mensal" value={formatBRL(Number(cliente.valor_mensal))} />

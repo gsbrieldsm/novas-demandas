@@ -21,12 +21,16 @@ interface ClienteFixo {
   valor_mensal: number
   ativo: boolean
   created_at: string
+  tipo: 'cliente' | 'outras_receitas'
+  data_inicio: string | null
+  data_cancelamento: string | null
 }
 
 interface LinhaCliente {
   key: string
   nome: string
   tipo: 'fixo' | 'avulso'
+  outrasReceitas?: boolean
   receita: number
   minutos: number
   rh: number | null
@@ -48,7 +52,7 @@ export default function ClientesPage() {
   const [editingAlvo, setEditingAlvo] = useState(false)
   const [alvoInput, setAlvoInput] = useState('')
   const [showNovoCliente, setShowNovoCliente] = useState(false)
-  const [novoCliente, setNovoCliente] = useState({ nome: '', email: '', valor_mensal: '', dia_vencimento: '', data_inicio: '' })
+  const [novoCliente, setNovoCliente] = useState({ nome: '', email: '', valor_mensal: '', dia_vencimento: '', data_inicio: '', tipo: 'cliente' as 'cliente' | 'outras_receitas' })
   const [savingNovo, setSavingNovo] = useState(false)
   const [erroNovo, setErroNovo] = useState<string | null>(null)
   const router = useRouter()
@@ -66,6 +70,7 @@ export default function ClientesPage() {
       valor_mensal: parseFloat(novoCliente.valor_mensal.replace(',', '.')),
       dia_vencimento: novoCliente.dia_vencimento ? parseInt(novoCliente.dia_vencimento, 10) : null,
       data_inicio: novoCliente.data_inicio || null,
+      tipo: novoCliente.tipo,
       ativo: true,
     }
     const res = await api('/api/clientes-fixos', {
@@ -144,10 +149,14 @@ export default function ClientesPage() {
 
   // Quantos meses o cliente fixo esteve ativo no período (pra receita correta no ano)
   function mesesAtivosNoPeriodo(cf: ClienteFixo): number {
-    if (!cf.ativo) return 0
-    const created = new Date(cf.created_at)
+    const created = cf.data_inicio ? new Date(cf.data_inicio + 'T12:00:00') : new Date(cf.created_at)
     const now = new Date()
-    const periodEnd = range.end > now ? now : range.end
+    let periodEnd = range.end > now ? now : range.end
+    if (!cf.ativo) {
+      if (!cf.data_cancelamento) return 0
+      const cancelamento = new Date(cf.data_cancelamento + 'T12:00:00')
+      if (cancelamento < periodEnd) periodEnd = cancelamento
+    }
     const periodStart = created > range.start ? created : range.start
     if (periodStart > periodEnd) return 0
     const months = (periodEnd.getFullYear() - periodStart.getFullYear()) * 12
@@ -165,8 +174,8 @@ export default function ClientesPage() {
 
     const result: LinhaCliente[] = []
 
-    // === Clientes fixos ativos ===
-    clientesFixos.filter(c => c.ativo).forEach(cf => {
+    // === Clientes fixos (inclui cancelados, mas só contam os meses em que estiveram ativos) ===
+    clientesFixos.forEach(cf => {
       const cfNome = cf.nome?.toLowerCase().trim()
       const tks = ticketsPeriodo.filter(t => {
         if (t.cliente_fixo_id === cf.id) return true
@@ -185,6 +194,7 @@ export default function ClientesPage() {
         key: `fixo-${cf.id}`,
         nome: cf.nome,
         tipo: 'fixo',
+        outrasReceitas: cf.tipo === 'outras_receitas',
         receita,
         minutos: min,
         rh: valorHora(receita, min),
@@ -393,6 +403,11 @@ export default function ClientesPage() {
                               <span className={clsx('text-xs font-medium px-2 py-0.5 rounded-full', l.tipo === 'fixo' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700')}>
                                 {l.tipo === 'fixo' ? 'Fixo' : 'Avulso'}
                               </span>
+                              {l.outrasReceitas && (
+                                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                                  💰 Outras Receitas
+                                </span>
+                              )}
                               {l.tipo === 'fixo' ? (
                                 <span
                                   onClick={(e) => { e.stopPropagation(); router.push(`/admin/cliente/${l.key.replace('fixo-', '')}`) }}
@@ -547,6 +562,26 @@ export default function ClientesPage() {
             </div>
             <div className="px-6 py-5 space-y-3">
               {erroNovo && <div className="bg-red-50 text-red-700 text-xs px-3 py-2 rounded">{erroNovo}</div>}
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 block mb-1.5">Tipo</label>
+                <div className="flex rounded-lg overflow-hidden border border-slate-200 text-sm">
+                  <button
+                    type="button"
+                    onClick={() => setNovoCliente(f => ({ ...f, tipo: 'cliente' }))}
+                    className={`flex-1 py-2 font-medium ${novoCliente.tipo === 'cliente' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500'}`}
+                  >
+                    Cliente
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNovoCliente(f => ({ ...f, tipo: 'outras_receitas' }))}
+                    className={`flex-1 py-2 font-medium ${novoCliente.tipo === 'outras_receitas' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500'}`}
+                  >
+                    Outras Receitas
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">Use "Outras Receitas" pra comissão, aluguel ou outra entrada recorrente que não seja um cliente de serviço.</p>
+              </div>
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 block mb-1.5">Nome *</label>
                 <input

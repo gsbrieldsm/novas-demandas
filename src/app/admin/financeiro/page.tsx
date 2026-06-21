@@ -21,6 +21,21 @@ interface ClienteFixo {
   valor_mensal: number
   dia_vencimento: number | null
   ativo: boolean
+  tipo: 'cliente' | 'outras_receitas'
+  data_inicio: string | null
+  data_cancelamento: string | null
+}
+
+/** Considera o cliente "contando" num mês/ano se ele já tinha começado e ainda não tinha cancelado até o fim daquele mês. */
+function clienteContaNoMes(c: ClienteFixo, mes: number, ano: number): boolean {
+  const inicioMes = new Date(ano, mes - 1, 1)
+  const fimMes = new Date(ano, mes, 0, 23, 59, 59)
+  if (c.data_inicio && new Date(c.data_inicio + 'T12:00:00') > fimMes) return false
+  if (!c.ativo) {
+    if (!c.data_cancelamento) return false
+    if (new Date(c.data_cancelamento + 'T12:00:00') < inicioMes) return false
+  }
+  return true
 }
 
 interface Pagamento {
@@ -192,7 +207,7 @@ export default function FinanceiroPage() {
   const m = mes.getMonth() + 1
   const a = mes.getFullYear()
 
-  const clientesAtivos = clientes.filter(c => c.ativo)
+  const clientesAtivos = clientes.filter(c => clienteContaNoMes(c, m, a))
 
   const rows = clientesAtivos.map(c => ({
     cliente: c,
@@ -202,6 +217,8 @@ export default function FinanceiroPage() {
   const totalEsperadoFixo = clientesAtivos.reduce((s, c) => s + Number(c.valor_mensal), 0)
   const totalRecebidoFixo = rows.filter(r => r.pag?.recebido).reduce((s, r) => s + Number(r.cliente.valor_mensal), 0)
   const totalPendenteFixo = totalEsperadoFixo - totalRecebidoFixo
+  const totalEsperadoClientes = clientesAtivos.filter(c => c.tipo !== 'outras_receitas').reduce((s, c) => s + Number(c.valor_mensal), 0)
+  const totalEsperadoOutrasReceitas = totalEsperadoFixo - totalEsperadoClientes
 
   const avulsosMes = tickets.filter(t => {
     if (t.is_fixed_client || !t.budget_value || t.status === 'cancelado') return false
@@ -234,7 +251,7 @@ export default function FinanceiroPage() {
     let ap = anoAtual
     const meses: { mes: number; ano: number; receita: number; despesas: number; despesasAPagar: number; saldo: number }[] = []
     while (ap < anoAtual || (ap === anoAtual && mp <= 12)) {
-      const receita = clientesAtivos.reduce((s, c) => s + Number(c.valor_mensal), 0)
+      const receita = clientes.filter(c => clienteContaNoMes(c, mp, ap)).reduce((s, c) => s + Number(c.valor_mensal), 0)
       const despesasMes = despesasTodas.filter(d => d.mes === mp && d.ano === ap)
       const totalDespesas = despesasMes.reduce((s, d) => s + Number(d.valor), 0)
       const aPagar = despesasMes.filter(d => !d.pago).reduce((s, d) => s + Number(d.valor), 0)
@@ -243,7 +260,7 @@ export default function FinanceiroPage() {
       if (mp > 12) { mp = 1; ap++ }
     }
     return meses
-  }, [clientesAtivos, despesasTodas])
+  }, [clientes, despesasTodas])
 
   const totalAPagarAteDezembro = projecao.reduce((s, p) => s + p.despesasAPagar, 0)
   const saldoAcumuladoAteDezembro = projecao.reduce((s, p) => s + p.saldo, 0)
@@ -386,7 +403,14 @@ export default function FinanceiroPage() {
         {/* Tabela de clientes fixos */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-700">Recebimentos Fixos</h2>
+            <div>
+              <h2 className="text-sm font-semibold text-slate-700">Recebimentos Fixos</h2>
+              {totalEsperadoOutrasReceitas > 0 && (
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Clientes {formatBRL(totalEsperadoClientes)} · Outras receitas {formatBRL(totalEsperadoOutrasReceitas)}
+                </p>
+              )}
+            </div>
             <span className="text-sm font-bold text-amber-600">{formatBRL(totalRecebidoFixo)} <span className="text-xs font-normal text-slate-400">de {formatBRL(totalEsperadoFixo)}</span></span>
           </div>
 
@@ -411,7 +435,12 @@ export default function FinanceiroPage() {
                   {rows.map(({ cliente, pag }) => (
                     <tr key={cliente.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
-                        <p className="text-sm font-medium text-slate-800">{cliente.nome}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-medium text-slate-800">{cliente.nome}</p>
+                          {cliente.tipo === 'outras_receitas' && (
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">💰 outras receitas</span>
+                          )}
+                        </div>
                         {cliente.email && <p className="text-xs text-slate-400">{cliente.email}</p>}
                       </td>
                       <td className="px-6 py-4">

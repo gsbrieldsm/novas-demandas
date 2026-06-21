@@ -33,6 +33,7 @@ export async function vincularClienteFixo(db: SupabaseClient, proposta: Proposta
           valor_mensal: proposta.valor ?? 0,
           dia_vencimento: null,
           ativo: true,
+          tipo: 'cliente',
           data_inicio: new Date().toISOString().slice(0, 10),
           escopo_mensal: proposta.escopo,
         })

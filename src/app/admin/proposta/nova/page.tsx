@@ -49,7 +49,7 @@ function NovaPropostaForm() {
       let cs: Array<Record<string, unknown>> = []
       if (cfRes.ok) {
         cs = await cfRes.json()
-        setClientesFixos(cs as Array<{ id: string; nome: string; valor_mensal: number; email: string | null }>)
+        setClientesFixos(cs.filter(c => c.tipo !== 'outras_receitas') as Array<{ id: string; nome: string; valor_mensal: number; email: string | null }>)
       }
       if (clienteFixoIdParam) {
         const cf = cs.find(c => c.id === clienteFixoIdParam)
