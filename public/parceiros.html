@@ -51,19 +51,19 @@
       border-bottom: 1px solid var(--border);
     }
     .nav-logo { font-size: 15px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text); text-decoration: none; white-space: nowrap; }
-    @media (max-width: 480px) {
-      .nav-logo { font-size: 12px; letter-spacing: .08em; }
-      nav { padding: 0 16px; }
-      .nav-cta { padding: 9px 14px; font-size: 11px; }
-    }
     .nav-logo span { color: var(--accent3); }
     .nav-cta {
-      background: linear-gradient(135deg, var(--accent) 0%, #8B6840 100%); color: #fff; font-size: 11px; font-weight: 700;
-      letter-spacing: .05em; text-transform: uppercase; padding: 8px 16px;
+      background: linear-gradient(135deg, var(--accent) 0%, #8B6840 100%); color: #fff; font-size: 13px; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase; padding: 10px 22px;
       border-radius: 6px; text-decoration: none; transition: opacity .2s, transform .2s;
       display: inline-block;
     }
     .nav-cta:hover { opacity: .9; transform: translateY(-1px); }
+    @media (max-width: 480px) {
+      .nav-logo { font-size: 12px; letter-spacing: .08em; }
+      nav { padding: 0 16px; }
+      .nav-cta { padding: 8px 13px; font-size: 10px; letter-spacing: .03em; }
+    }
 
     section { padding: 120px 24px 100px; position: relative; }
     .wrap { max-width: 1080px; margin: 0 auto; }
