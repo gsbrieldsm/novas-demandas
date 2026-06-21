@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Kit do Parceiro — Gabriel Moraes & Co</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @page { size: A4; margin: 0; }
+  body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #2a1f17;
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page {
+    width: 210mm; min-height: 297mm; padding: 14mm 16mm;
+    position: relative; page-break-after: always;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 10px; border-bottom: 1px solid #eee2cc; margin-bottom: 18px;
+  }
+  .topbar .brand { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: .04em; color: #2a1f17; }
+  .topbar .badge { background: #2a1f17; color: #f5d9a0; font-size: 10px; font-weight: 800; padding: 3px 7px; border-radius: 4px; }
+  .topbar .right { font-size: 10px; color: #8a7461; }
+
+  h1 { font-size: 30px; font-weight: 800; line-height: 1.15; letter-spacing: -.01em; color: #2a1f17; }
+  h2 { font-size: 16px; font-weight: 800; color: #2a1f17; margin-bottom: 4px; }
+  .section-label { display: flex; align-items: center; gap: 8px; margin: 18px 0 10px; }
+  .section-label .bar { width: 4px; height: 16px; background: #c9a96e; border-radius: 2px; }
+  .section-label h2 { margin: 0; }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 6px; background: #c9a96e; color: #2a1f17;
+    font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 4px; margin-bottom: 14px;
+  }
+
+  /* HERO BOX */
+  .hero-box { background: linear-gradient(135deg, #2a1f17 0%, #1a130d 100%); color: #f5ede0; border-radius: 14px; padding: 26px 28px; margin-top: 6px; }
+  .hero-box p.sub { font-size: 13px; color: #cbb892; margin-top: 8px; }
+  .hero-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(245,217,160,0.15); }
+  .hero-metrics div p:first-child { font-size: 20px; font-weight: 800; color: #f5d9a0; }
+  .hero-metrics div p:last-child { font-size: 9.5px; color: #b8a78d; margin-top: 2px; }
+
+  .cards3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 4px; }
+  .card { border: 1px solid #eee2cc; border-radius: 10px; padding: 12px 14px; background: #fdfbf7; }
+  .card .t { font-size: 11.5px; font-weight: 800; color: #2a1f17; margin-bottom: 4px; }
+  .card .d { font-size: 10px; color: #6b5c4a; line-height: 1.45; }
+
+  .steps { margin-top: 4px; }
+  .step { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f1e8d6; }
+  .step:last-child { border-bottom: none; }
+  .step .num { width: 22px; height: 22px; border-radius: 50%; background: #c9a96e; color: #2a1f17; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step .t { font-size: 12.5px; font-weight: 800; color: #2a1f17; }
+  .step .d { font-size: 10.5px; color: #6b5c4a; margin-top: 2px; line-height: 1.4; }
+
+  .footer-note { position: absolute; bottom: 10mm; left: 16mm; right: 16mm; display: flex; justify-content: space-between; font-size: 9px; color: #b3a690; border-top: 1px solid #f1e8d6; padding-top: 8px; }
+
+  /* TABLES */
+  table.profile { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  table.profile th { text-align: left; font-size: 10px; padding: 8px 10px; }
+  table.profile th.priority { background: #e9f3e9; color: #2f5c33; }
+  table.profile th.caution { background: #fdf3da; color: #8a6a1e; }
+  table.profile td { font-size: 10px; color: #4a3d2c; vertical-align: top; padding: 8px 10px; border-top: 1px solid #f1e8d6; line-height: 1.6; }
+
+  .moment { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px solid #f1e8d6; }
+  .moment:last-child { border-bottom: none; }
+  .moment .num { width: 20px; height: 20px; border-radius: 50%; background: #2a1f17; color: #f5d9a0; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .moment .t { font-size: 11.5px; font-weight: 800; }
+  .moment .d { font-size: 10px; color: #6b5c4a; margin-top: 1px; line-height: 1.4; }
+
+  .arg-row { display: flex; gap: 10px; align-items: center; padding: 9px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; color: #2a1f17; margin-bottom: 6px; }
+  .arg-row .letter { width: 18px; height: 18px; border-radius: 50%; background: #c9a96e; color: #2a1f17; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .arg-row:nth-child(odd) { background: #fdf8ee; }
+  .arg-row:nth-child(even) { background: #f7f0e3; }
+
+  .script-label { font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #8a6a30; margin: 16px 0 6px; }
+  .script-label:first-of-type { margin-top: 4px; }
+  .script-bubble { background: #1f1710; color: #e9e1d2; border-radius: 10px; padding: 16px 18px; font-size: 11px; line-height: 1.75; white-space: pre-line; }
+
+  .obj-card { border: 1px solid #eee2cc; border-radius: 10px; padding: 12px 14px; margin-bottom: 9px; background: #fdfbf7; }
+  .obj-card .q { font-size: 11.5px; font-weight: 800; color: #2a1f17; margin-bottom: 4px; }
+  .obj-card .q::before { content: '"'; }
+  .obj-card .q::after { content: '"'; }
+  .obj-card .a { font-size: 10.5px; color: #4a3d2c; line-height: 1.55; }
+
+  table.tiers { width: 100%; border-collapse: collapse; margin-top: 4px; border-radius: 10px; overflow: hidden; border: 1px solid #eee2cc; }
+  table.tiers th { background: #2a1f17; color: #fff; font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; text-align: left; padding: 9px 14px; }
+  table.tiers td { font-size: 11.5px; padding: 10px 14px; border-top: 1px solid #f1e8d6; color: #2a1f17; }
+  table.tiers tr.highlight td { background: #faf2dc; font-weight: 700; }
+  table.tiers td.pct { color: #8a6a30; font-weight: 800; }
+
+  .sim2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 6px; }
+  .sim-card { border: 1px solid #eee2cc; border-radius: 10px; padding: 14px 16px; background: #fdfbf7; }
+  .sim-card .h { font-size: 11.5px; font-weight: 800; margin-bottom: 8px; }
+  .sim-card .row { display: flex; justify-content: space-between; font-size: 10.5px; color: #4a3d2c; padding: 3px 0; }
+  .sim-card .row strong { color: #2a1f17; }
+  .sim-card .total { display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: #8a6a30; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee2cc; }
+
+  .pay-note { background: #1f1710; color: #e9e1d2; border-radius: 10px; padding: 16px 18px; margin-top: 16px; font-size: 11px; line-height: 1.6; }
+  .pay-note strong { color: #f5d9a0; }
+
+  .cta-final { background: linear-gradient(135deg, #c9a96e 0%, #8B6840 100%); color: #fff; border-radius: 12px; padding: 18px 22px; margin-top: 18px; display: flex; align-items: center; justify-content: space-between; }
+  .cta-final .t { font-size: 14px; font-weight: 800; }
+  .cta-final .link { font-size: 12px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- PÁGINA 1 -->
+<div class="page">
+  <div class="topbar">
+    <div class="brand"><span class="badge">GM</span> Gabriel Moraes &amp; Co · Kit do Parceiro</div>
+    <div class="right">gmeco.com.br/parceiros.html</div>
+  </div>
+
+  <div class="eyebrow">● Programa de Parceiros</div>
+  <h1>Bem-vindo ao time.<br />Agora você ganha junto.</h1>
+  <p style="font-size:13px;color:#6b5c4a;margin-top:10px;">Indique negócios e profissionais. Ganhe comissão assim que o cliente pagar.</p>
+
+  <div class="hero-box">
+    <p style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#cbb892;font-weight:700;">Resumo do programa</p>
+    <p class="sub">Comissão paga uma única vez, depois que o cliente paga o serviço (ou a 1ª parcela) — sem burocracia, sem mensalidade pra você.</p>
+    <div class="hero-metrics">
+      <div><p>até 30%</p><p>comissão máxima</p></div>
+      <div><p>R$ 0</p><p>taxa de adesão</p></div>
+      <div><p>7 dias</p><p>prazo de pagamento</p></div>
+      <div><p>∞</p><p>sem limite de indicações</p></div>
+    </div>
+  </div>
+
+  <div class="section-label"><div class="bar"></div><h2>O que você recebe hoje</h2></div>
+  <div class="cards3">
+    <div class="card"><p class="t">📋 Scripts prontos</p><p class="d">Mensagens testadas pra WhatsApp, Instagram e abordagem presencial.</p></div>
+    <div class="card"><p class="t">🎯 Argumentos de venda</p><p class="d">Respostas pra cada objeção comum de quem ainda não investe em marketing.</p></div>
+    <div class="card"><p class="t">🤝 Suporte direto</p><p class="d">Fala direto com Gabriel pelo WhatsApp pra tirar dúvida ou fechar junto.</p></div>
+  </div>
+
+  <div class="section-label"><div class="bar"></div><h2>Seus primeiros passos</h2></div>
+  <div class="steps">
+    <div class="step"><div class="num">1</div><div><p class="t">Leia os scripts deste kit</p><p class="d">Salve no celular pra copiar e adaptar. Funciona no WhatsApp, Instagram e presencialmente.</p></div></div>
+    <div class="step"><div class="num">2</div><div><p class="t">Liste 5 negócios que você conhece</p><p class="d">Não precisa ser amigo íntimo — qualquer dono ou gestor com quem tenha contato é um potencial.</p></div></div>
+    <div class="step"><div class="num">3</div><div><p class="t">Faça sua primeira abordagem ainda hoje</p><p class="d">A primeira é a mais difícil. Use o script pronto e chame o Gabriel se precisar de apoio pra fechar.</p></div></div>
+    <div class="step"><div class="num">4</div><div><p class="t">Apresente o cliente direto pro Gabriel</p><p class="d">Manda o contato pelo WhatsApp mencionando seu nome — assim a indicação fica registrada no seu nome.</p></div></div>
+    <div class="step"><div class="num">5</div><div><p class="t">Receba sua comissão em até 7 dias</p><p class="d">Direto na sua conta, depois que o cliente efetua o pagamento do serviço (ou da 1ª parcela, se for recorrente).</p></div></div>
+  </div>
+
+  <div class="footer-note"><span>© 2026 Gabriel Moraes &amp; Co · Todos os direitos reservados</span><span>Página 1</span></div>
+</div>
+
+<!-- PÁGINA 2 -->
+<div class="page">
+  <div class="topbar">
+    <div class="brand"><span class="badge">GM</span> Gabriel Moraes &amp; Co · Kit do Parceiro</div>
+    <div class="right">gmeco.com.br/parceiros.html</div>
+  </div>
+
+  <div class="section-label"><div class="bar"></div><h2>Quem abordar — perfil do cliente ideal</h2></div>
+  <table class="profile">
+    <tr><th class="priority">● Abordar com prioridade</th><th class="caution">■ Abordar com cautela</th></tr>
+    <tr>
+      <td>
+        • Negócio que já fatura mas não tem estratégia clara de marketing<br/>
+        • Dono ou gestor acessível, decide rápido<br/>
+        • Já tentou fazer marketing "por conta própria" e não deu resultado<br/>
+        • Quer crescer mas não tem tempo nem equipe pra cuidar disso<br/>
+        • Marca com potencial, mas pouca presença digital
+      </td>
+      <td>
+        • Negócio em crise financeira grave<br/>
+        • Já tem agência fixa contratada e satisfeita<br/>
+        • Zero orçamento disponível pra investir<br/>
+        • Espera resultado "da noite pro dia", sem processo
+      </td>
+    </tr>
+  </table>
+
+  <div class="section-label"><div class="bar"></div><h2>Os 3 momentos de abordagem</h2></div>
+  <div>
+    <div class="moment"><div class="num">1</div><div><p class="t">Abordagem fria — WhatsApp ou Instagram</p><p class="d">Você não conhece o dono. Use o script de primeiro contato. O objetivo não é vender — é marcar uma conversa.</p></div></div>
+    <div class="moment"><div class="num">2</div><div><p class="t">Abordagem morna — indicação ou rede</p><p class="d">Você ou alguém em comum conhece o dono. Mencione a conexão no início — abertura muito maior. Chame o Gabriel para a apresentação.</p></div></div>
+    <div class="moment"><div class="num">3</div><div><p class="t">Abordagem presencial — visita ao negócio</p><p class="d">O mais eficiente. Fale com o dono, mostre exemplos de trabalhos no celular — convence na hora.</p></div></div>
+  </div>
+
+  <div class="section-label"><div class="bar"></div><h2>Os 5 argumentos mais fortes</h2></div>
+  <div>
+    <div class="arg-row"><span class="letter">A</span> Proposta sob medida — nada de pacote fechado ou preço de tabela genérico</div>
+    <div class="arg-row"><span class="letter">B</span> Fala direto com quem executa — sem intermediário, sem telefone de central</div>
+    <div class="arg-row"><span class="letter">C</span> Estratégia conectada a resultado real no faturamento, não só engajamento</div>
+    <div class="arg-row"><span class="letter">D</span> Cobertura completa: vídeo, drone, social media e consultoria num só lugar</div>
+    <div class="arg-row"><span class="letter">E</span> Sem fidelidade longa imposta — contrato claro, sem letra pequena</div>
+  </div>
+
+  <div class="footer-note"><span>© 2026 Gabriel Moraes &amp; Co · Todos os direitos reservados</span><span>Página 2</span></div>
+</div>
+
+<!-- PÁGINA 3 -->
+<div class="page">
+  <div class="topbar">
+    <div class="brand"><span class="badge">GM</span> Gabriel Moraes &amp; Co · Kit do Parceiro</div>
+    <div class="right">gmeco.com.br/parceiros.html</div>
+  </div>
+
+  <div class="section-label"><div class="bar"></div><h2>Scripts prontos — copie e adapte</h2></div>
+  <p style="font-size:11px;color:#6b5c4a;">Salve essas mensagens no celular. Adapte com o nome do negócio e envie.</p>
+
+  <p class="script-label">WhatsApp — abordagem direta</p>
+  <div class="script-bubble">Oi! Trabalho com a Gabriel Moraes & Co — marketing, vídeo e social media com estratégia de verdade, não só "postar por postar".
+
+Vi o [nome do negócio] e achei que tem muito potencial pra crescer mais com a comunicação certa.
+
+Posso te mostrar rapidinho como a gente trabalha? Sem compromisso nenhum.</div>
+
+  <p class="script-label">WhatsApp — com conexão em comum</p>
+  <div class="script-bubble">Oi [nome]! Trabalho com o Gabriel, da Gabriel Moraes & Co — marketing estratégico, vídeo e social media.
+
+[Nome em comum] comentou que você tem buscado melhorar a presença digital do [negócio], e lembrei de vocês.
+
+Posso te apresentar o Gabriel? Ele te mostra rapidinho como funciona.</div>
+
+  <p class="script-label">WhatsApp — follow-up (sem resposta em 3 dias)</p>
+  <div class="script-bubble">Só passando pra deixar o link da Gabriel Moraes & Co, pra você dar uma olhada quando tiver um tempinho: gmeco.com.br
+
+Se quiser, marco uma conversa rápida com o Gabriel. Sem compromisso nenhum.</div>
+
+  <p class="script-label">Instagram — DM para perfil de negócio</p>
+  <div class="script-bubble">Oi! Trabalho com a Gabriel Moraes & Co — agência de marketing, vídeo e social media.
+
+Vi o perfil de vocês e achei que faria muito sentido investir numa estratégia mais clara de conteúdo e captação — vídeo profissional, social media com calendário, e até drone se fizer sentido pro negócio.
+
+Posso te apresentar o Gabriel? Ele te mostra como funciona em 10 minutos.</div>
+
+  <div class="footer-note"><span>© 2026 Gabriel Moraes &amp; Co · Todos os direitos reservados</span><span>Página 3</span></div>
+</div>
+
+<!-- PÁGINA 4 -->
+<div class="page">
+  <div class="topbar">
+    <div class="brand"><span class="badge">GM</span> Gabriel Moraes &amp; Co · Kit do Parceiro</div>
+    <div class="right">gmeco.com.br/parceiros.html</div>
+  </div>
+
+  <p class="script-label">Presencial — abertura de conversa</p>
+  <div class="script-bubble">Oi, tudo bem? Trabalho com um time de marketing chamado Gabriel Moraes & Co — fazemos vídeo, social media, drone e consultoria estratégica.
+
+Tem trabalhos que já ajudaram negócios parecidos com o de vocês a aparecer muito mais no Instagram e fechar mais clientes.
+
+Posso te mostrar alguns exemplos rapidinho?</div>
+
+  <div class="section-label"><div class="bar"></div><h2>Presencial — roteiro de visita</h2></div>
+  <div>
+    <div class="moment"><div class="num">1</div><div><p class="t">Vá em horário tranquilo</p><p class="d">Evite horário de pico do negócio. Peça pra falar com o dono ou responsável e diga que tem algo rápido pra mostrar.</p></div></div>
+    <div class="moment"><div class="num">2</div><div><p class="t">Mostre exemplos reais no celular</p><p class="d">Vídeos, posts e resultados de outros clientes. Ver o trabalho pronto convence muito mais que qualquer argumento.</p></div></div>
+    <div class="moment"><div class="num">3</div><div><p class="t">Pergunte: "Como vocês cuidam do marketing hoje?"</p><p class="d">Deixe o dono falar, escute o problema dele, depois mostre como a Gabriel Moraes & Co resolve exatamente aquilo.</p></div></div>
+    <div class="moment"><div class="num">4</div><div><p class="t">Feche com uma próxima ação clara</p><p class="d">"Posso apresentar você pro Gabriel essa semana?" ou "Te mando o link pra você ver com calma?"</p></div></div>
+  </div>
+
+  <div class="section-label"><div class="bar"></div><h2>Quebra de objeções</h2></div>
+  <div class="obj-card"><p class="q">Marketing é caro e eu não vejo retorno</p><p class="a">Aqui não existe pacote fechado — a proposta é negociada pro orçamento e objetivo de cada negócio. E o foco é resultado no faturamento, não só likes.</p></div>
+  <div class="obj-card"><p class="q">Já tentei agência antes e não funcionou</p><p class="a">Faz sentido a preocupação. Por isso a Gabriel Moraes & Co trabalha com proposta clara desde o início — escopo definido, sem letra pequena, e contato direto com quem executa.</p></div>
+  <div class="obj-card"><p class="q">Não tenho tempo pra ficar aprovando conteúdo</p><p class="a">O processo é pensado pra dar o mínimo de trabalho pro cliente — calendário definido, aprovações rápidas e comunicação direta, sem enrolação.</p></div>
+  <div class="obj-card"><p class="q">Já tenho alguém (sobrinho/amigo) que faz minhas redes</p><p class="a">Ótimo ter alguém de confiança! Mas marketing estratégico vai além de postar — envolve plano, captação profissional e acompanhamento de resultado. Pode até trabalhar junto.</p></div>
+  <div class="obj-card"><p class="q">Deixa eu pensar e te retorno</p><p class="a">Claro! Qual é sua maior dúvida — sobre valor, prazo ou formato? Posso te apresentar o Gabriel pra ele esclarecer direto, fica mais fácil decidir depois de conversar.</p></div>
+
+  <div class="footer-note"><span>© 2026 Gabriel Moraes &amp; Co · Todos os direitos reservados</span><span>Página 4</span></div>
+</div>
+
+<!-- PÁGINA 5 -->
+<div class="page">
+  <div class="topbar">
+    <div class="brand"><span class="badge">GM</span> Gabriel Moraes &amp; Co · Kit do Parceiro</div>
+    <div class="right">gmeco.com.br/parceiros.html</div>
+  </div>
+
+  <div class="section-label"><div class="bar"></div><h2>Estrutura de comissões</h2></div>
+  <p style="font-size:11px;color:#6b5c4a;">A comissão é paga uma única vez, depois que o cliente efetua o pagamento. Quanto mais clientes você já indicou, maior o seu percentual.</p>
+
+  <table class="tiers">
+    <tr><th>Clientes indicados</th><th>Sua comissão</th></tr>
+    <tr><td>1–2 clientes</td><td class="pct">15%</td></tr>
+    <tr><td>3–5 clientes</td><td class="pct">20%</td></tr>
+    <tr class="highlight"><td>6–9 clientes ●</td><td class="pct">25%</td></tr>
+    <tr><td>10+ clientes</td><td class="pct">até 30%</td></tr>
+  </table>
+  <p style="font-size:9.5px;color:#8a7461;margin-top:8px;line-height:1.5;">* Em planos mensais (marketing/social media), a comissão é calculada sobre o valor do <strong>1º mês</strong>. Em projetos pontuais (drone, captação, consultoria), sobre o <strong>valor total</strong> fechado.</p>
+
+  <div class="section-label"><div class="bar"></div><h2>Simulações reais</h2></div>
+  <div class="sim2">
+    <div class="sim-card">
+      <p class="h">Parceiro iniciante — 2 indicações</p>
+      <div class="row"><span>Plano mensal R$ 2.000 (15% do 1º mês)</span><strong>R$ 300</strong></div>
+      <div class="row"><span>Projeto pontual R$ 3.000 (15%)</span><strong>R$ 450</strong></div>
+      <div class="total"><span>Total</span><span>R$ 750</span></div>
+    </div>
+    <div class="sim-card">
+      <p class="h">Parceiro ativo — 8 indicações (faixa 25%)</p>
+      <div class="row"><span>5 planos mensais ~R$ 2.500 (25% do 1º mês cada)</span><strong>R$ 3.125</strong></div>
+      <div class="row"><span>3 projetos pontuais ~R$ 4.000 (25% cada)</span><strong>R$ 3.000</strong></div>
+      <div class="total"><span>Total</span><span>R$ 6.125</span></div>
+    </div>
+  </div>
+
+  <div class="pay-note">
+    <strong>Pagamento em até 7 dias úteis após o cliente pagar.</strong><br/>
+    A comissão só é liberada depois que o cliente efetua o pagamento do serviço — ou da 1ª parcela, em contratos recorrentes. Contrato assinado sem pagamento confirmado ainda não gera comissão.
+  </div>
+
+  <div class="cta-final">
+    <span class="t">Pronto para começar?</span>
+    <span class="link">gmeco.com.br/parceiros.html</span>
+  </div>
+
+  <div class="footer-note"><span>© 2026 Gabriel Moraes &amp; Co · Todos os direitos reservados</span><span>Página 5</span></div>
+</div>
+
+</body>
+</html>
