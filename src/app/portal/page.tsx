@@ -22,6 +22,8 @@ interface PortalTicket {
   purpose: string | null
   expected_result: string | null
   admin_notes: string | null
+  nota_cliente: string | null
+  nota_cliente_em: string | null
 }
 
 const STATUS_LABELS: Record<TicketStatus, string> = {
@@ -82,6 +84,9 @@ export default function PortalPage() {
   const [loading, setLoading] = useState(true)
   const [aba, setAba] = useState<'andamento' | 'documentos'>('andamento')
   const [ticketSelecionado, setTicketSelecionado] = useState<PortalTicket | null>(null)
+  const [notaDraft, setNotaDraft] = useState('')
+  const [salvandoNota, setSalvandoNota] = useState(false)
+  const [notaSalva, setNotaSalva] = useState(false)
 
   useEffect(() => {
     fetch('/api/portal/me')
@@ -96,6 +101,34 @@ export default function PortalPage() {
   async function handleLogout() {
     await fetch('/api/portal/logout', { method: 'POST' })
     router.push('/portal/login')
+  }
+
+  function abrirTicket(t: PortalTicket) {
+    setTicketSelecionado(t)
+    setNotaDraft(t.nota_cliente ?? '')
+    setNotaSalva(false)
+  }
+
+  async function salvarNota() {
+    if (!ticketSelecionado || !data) return
+    setSalvandoNota(true)
+    const res = await fetch(`/api/portal/tickets/${ticketSelecionado.id}/nota`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nota: notaDraft }),
+    })
+    if (res.ok) {
+      const agora = new Date().toISOString()
+      const notaFinal = notaDraft.trim() || null
+      setData(d => d && {
+        ...d,
+        tickets: d.tickets.map(t => t.id === ticketSelecionado.id ? { ...t, nota_cliente: notaFinal, nota_cliente_em: notaFinal ? agora : null } : t),
+      })
+      setTicketSelecionado(t => t && { ...t, nota_cliente: notaFinal, nota_cliente_em: notaFinal ? agora : null })
+      setNotaSalva(true)
+      setTimeout(() => setNotaSalva(false), 2000)
+    }
+    setSalvandoNota(false)
   }
 
   if (loading || !data) {
@@ -227,10 +260,13 @@ export default function PortalPage() {
                       ) : itens.map(t => (
                         <button
                           key={t.id}
-                          onClick={() => setTicketSelecionado(t)}
+                          onClick={() => abrirTicket(t)}
                           className="w-full text-left bg-white rounded-xl p-3 border border-slate-100 shadow-sm hover:border-[#C5A880] hover:shadow-md transition-all"
                         >
-                          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{REQUEST_TYPE_LABELS[t.request_type]}</span>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{REQUEST_TYPE_LABELS[t.request_type]}</span>
+                            {t.nota_cliente && <span className="text-xs flex-shrink-0" title="Você deixou uma nota">💬</span>}
+                          </div>
                           <p className="text-sm font-medium text-slate-800 mt-2">{t.title}</p>
                           {t.deadline && (
                             <p className="text-[11px] text-slate-400 mt-1">prazo {format(new Date(t.deadline + 'T12:00:00'), "d 'de' MMM", { locale: ptBR })}</p>
@@ -330,6 +366,32 @@ export default function PortalPage() {
               {!ticketSelecionado.description && !ticketSelecionado.where_used && !ticketSelecionado.purpose && !ticketSelecionado.expected_result && !ticketSelecionado.admin_notes && (
                 <p className="text-sm text-slate-400 italic">Sem detalhes adicionais por aqui ainda.</p>
               )}
+
+              <div className="pt-2 border-t border-slate-100">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Sua nota — complemente essa demanda</p>
+                <textarea
+                  value={notaDraft}
+                  onChange={e => setNotaDraft(e.target.value)}
+                  rows={3}
+                  placeholder="Escreva aqui qualquer informação que ajude o Gabriel — referências, ajustes, observações..."
+                  className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none placeholder:text-slate-400"
+                />
+                <div className="flex items-center justify-between mt-2">
+                  {ticketSelecionado.nota_cliente_em && (
+                    <p className="text-[11px] text-slate-400">
+                      Salvo em {format(new Date(ticketSelecionado.nota_cliente_em), "d 'de' MMM 'às' HH:mm", { locale: ptBR })}
+                    </p>
+                  )}
+                  <button
+                    onClick={salvarNota}
+                    disabled={salvandoNota}
+                    className="text-sm px-4 py-2 rounded-lg text-white font-medium disabled:opacity-50 ml-auto"
+                    style={{ background: '#C5A880' }}
+                  >
+                    {salvandoNota ? 'Salvando...' : notaSalva ? '✓ Salvo!' : 'Salvar nota'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

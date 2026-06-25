@@ -343,6 +343,14 @@ export default function TicketDetailPage() {
             </div>
           )}
 
+          {ticket?.nota_cliente && (
+            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5">
+              <h3 className="text-xs font-semibold text-amber-700 uppercase tracking-wider">💬 Nota do Cliente</h3>
+              <p className="text-xs text-amber-600 mt-0.5 mb-3">Escrita por ele direto no portal</p>
+              <p className="text-sm text-amber-900 whitespace-pre-wrap leading-relaxed">{ticket.nota_cliente}</p>
+            </div>
+          )}
+
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
             <div className="flex items-center justify-between mb-3">
               <div>

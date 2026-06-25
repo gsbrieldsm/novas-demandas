@@ -26,6 +26,8 @@ export interface Ticket {
   pagamento_recebido: boolean
   chat_transcript: ChatMessage[]
   visivel_portal: boolean
+  nota_cliente: string | null
+  nota_cliente_em: string | null
 }
 
 export interface BlocoDocumento {

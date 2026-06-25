@@ -161,3 +161,8 @@ create index if not exists documentos_cliente_cliente_fixo_idx on public.documen
 -- consistente com o padrão das demais tabelas do projeto (a proteção é via
 -- requireAuth na API, não via RLS).
 alter table public.documentos_cliente disable row level security;
+
+-- Migração: cliente pode complementar a demanda com uma nota própria, pelo portal
+alter table public.tickets
+  add column if not exists nota_cliente text,
+  add column if not exists nota_cliente_em timestamp with time zone;

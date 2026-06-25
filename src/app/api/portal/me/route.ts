@@ -24,13 +24,13 @@ export async function GET(req: Request) {
 
   const { data: ticketsPorId } = await db
     .from('tickets')
-    .select('id, title, description, request_type, status, priority, created_at, where_used, deadline, purpose, expected_result, admin_notes')
+    .select('id, title, description, request_type, status, priority, created_at, where_used, deadline, purpose, expected_result, admin_notes, nota_cliente, nota_cliente_em')
     .eq('cliente_fixo_id', cliente.id)
     .eq('visivel_portal', true)
 
   const { data: ticketsPorNome } = await db
     .from('tickets')
-    .select('id, title, description, request_type, status, priority, created_at, where_used, deadline, purpose, expected_result, admin_notes')
+    .select('id, title, description, request_type, status, priority, created_at, where_used, deadline, purpose, expected_result, admin_notes, nota_cliente, nota_cliente_em')
     .eq('is_fixed_client', true)
     .eq('visivel_portal', true)
     .or(`client_name.ilike.${cfNome},company.ilike.${cfNome}`)
