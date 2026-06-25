@@ -25,6 +25,23 @@ export interface Ticket {
   cliente_fixo_id: string | null
   pagamento_recebido: boolean
   chat_transcript: ChatMessage[]
+  visivel_portal: boolean
+}
+
+export interface BlocoDocumento {
+  id: string
+  titulo: string
+  conteudo: string
+}
+
+export interface DocumentoCliente {
+  id: string
+  created_at: string
+  updated_at: string
+  cliente_fixo_id: string
+  titulo: string
+  blocos: BlocoDocumento[]
+  visivel_portal: boolean
 }
 
 export type PropostaModalidade = 'mensal' | 'pontual'

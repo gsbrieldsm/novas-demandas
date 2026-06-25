@@ -9,7 +9,7 @@ import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import { AdminNav } from '@/components/AdminNav'
 import { formatMinutos, valorHora } from '@/lib/tempo'
-import type { Ticket, TempoApontamento, Proposta, PropostaStatus } from '@/types'
+import type { Ticket, TempoApontamento, Proposta, PropostaStatus, DocumentoCliente } from '@/types'
 import { PROPOSTA_STATUS_LABELS } from '@/types'
 
 const PROPOSTA_STATUS_COLORS: Record<PropostaStatus, string> = {
@@ -40,6 +40,9 @@ interface ClienteFixo {
   razao_social: string | null
   telefone: string | null
   tipo: 'cliente' | 'outras_receitas'
+  portal_email: string | null
+  portal_ativo: boolean
+  logo_url: string | null
 }
 
 function formatCNPJ(value: string) {
@@ -82,11 +85,16 @@ export default function ClienteDetailPage() {
   const [tempo, setTempo] = useState<TempoApontamento[]>([])
   const [metricas, setMetricas] = useState<Metrica[]>([])
   const [propostas, setPropostas] = useState<Proposta[]>([])
+  const [documentos, setDocumentos] = useState<DocumentoCliente[]>([])
   const [loading, setLoading] = useState(true)
   const [editingIdent, setEditingIdent] = useState(false)
   const [editingEscopo, setEditingEscopo] = useState(false)
+  const [editingPortal, setEditingPortal] = useState(false)
   const [showCancel, setShowCancel] = useState(false)
   const [cancelDate, setCancelDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [portalForm, setPortalForm] = useState({ portal_email: '', logo_url: '', novaSenha: '' })
+  const [salvandoPortal, setSalvandoPortal] = useState(false)
+  const [linkPortalCopiado, setLinkPortalCopiado] = useState(false)
 
   // Form states
   const [identForm, setIdentForm] = useState({
@@ -103,12 +111,13 @@ export default function ClienteDetailPage() {
 
   const loadAll = useCallback(async () => {
     setLoading(true)
-    const [cs, ts, tm, ms, ps] = await Promise.all([
+    const [cs, ts, tm, ms, ps, ds] = await Promise.all([
       api('/api/clientes-fixos').then(r => r.json()),
       api('/api/tickets').then(r => r.json()),
       api('/api/tempo').then(r => r.json()),
       api(`/api/metricas?cliente_id=${id}`).then(r => r.json()),
       api(`/api/propostas?cliente_fixo_id=${id}`).then(r => r.json()),
+      api(`/api/documentos?cliente_fixo_id=${id}`).then(r => r.json()),
     ])
     const cf = (cs as ClienteFixo[]).find(c => c.id === id)
     setCliente(cf ?? null)
@@ -116,7 +125,9 @@ export default function ClienteDetailPage() {
     setTempo(tm)
     setMetricas(ms)
     setPropostas(ps)
+    setDocumentos(ds)
     if (cf) {
+      setPortalForm({ portal_email: cf.portal_email ?? '', logo_url: cf.logo_url ?? '', novaSenha: '' })
       setIdentForm({
         nome: cf.nome,
         email: cf.email ?? '',
@@ -176,6 +187,60 @@ export default function ClienteDetailPage() {
     })
     setEditingEscopo(false)
     loadAll()
+  }
+
+  async function salvarPortal() {
+    setSalvandoPortal(true)
+    await patchCliente({
+      portal_email: portalForm.portal_email.trim() || null,
+      logo_url: portalForm.logo_url.trim() || null,
+    })
+    if (portalForm.novaSenha.trim()) {
+      await api(`/api/clientes-fixos/${id}/portal-senha`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ senha: portalForm.novaSenha.trim() }),
+      })
+    }
+    setPortalForm(f => ({ ...f, novaSenha: '' }))
+    setEditingPortal(false)
+    setSalvandoPortal(false)
+    loadAll()
+  }
+
+  async function togglePortalAtivo() {
+    if (!cliente) return
+    await patchCliente({ portal_ativo: !cliente.portal_ativo })
+    loadAll()
+  }
+
+  async function toggleTicketPortal(ticketId: string, visivelAtual: boolean) {
+    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, visivel_portal: !visivelAtual } : t))
+    await api(`/api/tickets/${ticketId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visivel_portal: !visivelAtual }),
+    })
+  }
+
+  async function criarDocumento() {
+    const res = await api('/api/documentos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cliente_fixo_id: id,
+        titulo: 'Plano de Marketing',
+        blocos: [
+          { id: crypto.randomUUID(), titulo: 'Datas Especiais', conteudo: '' },
+          { id: crypto.randomUUID(), titulo: 'Eventos', conteudo: '' },
+          { id: crypto.randomUUID(), titulo: 'Comunicação da Marca', conteudo: '' },
+          { id: crypto.randomUUID(), titulo: 'Branding', conteudo: '' },
+          { id: crypto.randomUUID(), titulo: 'Funil de Marketing', conteudo: '' },
+        ],
+      }),
+    })
+    const novo = await res.json()
+    router.push(`/admin/documento/${novo.id}`)
   }
 
   async function confirmarCancelamento() {
@@ -443,6 +508,78 @@ export default function ClienteDetailPage() {
           )}
         </SectionCard>
 
+        {/* PORTAL DO CLIENTE */}
+        <SectionCard title="Portal do Cliente" onEdit={() => setEditingPortal(true)} editing={editingPortal}>
+          {editingPortal ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <FormField label="E-mail de acesso">
+                  <input
+                    value={portalForm.portal_email}
+                    onChange={e => setPortalForm(f => ({ ...f, portal_email: e.target.value }))}
+                    type="email"
+                    placeholder="cliente@empresa.com.br"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                  />
+                </FormField>
+                <FormField label="Nova senha (deixe vazio pra manter)">
+                  <input
+                    value={portalForm.novaSenha}
+                    onChange={e => setPortalForm(f => ({ ...f, novaSenha: e.target.value }))}
+                    type="text"
+                    placeholder="mínimo 6 caracteres"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                  />
+                </FormField>
+                <FormField label="URL da logo do cliente">
+                  <input
+                    value={portalForm.logo_url}
+                    onChange={e => setPortalForm(f => ({ ...f, logo_url: e.target.value }))}
+                    placeholder="https://..."
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                  />
+                </FormField>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button onClick={salvarPortal} disabled={salvandoPortal} className="text-sm px-4 py-2 rounded-lg text-white disabled:opacity-50" style={{ background: '#C5A880' }}>
+                  {salvandoPortal ? 'Salvando...' : 'Salvar'}
+                </button>
+                <button onClick={() => { setEditingPortal(false); if (cliente) setPortalForm({ portal_email: cliente.portal_email ?? '', logo_url: cliente.logo_url ?? '', novaSenha: '' }) }} className="text-sm px-4 py-2 rounded-lg text-slate-500 hover:bg-slate-50">Cancelar</button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                <FieldDisplay label="E-mail de acesso" value={cliente.portal_email ?? '— não definido'} />
+                <FieldDisplay label="Logo" value={cliente.logo_url ? '✓ definida' : '— não definida'} />
+              </div>
+              <div className="flex items-center gap-2 flex-wrap pt-1">
+                <button
+                  onClick={togglePortalAtivo}
+                  disabled={!cliente.portal_email}
+                  className={clsx(
+                    'text-xs px-3 py-1.5 rounded-lg font-medium disabled:opacity-40',
+                    cliente.portal_ativo ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                  )}
+                >
+                  {cliente.portal_ativo ? '✓ Acesso ativo' : '⊘ Acesso desativado'}
+                </button>
+                {!cliente.portal_email && <span className="text-[11px] text-slate-400">Defina um e-mail pra poder ativar</span>}
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/portal/login`)
+                    setLinkPortalCopiado(true)
+                    setTimeout(() => setLinkPortalCopiado(false), 2000)
+                  }}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+                >
+                  {linkPortalCopiado ? '✓ Copiado!' : '📋 Copiar link do portal'}
+                </button>
+              </div>
+            </div>
+          )}
+        </SectionCard>
+
         {/* ESCOPO + OBSERVAÇÕES */}
         <SectionCard title="Escopo de Trabalho" onEdit={() => setEditingEscopo(true)} editing={editingEscopo}>
           {editingEscopo ? (
@@ -527,13 +664,13 @@ export default function ClienteDetailPage() {
             <p className="text-xs text-slate-400 italic text-center py-4">Nenhuma demanda registrada ainda para este cliente.</p>
           ) : (
             <div className="divide-y divide-slate-50 -mx-2">
+              <p className="text-[11px] text-slate-400 px-3 pb-2">👁 Clique no olho pra escolher se a demanda aparece no portal do cliente</p>
               {ticketsDoCliente.slice(0, 15).map(t => {
                 const min = minutosPorTicket.get(t.id) ?? 0
                 return (
                   <div
                     key={t.id}
-                    onClick={() => router.push(`/admin/chamado/${t.id}`)}
-                    className="px-3 py-2.5 hover:bg-slate-50 cursor-pointer flex items-center gap-3"
+                    className="px-3 py-2.5 hover:bg-slate-50 flex items-center gap-3"
                   >
                     <span className={clsx(
                       'w-1.5 h-1.5 rounded-full flex-shrink-0',
@@ -543,13 +680,20 @@ export default function ClienteDetailPage() {
                       : t.status === 'cancelado' ? 'bg-slate-300'
                       : 'bg-blue-500'
                     )} />
-                    <div className="min-w-0 flex-1">
+                    <div onClick={() => router.push(`/admin/chamado/${t.id}`)} className="min-w-0 flex-1 cursor-pointer">
                       <p className="text-sm font-medium text-slate-800 truncate">{t.title}</p>
                       <p className="text-[11px] text-slate-400 mt-0.5">
                         {format(new Date(t.created_at), "d 'de' MMM yyyy", { locale: ptBR })}
                         {min > 0 && ` · ${formatMinutos(min)}`}
                       </p>
                     </div>
+                    <button
+                      onClick={() => toggleTicketPortal(t.id, t.visivel_portal)}
+                      title={t.visivel_portal ? 'Visível no portal — clique pra esconder' : 'Oculto no portal — clique pra mostrar'}
+                      className={clsx('text-base flex-shrink-0', t.visivel_portal ? 'opacity-100' : 'opacity-30')}
+                    >
+                      👁
+                    </button>
                   </div>
                 )
               })}
@@ -559,6 +703,45 @@ export default function ClienteDetailPage() {
             </div>
           )}
         </SectionCard>
+
+        {/* DOCUMENTOS DO PORTAL */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
+          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-700">Documentos do Portal ({documentos.length})</h2>
+            <button
+              onClick={criarDocumento}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg text-white hover:opacity-90"
+              style={{ background: '#C5A880' }}
+            >
+              + Novo documento
+            </button>
+          </div>
+          <div className="px-4 md:px-6 py-4 md:py-5">
+            {documentos.length === 0 ? (
+              <p className="text-xs text-slate-400 italic text-center py-4">Nenhum documento ainda — crie um Plano de Marketing pra esse cliente.</p>
+            ) : (
+              <div className="space-y-2">
+                {documentos.map(doc => (
+                  <button
+                    key={doc.id}
+                    onClick={() => router.push(`/admin/documento/${doc.id}`)}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors text-left"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{doc.titulo}</p>
+                        <span className={clsx('text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full', doc.visivel_portal ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500')}>
+                          {doc.visivel_portal ? 'Visível' : 'Oculto'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">{doc.blocos.length} blocos · atualizado em {format(new Date(doc.updated_at), "d 'de' MMM", { locale: ptBR })}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* PROPOSTAS */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">

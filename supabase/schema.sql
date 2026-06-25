@@ -125,3 +125,39 @@ alter table public.clientes_fixos
 
 alter table public.clientes_fixos
   add constraint clientes_fixos_tipo_check check (tipo in ('cliente', 'outras_receitas'));
+
+-- Migração: Portal do Cliente (login próprio, logo, sucesso do cliente)
+alter table public.clientes_fixos
+  add column if not exists portal_email text,
+  add column if not exists portal_senha_hash text,
+  add column if not exists portal_ativo boolean not null default false,
+  add column if not exists logo_url text;
+
+create unique index if not exists clientes_fixos_portal_email_idx on public.clientes_fixos(portal_email) where portal_email is not null;
+
+-- Migração: visibilidade de demandas no portal do cliente
+alter table public.tickets
+  add column if not exists visivel_portal boolean not null default true;
+
+-- Migração: documentos vivos do portal (Plano de Marketing e afins, em blocos editáveis)
+create table if not exists public.documentos_cliente (
+  id uuid default uuid_generate_v4() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  cliente_fixo_id uuid not null references public.clientes_fixos(id) on delete cascade,
+  titulo text not null,
+  blocos jsonb not null default '[]'::jsonb,
+  visivel_portal boolean not null default true
+);
+
+create trigger update_documentos_cliente_updated_at
+  before update on public.documentos_cliente
+  for each row execute procedure public.update_updated_at_column();
+
+create index if not exists documentos_cliente_cliente_fixo_idx on public.documentos_cliente(cliente_fixo_id);
+
+-- Fix: documentos_cliente foi criada com RLS habilitado por padrão (sem políticas),
+-- o que bloqueava o acesso até do usuário autenticado (Gabriel). Desabilitando,
+-- consistente com o padrão das demais tabelas do projeto (a proteção é via
+-- requireAuth na API, não via RLS).
+alter table public.documentos_cliente disable row level security;
