@@ -24,13 +24,13 @@ export async function GET(req: Request) {
 
   const { data: ticketsPorId } = await db
     .from('tickets')
-    .select('id, title, description, request_type, status, priority, created_at, where_used, deadline')
+    .select('id, title, description, request_type, status, priority, created_at, where_used, deadline, purpose, expected_result, admin_notes')
     .eq('cliente_fixo_id', cliente.id)
     .eq('visivel_portal', true)
 
   const { data: ticketsPorNome } = await db
     .from('tickets')
-    .select('id, title, description, request_type, status, priority, created_at, where_used, deadline')
+    .select('id, title, description, request_type, status, priority, created_at, where_used, deadline, purpose, expected_result, admin_notes')
     .eq('is_fixed_client', true)
     .eq('visivel_portal', true)
     .or(`client_name.ilike.${cfNome},company.ilike.${cfNome}`)
@@ -49,9 +49,19 @@ export async function GET(req: Request) {
     .eq('visivel_portal', true)
     .order('created_at', { ascending: true })
 
+  const { data: metricas } = await db
+    .from('metricas_mensais')
+    .select('mes, ano, seguidores, engajamento_percent, alcance, visualizacoes')
+    .eq('cliente_fixo_id', cliente.id)
+    .order('ano', { ascending: false })
+    .order('mes', { ascending: false })
+    .limit(2)
+
   return NextResponse.json({
     cliente: { id: cliente.id, nome: cliente.nome, logo_url: cliente.logo_url, escopo_mensal: cliente.escopo_mensal },
     tickets,
     documentos: documentos ?? [],
+    metricaAtual: metricas?.[0] ?? null,
+    metricaAnterior: metricas?.[1] ?? null,
   })
 }
