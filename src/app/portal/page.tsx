@@ -7,7 +7,7 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import { REQUEST_TYPE_LABELS } from '@/types'
-import type { RequestType, TicketStatus, DocumentoCliente } from '@/types'
+import type { RequestType, TicketStatus, DocumentoCliente, ChatMessage } from '@/types'
 
 interface PortalTicket {
   id: string
@@ -88,14 +88,25 @@ export default function PortalPage() {
   const [salvandoNota, setSalvandoNota] = useState(false)
   const [notaSalva, setNotaSalva] = useState(false)
 
-  useEffect(() => {
-    fetch('/api/portal/me')
+  const [showNovaDemanda, setShowNovaDemanda] = useState(false)
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [chatStarted, setChatStarted] = useState(false)
+  const [chatLoading, setChatLoading] = useState(false)
+  const [chatInput, setChatInput] = useState('')
+  const [novoTicketId, setNovoTicketId] = useState<string | null>(null)
+
+  function carregarPortal() {
+    return fetch('/api/portal/me')
       .then(async r => {
         if (!r.ok) { router.push('/portal/login'); return null }
         return r.json()
       })
       .then(d => { if (d) setData(d); setLoading(false) })
       .catch(() => router.push('/portal/login'))
+  }
+
+  useEffect(() => {
+    carregarPortal()
   }, [router])
 
   async function handleLogout() {
@@ -129,6 +140,70 @@ export default function PortalPage() {
       setTimeout(() => setNotaSalva(false), 2000)
     }
     setSalvandoNota(false)
+  }
+
+  function abrirNovaDemanda() {
+    setShowNovaDemanda(true)
+    setChatMessages([])
+    setChatStarted(false)
+    setNovoTicketId(null)
+    iniciarConversa()
+  }
+
+  async function iniciarConversa() {
+    setChatStarted(true)
+    await enviarParaIA([{ role: 'user', content: '__INIT__' }])
+  }
+
+  async function enviarParaIA(msgs: ChatMessage[]) {
+    setChatLoading(true)
+    const assistantMsg: ChatMessage = { role: 'assistant', content: '' }
+    setChatMessages(prev => [...prev, assistantMsg])
+
+    try {
+      const res = await fetch('/api/portal/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: msgs }),
+      })
+      const reader = res.body!.getReader()
+      const decoder = new TextDecoder()
+      let accumulated = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        accumulated += decoder.decode(value)
+
+        const ticketMatch = accumulated.match(/\[TICKET_ID:([^\]]+)\]/)
+        if (ticketMatch) setNovoTicketId(ticketMatch[1])
+
+        setChatMessages(prev => {
+          const updated = [...prev]
+          updated[updated.length - 1] = { role: 'assistant', content: accumulated }
+          return updated
+        })
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setChatLoading(false)
+    }
+  }
+
+  async function enviarMensagemChat() {
+    const text = chatInput.trim()
+    if (!text || chatLoading) return
+    const userMsg: ChatMessage = { role: 'user', content: text }
+    const novasMensagens = [...chatMessages.filter(m => m.content.trim()), userMsg]
+    setChatMessages(novasMensagens)
+    setChatInput('')
+    await enviarParaIA(novasMensagens)
+  }
+
+  function fecharNovaDemanda() {
+    setShowNovaDemanda(false)
+    if (novoTicketId) carregarPortal()
   }
 
   if (loading || !data) {
@@ -226,18 +301,27 @@ export default function PortalPage() {
 
       {/* TABS */}
       <div className="px-4 md:px-6 pt-4 border-b border-slate-200 bg-white">
-        <div className="flex gap-1 max-w-5xl mx-auto">
+        <div className="flex items-center justify-between gap-2 max-w-5xl mx-auto flex-wrap">
+          <div className="flex gap-1">
+            <button
+              onClick={() => setAba('andamento')}
+              className={clsx('px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors', aba === 'andamento' ? 'text-slate-900 border-[#C5A880]' : 'text-slate-400 border-transparent')}
+            >
+              Andamento dos trabalhos
+            </button>
+            <button
+              onClick={() => setAba('documentos')}
+              className={clsx('px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors', aba === 'documentos' ? 'text-slate-900 border-[#C5A880]' : 'text-slate-400 border-transparent')}
+            >
+              Documentos {data.documentos.length > 0 && `(${data.documentos.length})`}
+            </button>
+          </div>
           <button
-            onClick={() => setAba('andamento')}
-            className={clsx('px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors', aba === 'andamento' ? 'text-slate-900 border-[#C5A880]' : 'text-slate-400 border-transparent')}
+            onClick={abrirNovaDemanda}
+            className="text-xs font-bold px-3.5 py-2 rounded-lg text-white mb-2 flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #c9a96e 0%, #8B6840 100%)' }}
           >
-            Andamento dos trabalhos
-          </button>
-          <button
-            onClick={() => setAba('documentos')}
-            className={clsx('px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors', aba === 'documentos' ? 'text-slate-900 border-[#C5A880]' : 'text-slate-400 border-transparent')}
-          >
-            Documentos {data.documentos.length > 0 && `(${data.documentos.length})`}
+            + Nova Demanda
           </button>
         </div>
       </div>
@@ -393,6 +477,85 @@ export default function PortalPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL NOVA DEMANDA — chat com a IA */}
+      {showNovaDemanda && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-[#100E0B] rounded-2xl shadow-2xl w-full max-w-lg h-[80vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 flex-shrink-0">
+              <div>
+                <p className="text-white text-sm font-bold">Nova Demanda</p>
+                <p className="text-white/40 text-[11px]">Conte o que você precisa — a equipe registra pra você</p>
+              </div>
+              <button onClick={fecharNovaDemanda} className="text-white/40 hover:text-white text-lg leading-none">×</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 py-5 space-y-3">
+              {chatMessages
+                .filter(m => m.content !== '__INIT__')
+                .map((m, i) => {
+                  const conteudo = m.content.replace(/\[BRIEFING_COMPLETO\][\s\S]*/g, '').replace(/\[TICKET_ID:[^\]]+\]/g, '').trim()
+                  if (!conteudo) return null
+                  const isUser = m.role === 'user'
+                  return (
+                    <div key={i} className={clsx('flex', isUser ? 'justify-end' : 'justify-start')}>
+                      <div
+                        className={clsx('max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap', isUser ? 'text-[#1C1A18] rounded-br-sm' : 'bg-white/10 text-white/90 rounded-bl-sm')}
+                        style={isUser ? { background: '#C5A880' } : {}}
+                      >
+                        {conteudo}
+                      </div>
+                    </div>
+                  )
+                })}
+              {chatLoading && chatMessages[chatMessages.length - 1]?.content === '' && (
+                <div className="flex justify-start">
+                  <div className="bg-white/10 rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1">
+                    {[0, 1, 2].map(i => <span key={i} className="w-1.5 h-1.5 rounded-full bg-[#C5A880] animate-pulse" style={{ animationDelay: `${i * 0.15}s` }} />)}
+                  </div>
+                </div>
+              )}
+
+              {novoTicketId && (
+                <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4 text-center mt-4">
+                  <p className="text-green-300 text-sm font-bold">✓ Demanda registrada!</p>
+                  <p className="text-white/50 text-xs mt-1">Já aparece no seu quadro de andamento.</p>
+                </div>
+              )}
+            </div>
+
+            {!novoTicketId && (
+              <div className="px-4 py-3 border-t border-white/10 flex items-end gap-2 flex-shrink-0">
+                <textarea
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensagemChat() } }}
+                  placeholder="Digite sua mensagem..."
+                  rows={1}
+                  disabled={chatLoading || !chatStarted}
+                  className="flex-1 bg-white/5 text-white placeholder-white/25 border border-white/10 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none disabled:opacity-50"
+                  style={{ minHeight: '40px', maxHeight: '100px' }}
+                />
+                <button
+                  onClick={enviarMensagemChat}
+                  disabled={chatLoading || !chatInput.trim()}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-[#1C1A18] disabled:opacity-30 flex-shrink-0"
+                  style={{ background: '#C5A880' }}
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
+                </button>
+              </div>
+            )}
+            {novoTicketId && (
+              <div className="px-4 py-3 border-t border-white/10 flex-shrink-0">
+                <button onClick={fecharNovaDemanda} className="w-full text-sm py-2.5 rounded-xl text-[#1C1A18] font-bold" style={{ background: '#C5A880' }}>
+                  Fechar
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

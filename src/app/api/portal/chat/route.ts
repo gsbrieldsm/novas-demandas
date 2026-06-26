@@ -1,7 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { getSystemPrompt } from '@/lib/system-prompt'
+import { getPortalSystemPrompt } from '@/lib/system-prompt'
 import { getServiceClient } from '@/lib/supabase'
-import { sendNewTicketEmail, sendClientTicketCreated } from '@/lib/email'
+import { getPortalSession } from '@/lib/portalAuth'
+import { sendNewTicketEmail } from '@/lib/email'
 import type { ChatMessage, BriefingData } from '@/types'
 
 const anthropic = new Anthropic({
@@ -9,12 +10,28 @@ const anthropic = new Anthropic({
 })
 
 export async function POST(req: Request) {
+  const session = getPortalSession(req)
+  if (!session) {
+    return new Response('unauthorized', { status: 401 })
+  }
+
+  const db = getServiceClient()
+  const { data: cliente } = await db
+    .from('clientes_fixos')
+    .select('id, nome, email, portal_ativo')
+    .eq('id', session.clienteFixoId)
+    .single()
+
+  if (!cliente || !cliente.portal_ativo) {
+    return new Response('unauthorized', { status: 401 })
+  }
+
   const { messages }: { messages: ChatMessage[] } = await req.json()
 
   const stream = await anthropic.messages.stream({
     model: 'claude-sonnet-4-6',
     max_tokens: 4096,
-    system: getSystemPrompt(),
+    system: getPortalSystemPrompt(cliente.nome),
     messages: messages.map((m) => ({
       role: m.role,
       content: m.content,
@@ -38,7 +55,6 @@ export async function POST(req: Request) {
 
       if (fullText.includes('[BRIEFING_COMPLETO]')) {
         const matches = [...fullText.matchAll(/```json\s*\n([\s\S]*?)\n\s*```/g)]
-        const db = getServiceClient()
         for (const match of matches) {
           try {
             const briefing: BriefingData = JSON.parse(match[1])
@@ -46,6 +62,12 @@ export async function POST(req: Request) {
               .from('tickets')
               .insert({
                 ...briefing,
+                client_name: cliente.nome,
+                client_email: cliente.email ?? null,
+                company: cliente.nome,
+                is_fixed_client: true,
+                cliente_fixo_id: cliente.id,
+                visivel_portal: true,
                 chat_transcript: messages,
               })
               .select('*')
@@ -54,20 +76,10 @@ export async function POST(req: Request) {
             if (data) {
               const ticketIdMarker = `\n[TICKET_ID:${data.id}]`
               controller.enqueue(new TextEncoder().encode(ticketIdMarker))
-              // Notificação interna pro Gabriel (fire-and-forget)
               sendNewTicketEmail(data).catch(err => console.error('email error:', err))
-              // Confirmação pro cliente (fire-and-forget)
-              if (data.client_email) {
-                sendClientTicketCreated({
-                  ticketId: data.id,
-                  clientName: data.client_name,
-                  clientEmail: data.client_email,
-                  ticketTitle: data.title,
-                }).catch(err => console.error('email cliente error:', err))
-              }
             }
           } catch (e) {
-            console.error('Erro ao criar ticket:', e)
+            console.error('Erro ao criar ticket via portal:', e)
           }
         }
       }
