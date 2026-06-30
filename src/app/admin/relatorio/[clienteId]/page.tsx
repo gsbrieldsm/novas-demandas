@@ -340,9 +340,11 @@ export default function RelatorioPage() {
                 background: '#080c10',
               }}
             >
-              {/* Glow dourado de fundo (como o hero do site) */}
+              {/* Glow dourado de fundo (como o hero do site) — desligado no print: alguns navegadores
+                  (Safari, principalmente) renderizam mal gradientes radiais semitransparentes ao
+                  exportar PDF, virando uma mancha sólida. Fundo escuro liso é mais confiável. */}
               <div
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-0 pointer-events-none print:hidden"
                 style={{
                   background: 'radial-gradient(ellipse 65% 90% at 85% 0%, rgba(201,169,110,0.18) 0%, transparent 55%), radial-gradient(ellipse 50% 70% at 10% 100%, rgba(107,76,40,0.25) 0%, transparent 50%)',
                 }}
@@ -350,7 +352,7 @@ export default function RelatorioPage() {
 
               {/* Grid sutil */}
               <div
-                className="absolute inset-0 opacity-[0.04] pointer-events-none"
+                className="absolute inset-0 opacity-[0.04] pointer-events-none print:hidden"
                 style={{
                   backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
                   backgroundSize: '40px 40px',

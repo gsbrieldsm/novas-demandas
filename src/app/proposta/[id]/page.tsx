@@ -222,8 +222,9 @@ export default function PublicPropostaPage() {
               className="relative px-8 md:px-14 py-12 md:py-16 text-white overflow-hidden"
               style={{ background: '#080c10' }}
             >
-              <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 65% 90% at 85% 0%, rgba(201,169,110,0.18) 0%, transparent 55%), radial-gradient(ellipse 50% 70% at 10% 100%, rgba(107,76,40,0.25) 0%, transparent 50%)' }} />
-              <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+              {/* Desligado no print: Safari renderiza mal gradiente radial semitransparente ao exportar PDF */}
+              <div className="absolute inset-0 pointer-events-none print:hidden" style={{ background: 'radial-gradient(ellipse 65% 90% at 85% 0%, rgba(201,169,110,0.18) 0%, transparent 55%), radial-gradient(ellipse 50% 70% at 10% 100%, rgba(107,76,40,0.25) 0%, transparent 50%)' }} />
+              <div className="absolute inset-0 opacity-[0.04] pointer-events-none print:hidden" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
               <div className="relative">
                 <div className="flex items-center gap-3 mb-12 md:mb-16">
