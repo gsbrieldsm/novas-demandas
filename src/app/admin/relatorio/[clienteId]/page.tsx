@@ -335,7 +335,7 @@ export default function RelatorioPage() {
 
             {/* ===== CAPA / HEADER ===== */}
             <header
-              className="relative px-8 md:px-14 py-8 md:py-10 print:py-6 text-white overflow-hidden"
+              className="relative px-8 md:px-14 py-7 md:py-9 print:py-6 text-white overflow-hidden"
               style={{
                 background: '#080c10',
               }}
@@ -359,7 +359,7 @@ export default function RelatorioPage() {
 
               <div className="relative">
                 {/* Marca */}
-                <div className="flex items-center gap-3 mb-6 md:mb-8 print:mb-6">
+                <div className="flex items-center gap-3 mb-5 md:mb-7 print:mb-6">
                   <Image
                     src="/logo-symbol.png"
                     alt="GM&Co"
@@ -393,7 +393,7 @@ export default function RelatorioPage() {
                 </p>
 
                 {/* Linha de stats no rodapé do header */}
-                <div className="mt-6 md:mt-8 print:mt-6 pt-5 print:pt-4 border-t border-white/10 grid grid-cols-3 gap-4">
+                <div className="mt-5 md:mt-7 print:mt-6 pt-4 border-t border-white/10 grid grid-cols-3 gap-4">
                   <HeaderStat label="Contrato" value={formatBRL(Number(cliente.valor_mensal))} />
                   <HeaderStat label="Entregas" value={String(concluidas)} sub={`de ${entregas.length}`} />
                   <HeaderStat label="Tempo investido" value={formatMinutos(tempoTotal)} />
@@ -560,8 +560,10 @@ function HeaderStat({ label, value, sub }: { label: string; value: string; sub?:
   return (
     <div>
       <p className="text-[9px] font-bold tracking-[0.22em] uppercase text-white/40 mb-1.5">{label}</p>
-      <p className="text-xl md:text-2xl font-bold text-white leading-none tabular-nums">{value}</p>
-      {sub && <p className="text-[10px] tracking-wider text-white/40 mt-1">{sub}</p>}
+      <div className="flex items-baseline gap-1.5">
+        <p className="text-xl md:text-2xl font-bold text-white leading-none tabular-nums">{value}</p>
+        {sub && <p className="text-[10px] tracking-wider text-white/40">{sub}</p>}
+      </div>
     </div>
   )
 }
