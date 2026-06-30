@@ -166,3 +166,11 @@ alter table public.documentos_cliente disable row level security;
 alter table public.tickets
   add column if not exists nota_cliente text,
   add column if not exists nota_cliente_em timestamp with time zone;
+
+-- Fix: "estrategia" já era uma opção válida no app (RequestType, REQUEST_TYPE_LABELS,
+-- system-prompt) mas a constraint do banco nunca foi atualizada — bloqueava a criação
+-- de qualquer demanda do tipo Estratégia.
+alter table public.tickets drop constraint if exists tickets_request_type_check;
+alter table public.tickets
+  add constraint tickets_request_type_check
+  check (request_type in ('estrategia', 'gravacao', 'conteudo', 'arte', 'edicao', 'outro'));

@@ -335,7 +335,7 @@ export default function RelatorioPage() {
 
             {/* ===== CAPA / HEADER ===== */}
             <header
-              className="relative px-8 md:px-14 py-12 md:py-16 text-white overflow-hidden"
+              className="relative px-8 md:px-14 py-12 md:py-16 print:py-6 text-white overflow-hidden"
               style={{
                 background: '#080c10',
               }}
@@ -359,7 +359,7 @@ export default function RelatorioPage() {
 
               <div className="relative">
                 {/* Marca */}
-                <div className="flex items-center gap-3 mb-12 md:mb-16">
+                <div className="flex items-center gap-3 mb-12 md:mb-16 print:mb-6">
                   <Image
                     src="/logo-symbol.png"
                     alt="GM&Co"
@@ -388,17 +388,17 @@ export default function RelatorioPage() {
                 </div>
 
                 {/* Título — estilo hero */}
-                <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-2 capitalize tracking-tight">
+                <h1 className="text-4xl md:text-5xl print:text-3xl font-bold leading-tight mb-2 capitalize tracking-tight">
                   {cliente.nome}
                 </h1>
-                <p className="text-lg md:text-xl text-white/60 capitalize">
+                <p className="text-lg md:text-xl print:text-base text-white/60 capitalize">
                   <em style={{ color: '#c9a96e', fontStyle: 'italic' }}>
                     {format(mes, "MMMM", { locale: ptBR })}
                   </em> de {format(mes, 'yyyy')}
                 </p>
 
                 {/* Linha de stats no rodapé do header */}
-                <div className="mt-10 md:mt-12 pt-6 border-t border-white/10 grid grid-cols-3 gap-4">
+                <div className="mt-10 md:mt-12 print:mt-6 pt-6 print:pt-4 border-t border-white/10 grid grid-cols-3 gap-4">
                   <HeaderStat label="Contrato" value={formatBRL(Number(cliente.valor_mensal))} />
                   <HeaderStat label="Entregas" value={String(concluidas)} sub={`de ${entregas.length}`} />
                   <HeaderStat label="Tempo investido" value={formatMinutos(tempoTotal)} />
@@ -407,7 +407,7 @@ export default function RelatorioPage() {
             </header>
 
             {/* ===== CORPO ===== */}
-            <div className="px-8 md:px-14 py-10 md:py-14 space-y-12">
+            <div className="px-8 md:px-14 py-10 md:py-14 print:py-6 space-y-12 print:space-y-6">
 
               {/* ESCOPO */}
               <section>
@@ -430,16 +430,16 @@ export default function RelatorioPage() {
               <section>
                 <SectionHeader number="02" label="Resultados do Mês" />
 
-                <div className="space-y-3">
-                  <MetricaRow label="Seguidores" prev={metricaAnterior?.seguidores} curr={metricaAtual?.seguidores} format={formatNum} growth={calcGrowth} mesAnteriorLabel={mesAnteriorLabel} />
-                  <MetricaRow label="Engajamento" prev={metricaAnterior?.engajamento_percent} curr={metricaAtual?.engajamento_percent} format={(v) => v == null ? '—' : `${Number(v).toFixed(2)}%`} growth={calcGrowth} mesAnteriorLabel={mesAnteriorLabel} />
-                  <MetricaRow label="Alcance" prev={metricaAnterior?.alcance} curr={metricaAtual?.alcance} format={formatNum} growth={calcGrowth} mesAnteriorLabel={mesAnteriorLabel} />
-                  <MetricaRow label="Visualizações" prev={metricaAnterior?.visualizacoes} curr={metricaAtual?.visualizacoes} format={formatNum} growth={calcGrowth} mesAnteriorLabel={mesAnteriorLabel} />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <MetricaCard label="Seguidores" prev={metricaAnterior?.seguidores} curr={metricaAtual?.seguidores} format={formatNum} growth={calcGrowth} mesAnteriorLabel={mesAnteriorLabel} />
+                  <MetricaCard label="Engajamento" prev={metricaAnterior?.engajamento_percent} curr={metricaAtual?.engajamento_percent} format={(v) => v == null ? '—' : `${Number(v).toFixed(2)}%`} growth={calcGrowth} mesAnteriorLabel={mesAnteriorLabel} />
+                  <MetricaCard label="Alcance" prev={metricaAnterior?.alcance} curr={metricaAtual?.alcance} format={formatNum} growth={calcGrowth} mesAnteriorLabel={mesAnteriorLabel} />
+                  <MetricaCard label="Visualizações" prev={metricaAnterior?.visualizacoes} curr={metricaAtual?.visualizacoes} format={formatNum} growth={calcGrowth} mesAnteriorLabel={mesAnteriorLabel} />
                 </div>
 
                 {metricaAtual?.observacoes && (
                   <div
-                    className="mt-6 px-5 py-4 border-l-2 italic text-[15px] leading-relaxed"
+                    className="mt-4 px-5 py-3 border-l-2 italic text-[14px] leading-relaxed"
                     style={{ borderColor: '#c9a96e', color: '#5a6e84' }}
                   >
                     {metricaAtual.observacoes}
@@ -462,7 +462,7 @@ export default function RelatorioPage() {
                         <div
                           key={t.id}
                           className={clsx(
-                            'flex items-baseline gap-4 py-3',
+                            'flex items-baseline gap-4 py-3 print:py-1.5',
                             i !== entregas.length - 1 && 'border-b border-slate-100'
                           )}
                         >
@@ -499,10 +499,10 @@ export default function RelatorioPage() {
 
             {/* ===== RODAPÉ ===== */}
             <footer
-              className="px-8 md:px-14 py-8 text-center border-t"
+              className="px-8 md:px-14 py-8 print:py-3 text-center border-t"
               style={{ borderColor: '#eef0f3', background: '#fafbfc' }}
             >
-              <div className="flex items-center justify-center gap-2 mb-3">
+              <div className="flex items-center justify-center gap-2 mb-3 print:mb-1.5">
                 <div className="h-px w-12" style={{ background: '#c9a96e' }} />
                 <Image
                   src="/logo-symbol.png"
@@ -591,7 +591,7 @@ function SectionHeader({ number, label }: { number: string; label: string }) {
   )
 }
 
-function MetricaRow({
+function MetricaCard({
   label, prev, curr, format: fmt, growth, mesAnteriorLabel,
 }: {
   label: string
@@ -603,33 +603,26 @@ function MetricaRow({
 }) {
   const g = growth(curr, prev)
   return (
-    <div
-      className="flex items-end justify-between gap-4 py-3 border-b"
-      style={{ borderColor: '#f0f2f5' }}
-    >
-      <div className="min-w-0">
-        <p className="text-[10px] font-bold tracking-[0.18em] uppercase text-slate-400 mb-1">{label}</p>
-        <p className="text-2xl font-bold tabular-nums leading-none" style={{ color: '#2a3340' }}>
-          {fmt(curr)}
-        </p>
-      </div>
-      <div className="text-right flex-shrink-0">
-        <p className="text-[9px] tracking-wider text-slate-300 uppercase mb-1 capitalize">
+    <div className="border rounded-xl p-3" style={{ borderColor: '#eef0f3' }}>
+      <p className="text-[9px] font-bold tracking-[0.16em] uppercase text-slate-400 mb-1">{label}</p>
+      <p className="text-xl font-bold tabular-nums leading-none" style={{ color: '#2a3340' }}>
+        {fmt(curr)}
+      </p>
+      <div className="flex items-center justify-between gap-2 mt-1.5">
+        <p className="text-[9px] tracking-wide text-slate-300 capitalize truncate">
           vs {mesAnteriorLabel}: <span className="tabular-nums">{fmt(prev)}</span>
         </p>
         {g ? (
           <span
             className={clsx(
-              'inline-flex items-center gap-1 text-xs font-bold tabular-nums px-2 py-1 rounded-md',
-              g.isPositive
-                ? 'bg-emerald-50 text-emerald-700'
-                : 'bg-red-50 text-red-600'
+              'text-[10px] font-bold tabular-nums flex-shrink-0',
+              g.isPositive ? 'text-emerald-600' : 'text-red-500'
             )}
           >
-            {g.arrow} {Math.abs(g.pct).toFixed(1)}%
+            {g.arrow} {Math.abs(g.pct).toFixed(0)}%
           </span>
         ) : (
-          <span className="text-xs text-slate-300 tabular-nums">—</span>
+          <span className="text-[10px] text-slate-300 flex-shrink-0">—</span>
         )}
       </div>
     </div>
