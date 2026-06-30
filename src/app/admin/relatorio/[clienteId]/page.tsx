@@ -335,7 +335,7 @@ export default function RelatorioPage() {
 
             {/* ===== CAPA / HEADER ===== */}
             <header
-              className="relative px-8 md:px-14 py-12 md:py-16 print:py-6 text-white overflow-hidden"
+              className="relative px-8 md:px-14 py-8 md:py-10 print:py-6 text-white overflow-hidden"
               style={{
                 background: '#080c10',
               }}
@@ -359,7 +359,7 @@ export default function RelatorioPage() {
 
               <div className="relative">
                 {/* Marca */}
-                <div className="flex items-center gap-3 mb-12 md:mb-16 print:mb-6">
+                <div className="flex items-center gap-3 mb-6 md:mb-8 print:mb-6">
                   <Image
                     src="/logo-symbol.png"
                     alt="GM&Co"
@@ -378,17 +378,12 @@ export default function RelatorioPage() {
                 </div>
 
                 {/* Etiqueta */}
-                <div
-                  className="inline-block px-3 py-1.5 rounded-full mb-6"
-                  style={{ background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(201,169,110,0.3)' }}
-                >
-                  <p className="text-[10px] font-bold tracking-[0.22em] uppercase" style={{ color: '#e8c987' }}>
-                    Relatório Mensal · {format(mes, 'MM/yyyy')}
-                  </p>
-                </div>
+                <p className="text-[10px] font-bold tracking-[0.22em] uppercase mb-3" style={{ color: '#e8c987' }}>
+                  Relatório Mensal · {format(mes, 'MM/yyyy')}
+                </p>
 
                 {/* Título — estilo hero */}
-                <h1 className="text-4xl md:text-5xl print:text-3xl font-bold leading-tight mb-2 capitalize tracking-tight">
+                <h1 className="text-4xl md:text-5xl print:text-3xl font-bold leading-tight mb-1 capitalize tracking-tight">
                   {cliente.nome}
                 </h1>
                 <p className="text-lg md:text-xl print:text-base text-white/60 capitalize">
@@ -398,7 +393,7 @@ export default function RelatorioPage() {
                 </p>
 
                 {/* Linha de stats no rodapé do header */}
-                <div className="mt-10 md:mt-12 print:mt-6 pt-6 print:pt-4 border-t border-white/10 grid grid-cols-3 gap-4">
+                <div className="mt-6 md:mt-8 print:mt-6 pt-5 print:pt-4 border-t border-white/10 grid grid-cols-3 gap-4">
                   <HeaderStat label="Contrato" value={formatBRL(Number(cliente.valor_mensal))} />
                   <HeaderStat label="Entregas" value={String(concluidas)} sub={`de ${entregas.length}`} />
                   <HeaderStat label="Tempo investido" value={formatMinutos(tempoTotal)} />
