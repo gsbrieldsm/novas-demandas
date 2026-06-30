@@ -24,6 +24,11 @@ function formatBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
+function formatNum(v: number | null | undefined): string {
+  if (v == null) return '—'
+  return v.toLocaleString('pt-BR')
+}
+
 interface ClienteFixo {
   id: string
   nome: string
@@ -322,6 +327,23 @@ export default function ClienteDetailPage() {
     }
     return result
   }, [ticketsDoCliente, minutosPorTicket, now])
+
+  // Crescimento de redes sociais — últimos 6 meses
+  const historicoRedes = useMemo(() => {
+    const result: { mes: Date; seguidores: number | null; engajamento: number | null; growth: number | null }[] = []
+    for (let i = 0; i < 6; i++) {
+      const m = subMonths(now, i)
+      const atual = metricas.find(x => x.mes === m.getMonth() + 1 && x.ano === m.getFullYear())
+      const mAnt = subMonths(m, 1)
+      const anterior = metricas.find(x => x.mes === mAnt.getMonth() + 1 && x.ano === mAnt.getFullYear())
+      let growth: number | null = null
+      if (atual?.seguidores != null && anterior?.seguidores != null && anterior.seguidores > 0) {
+        growth = ((atual.seguidores - anterior.seguidores) / anterior.seguidores) * 100
+      }
+      result.push({ mes: m, seguidores: atual?.seguidores ?? null, engajamento: atual?.engajamento_percent ?? null, growth })
+    }
+    return result
+  }, [metricas, now])
 
   if (loading || !cliente) {
     return (
@@ -656,6 +678,53 @@ export default function ClienteDetailPage() {
               })}
             </div>
           </div>
+        </SectionCard>
+
+        {/* CRESCIMENTO NAS REDES */}
+        <SectionCard title="Crescimento nas Redes — últimos 6 meses">
+          {metricas.length === 0 ? (
+            <p className="text-xs text-slate-400 italic text-center py-4">Nenhuma métrica registrada ainda. Preencha no relatório mensal.</p>
+          ) : (
+            <div className="overflow-x-auto -mx-2">
+              <div className="flex gap-2 px-2 min-w-max">
+                {historicoRedes.map((h, i) => {
+                  const isCurrent = i === 0
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => router.push(`/admin/relatorio/${id}?mes=${h.mes.getMonth() + 1}&ano=${h.mes.getFullYear()}`)}
+                      className={clsx(
+                        'rounded-xl p-3 min-w-[110px] text-left transition-colors',
+                        isCurrent ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 hover:bg-slate-50'
+                      )}
+                    >
+                      <p className={clsx('text-[10px] uppercase tracking-wider font-bold mb-1', isCurrent ? 'text-white/50' : 'text-slate-400')}>
+                        {format(h.mes, 'MMM yyyy', { locale: ptBR })}
+                      </p>
+                      <div className="flex items-baseline gap-1.5">
+                        <p className={clsx('text-lg font-bold tabular-nums', isCurrent ? 'text-white' : 'text-slate-800')}>
+                          {formatNum(h.seguidores)}
+                        </p>
+                        {h.growth != null && (
+                          <span className={clsx(
+                            'text-[10px] font-bold tabular-nums',
+                            h.growth >= 0
+                              ? (isCurrent ? 'text-emerald-400' : 'text-emerald-600')
+                              : (isCurrent ? 'text-red-400' : 'text-red-500')
+                          )}>
+                            {h.growth >= 0 ? '↑' : '↓'} {Math.abs(h.growth).toFixed(0)}%
+                          </span>
+                        )}
+                      </div>
+                      <p className={clsx('text-[10px] mt-0.5', isCurrent ? 'text-white/60' : 'text-slate-500')}>
+                        {h.engajamento != null ? `${h.engajamento.toFixed(1)}% engaj.` : 'sem dados'}
+                      </p>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </SectionCard>
 
         {/* DEMANDAS RECENTES */}
