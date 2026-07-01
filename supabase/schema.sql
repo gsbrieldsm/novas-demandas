@@ -167,6 +167,25 @@ alter table public.tickets
   add column if not exists nota_cliente text,
   add column if not exists nota_cliente_em timestamp with time zone;
 
+-- Migração: receitas avulsas (entradas pontuais que não são serviço prestado)
+create table if not exists public.receitas_avulsas (
+  id uuid default uuid_generate_v4() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  descricao text not null,
+  valor numeric not null,
+  mes integer not null,
+  ano integer not null,
+  recebido boolean not null default false,
+  recebido_em timestamp with time zone
+);
+
+create trigger update_receitas_avulsas_updated_at
+  before update on public.receitas_avulsas
+  for each row execute procedure public.update_updated_at_column();
+
+create index if not exists receitas_avulsas_mes_ano_idx on public.receitas_avulsas(mes, ano);
+
 -- Fix: "estrategia" já era uma opção válida no app (RequestType, REQUEST_TYPE_LABELS,
 -- system-prompt) mas a constraint do banco nunca foi atualizada — bloqueava a criação
 -- de qualquer demanda do tipo Estratégia.

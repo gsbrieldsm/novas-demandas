@@ -67,6 +67,17 @@ interface Despesa {
   recorrencia_grupo_id: string | null
 }
 
+interface ReceitaAvulsa {
+  id: string
+  created_at: string
+  descricao: string
+  valor: number
+  mes: number
+  ano: number
+  recebido: boolean
+  recebido_em: string | null
+}
+
 export default function FinanceiroPage() {
   const [mes, setMes] = useState(new Date())
   const [clientes, setClientes] = useState<ClienteFixo[]>([])
@@ -78,6 +89,10 @@ export default function FinanceiroPage() {
   const [despForm, setDespForm] = useState<{ tipo: DespesaTipo; descricao: string; valor: string; vencimento: string; recorrente: boolean; recorrencia_meses: string }>({ tipo: 'corporativa', descricao: '', valor: '', vencimento: '', recorrente: false, recorrencia_meses: '12' })
   const [savingDesp, setSavingDesp] = useState(false)
   const [despesasTodas, setDespesasTodas] = useState<Despesa[]>([])
+  const [receitasAvulsas, setReceitasAvulsas] = useState<ReceitaAvulsa[]>([])
+  const [showRecAvForm, setShowRecAvForm] = useState(false)
+  const [recAvForm, setRecAvForm] = useState({ descricao: '', valor: '' })
+  const [savingRecAv, setSavingRecAv] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -97,12 +112,14 @@ export default function FinanceiroPage() {
       api('/api/tickets').then(r => r.json()),
       api(`/api/despesas?mes=${m}&ano=${a}`).then(r => r.json()),
       api('/api/despesas').then(r => r.json()),
-    ]).then(([c, p, t, d, dTodas]) => {
+      api(`/api/receitas-avulsas?mes=${m}&ano=${a}`).then(r => r.json()),
+    ]).then(([c, p, t, d, dTodas, ra]) => {
       setClientes(c)
       setPagamentos(p)
       setTickets(t)
       setDespesas(d)
       setDespesasTodas(dTodas)
+      setReceitasAvulsas(ra)
       setLoading(false)
     })
   }, [mes])
@@ -203,6 +220,46 @@ export default function FinanceiroPage() {
     setDespesasTodas(dTodas)
   }
 
+  async function addReceitaAvulsa() {
+    if (!recAvForm.descricao || !recAvForm.valor) return
+    setSavingRecAv(true)
+    const valor = parseFloat(recAvForm.valor.replace(',', '.'))
+    if (isNaN(valor)) { setSavingRecAv(false); return }
+    const res = await api('/api/receitas-avulsas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        descricao: recAvForm.descricao,
+        valor,
+        mes: mes.getMonth() + 1,
+        ano: mes.getFullYear(),
+      }),
+    })
+    const nova = await res.json()
+    setReceitasAvulsas(prev => [nova, ...prev])
+    setRecAvForm({ descricao: '', valor: '' })
+    setShowRecAvForm(false)
+    setSavingRecAv(false)
+  }
+
+  async function toggleReceitaAvulsa(ra: ReceitaAvulsa) {
+    const novo = !ra.recebido
+    setReceitasAvulsas(prev => prev.map(r => r.id === ra.id ? {
+      ...r, recebido: novo, recebido_em: novo ? new Date().toISOString() : null,
+    } : r))
+    await api(`/api/receitas-avulsas/${ra.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recebido: novo, recebido_em: novo ? new Date().toISOString() : null }),
+    })
+  }
+
+  async function deleteReceitaAvulsa(ra: ReceitaAvulsa) {
+    if (!confirm('Excluir esta receita?')) return
+    setReceitasAvulsas(prev => prev.filter(r => r.id !== ra.id))
+    await api(`/api/receitas-avulsas/${ra.id}`, { method: 'DELETE' })
+  }
+
   // ============ Cálculos ============
   const m = mes.getMonth() + 1
   const a = mes.getFullYear()
@@ -230,8 +287,11 @@ export default function FinanceiroPage() {
   const totalAvulsoRecebido = avulsosMes.filter(t => t.pagamento_recebido).reduce((s, t) => s + (t.budget_value ?? 0), 0)
   const totalAvulsoPendente = totalAvulso - totalAvulsoRecebido
 
-  const entradas = totalRecebidoFixo + totalAvulsoRecebido
-  const pendente = totalPendenteFixo + totalAvulsoPendente
+  const totalRecAvulsasRecebido = receitasAvulsas.filter(r => r.recebido).reduce((s, r) => s + Number(r.valor), 0)
+  const totalRecAvulsasPendente = receitasAvulsas.filter(r => !r.recebido).reduce((s, r) => s + Number(r.valor), 0)
+
+  const entradas = totalRecebidoFixo + totalAvulsoRecebido + totalRecAvulsasRecebido
+  const pendente = totalPendenteFixo + totalAvulsoPendente + totalRecAvulsasPendente
 
   const saidasPagas = despesas.filter(d => d.pago).reduce((s, d) => s + Number(d.valor), 0)
   const saidasAPagar = despesas.filter(d => !d.pago).reduce((s, d) => s + Number(d.valor), 0)
@@ -312,7 +372,11 @@ export default function FinanceiroPage() {
             <BalancoCard
               label="Entradas"
               value={formatBRL(entradas)}
-              sub={`Fixo ${formatBRL(totalRecebidoFixo)} + Avulso ${formatBRL(totalAvulsoRecebido)}`}
+              sub={[
+                `Fixo ${formatBRL(totalRecebidoFixo)}`,
+                `Avulso ${formatBRL(totalAvulsoRecebido)}`,
+                totalRecAvulsasRecebido > 0 ? `Outros ${formatBRL(totalRecAvulsasRecebido)}` : '',
+              ].filter(Boolean).join(' + ')}
               color="text-green-300"
             />
             <BalancoCard
@@ -621,6 +685,181 @@ export default function FinanceiroPage() {
                         )}
                       </div>
                     </div>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* OUTRAS ENTRADAS (receitas avulsas) */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-700">Outras Entradas</h2>
+              <p className="text-[11px] text-slate-400 mt-0.5">Recebimentos avulsos que não são serviço prestado</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-bold text-green-600">
+                {formatBRL(totalRecAvulsasRecebido)}
+                {totalRecAvulsasPendente > 0 && (
+                  <span className="text-xs font-normal text-slate-400 ml-1">de {formatBRL(totalRecAvulsasRecebido + totalRecAvulsasPendente)}</span>
+                )}
+              </span>
+              <button
+                onClick={() => setShowRecAvForm(v => !v)}
+                className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition-opacity"
+                style={{ background: '#C5A880' }}
+              >
+                {showRecAvForm ? 'Cancelar' : '+ Adicionar'}
+              </button>
+            </div>
+          </div>
+
+          {showRecAvForm && (
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                <div className="sm:col-span-6">
+                  <input
+                    placeholder="Descrição (ex: venda de equipamento, comissão...)"
+                    value={recAvForm.descricao}
+                    onChange={e => setRecAvForm(f => ({ ...f, descricao: e.target.value }))}
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                  />
+                </div>
+                <div className="sm:col-span-3">
+                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#C5A880] bg-white">
+                    <span className="px-2 text-xs text-slate-400 bg-slate-100 border-r border-slate-200 py-2">R$</span>
+                    <input
+                      placeholder="0,00"
+                      value={recAvForm.valor}
+                      onChange={e => setRecAvForm(f => ({ ...f, valor: e.target.value }))}
+                      onKeyDown={e => { if (e.key === 'Enter') addReceitaAvulsa() }}
+                      inputMode="decimal"
+                      className="w-full text-sm px-2 py-2 focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="sm:col-span-3">
+                  <button
+                    onClick={addReceitaAvulsa}
+                    disabled={savingRecAv || !recAvForm.descricao || !recAvForm.valor}
+                    className="w-full text-sm py-2 rounded-lg text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+                    style={{ background: '#C5A880' }}
+                  >
+                    {savingRecAv ? 'Salvando...' : 'Salvar'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {receitasAvulsas.length === 0 ? (
+            <div className="px-6 py-6 text-center text-slate-400 text-sm">Nenhuma entrada avulsa este mês.</div>
+          ) : (
+            <>
+              {/* Desktop */}
+              <table className="hidden md:table w-full">
+                <thead>
+                  <tr className="text-left">
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Descrição</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Valor</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {receitasAvulsas.map(ra => (
+                    <tr key={ra.id} className={clsx('hover:bg-slate-50 transition-colors', ra.recebido && 'opacity-70')}>
+                      <td className="px-6 py-3">
+                        <p className={clsx('text-sm', ra.recebido ? 'text-slate-500' : 'text-slate-800')}>{ra.descricao}</p>
+                        <p className="text-xs text-slate-400">lançado {format(new Date(ra.created_at), "d 'de' MMM", { locale: ptBR })}</p>
+                      </td>
+                      <td className="px-6 py-3">
+                        <span className={clsx('text-sm font-semibold', ra.recebido ? 'text-slate-400' : 'text-green-600')}>
+                          + {formatBRL(Number(ra.valor))}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3">
+                        {ra.recebido ? (
+                          <div>
+                            <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-100 text-green-700 px-2.5 py-1 rounded-full">
+                              ✓ Recebido
+                            </span>
+                            {ra.recebido_em && (
+                              <p className="text-xs text-slate-400 mt-1">
+                                {format(new Date(ra.recebido_em), "d 'de' MMM", { locale: ptBR })}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full">
+                            ⏳ Pendente
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => toggleReceitaAvulsa(ra)}
+                            className={clsx(
+                              'text-xs px-3 py-1.5 rounded-lg font-medium transition-colors whitespace-nowrap',
+                              ra.recebido
+                                ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                : 'bg-green-600 text-white hover:bg-green-700'
+                            )}
+                          >
+                            {ra.recebido ? 'Desfazer' : 'Marcar recebido'}
+                          </button>
+                          <button
+                            onClick={() => deleteReceitaAvulsa(ra)}
+                            className="text-slate-300 hover:text-red-400 transition-colors text-lg leading-none"
+                            title="Excluir"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Mobile */}
+              <div className="md:hidden divide-y divide-slate-50">
+                {receitasAvulsas.map(ra => (
+                  <button
+                    key={ra.id}
+                    onClick={() => toggleReceitaAvulsa(ra)}
+                    className={clsx(
+                      'w-full text-left px-4 py-3 flex items-center gap-3 active:bg-slate-50 transition-colors',
+                      ra.recebido && 'opacity-60'
+                    )}
+                  >
+                    <span className={clsx('w-1 self-stretch rounded-full flex-shrink-0', ra.recebido ? 'bg-green-400' : 'bg-amber-400')} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline gap-2">
+                        <p className={clsx('text-sm font-medium truncate flex-1', ra.recebido ? 'text-slate-500' : 'text-slate-800')}>
+                          {ra.descricao}
+                        </p>
+                        <span className={clsx('text-sm font-bold whitespace-nowrap', ra.recebido ? 'text-slate-400' : 'text-green-600')}>
+                          {formatBRL(Number(ra.valor))}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
+                        {ra.recebido ? (
+                          <span className="text-green-600 font-medium">✓ Recebido</span>
+                        ) : (
+                          <span className="text-amber-600">⏳ Pendente</span>
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      onClick={(e) => { e.stopPropagation(); deleteReceitaAvulsa(ra) }}
+                      className="w-7 h-7 rounded-md text-slate-300 hover:text-red-500 flex items-center justify-center text-lg flex-shrink-0 -mr-1"
+                    >
+                      ×
+                    </span>
                   </button>
                 ))}
               </div>
