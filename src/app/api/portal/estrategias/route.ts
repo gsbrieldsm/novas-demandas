@@ -10,7 +10,7 @@ export async function GET(req: Request) {
   const { data, error } = await db
     .from('estrategias')
     .select('id, titulo, descricao, nodes, edges, created_at, updated_at')
-    .eq('cliente_fixo_id', session.clienteId)
+    .eq('cliente_fixo_id', session.clienteFixoId)
     .eq('visivel_portal', true)
     .order('created_at', { ascending: false })
 
