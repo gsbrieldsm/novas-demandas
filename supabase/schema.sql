@@ -167,6 +167,27 @@ alter table public.tickets
   add column if not exists nota_cliente text,
   add column if not exists nota_cliente_em timestamp with time zone;
 
+-- Migração: estratégias (mapas mentais / fluxos por cliente)
+create table if not exists public.estrategias (
+  id uuid default uuid_generate_v4() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  cliente_fixo_id uuid references public.clientes_fixos(id) on delete cascade,
+  titulo text not null default 'Nova Estratégia',
+  descricao text,
+  nodes jsonb not null default '[]'::jsonb,
+  edges jsonb not null default '[]'::jsonb,
+  visivel_portal boolean not null default false
+);
+
+create trigger update_estrategias_updated_at
+  before update on public.estrategias
+  for each row execute procedure public.update_updated_at_column();
+
+create index if not exists estrategias_cliente_idx on public.estrategias(cliente_fixo_id);
+
+alter table public.estrategias disable row level security;
+
 -- Migração: receitas avulsas (entradas pontuais que não são serviço prestado)
 create table if not exists public.receitas_avulsas (
   id uuid default uuid_generate_v4() primary key,

@@ -10,6 +10,15 @@ import clsx from 'clsx'
 import { AdminNav } from '@/components/AdminNav'
 import { formatMinutos, valorHora } from '@/lib/tempo'
 import type { Ticket, TempoApontamento, Proposta, PropostaStatus, DocumentoCliente } from '@/types'
+
+interface Estrategia {
+  id: string
+  titulo: string
+  descricao: string | null
+  visivel_portal: boolean
+  created_at: string
+  updated_at: string
+}
 import { PROPOSTA_STATUS_LABELS } from '@/types'
 
 const PROPOSTA_STATUS_COLORS: Record<PropostaStatus, string> = {
@@ -91,6 +100,7 @@ export default function ClienteDetailPage() {
   const [metricas, setMetricas] = useState<Metrica[]>([])
   const [propostas, setPropostas] = useState<Proposta[]>([])
   const [documentos, setDocumentos] = useState<DocumentoCliente[]>([])
+  const [estrategias, setEstrategias] = useState<Estrategia[]>([])
   const [loading, setLoading] = useState(true)
   const [editingIdent, setEditingIdent] = useState(false)
   const [editingEscopo, setEditingEscopo] = useState(false)
@@ -116,13 +126,14 @@ export default function ClienteDetailPage() {
 
   const loadAll = useCallback(async () => {
     setLoading(true)
-    const [cs, ts, tm, ms, ps, ds] = await Promise.all([
+    const [cs, ts, tm, ms, ps, ds, es] = await Promise.all([
       api('/api/clientes-fixos').then(r => r.json()),
       api('/api/tickets').then(r => r.json()),
       api('/api/tempo').then(r => r.json()),
       api(`/api/metricas?cliente_id=${id}`).then(r => r.json()),
       api(`/api/propostas?cliente_fixo_id=${id}`).then(r => r.json()),
       api(`/api/documentos?cliente_fixo_id=${id}`).then(r => r.json()),
+      api(`/api/estrategias?cliente_id=${id}`).then(r => r.json()),
     ])
     const cf = (cs as ClienteFixo[]).find(c => c.id === id)
     setCliente(cf ?? null)
@@ -131,6 +142,7 @@ export default function ClienteDetailPage() {
     setMetricas(ms)
     setPropostas(ps)
     setDocumentos(ds)
+    setEstrategias(es)
     if (cf) {
       setPortalForm({ portal_email: cf.portal_email ?? '', logo_url: cf.logo_url ?? '', novaSenha: '' })
       setIdentForm({
@@ -246,6 +258,22 @@ export default function ClienteDetailPage() {
     })
     const novo = await res.json()
     router.push(`/admin/documento/${novo.id}`)
+  }
+
+  async function criarEstrategia() {
+    const res = await api('/api/estrategias', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cliente_fixo_id: id,
+        titulo: 'Nova Estratégia',
+        nodes: [],
+        edges: [],
+        visivel_portal: false,
+      }),
+    })
+    const nova = await res.json()
+    router.push(`/admin/estrategia/${nova.id}`)
   }
 
   async function confirmarCancelamento() {
@@ -805,6 +833,59 @@ export default function ClienteDetailPage() {
                       </div>
                       <p className="text-[11px] text-slate-400 mt-0.5">{doc.blocos.length} blocos · atualizado em {format(new Date(doc.updated_at), "d 'de' MMM", { locale: ptBR })}</p>
                     </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ESTRATÉGIAS */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
+          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-700">Estratégias ({estrategias.length})</h2>
+              <p className="text-[11px] text-slate-400 mt-0.5">Mapas mentais e fluxos de estratégia</p>
+            </div>
+            <button
+              onClick={criarEstrategia}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg text-white hover:opacity-90"
+              style={{ background: '#C5A880' }}
+            >
+              + Nova estratégia
+            </button>
+          </div>
+          <div className="px-4 md:px-6 py-4 md:py-5">
+            {estrategias.length === 0 ? (
+              <p className="text-xs text-slate-400 italic text-center py-4">Nenhuma estratégia ainda — crie um mapa mental para visualizar os fluxos desse cliente.</p>
+            ) : (
+              <div className="space-y-2">
+                {estrategias.map(e => (
+                  <button
+                    key={e.id}
+                    onClick={() => router.push(`/admin/estrategia/${e.id}`)}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors text-left"
+                  >
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-lg"
+                      style={{ background: '#1a1814' }}>
+                      🧠
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{e.titulo}</p>
+                        <span className={clsx(
+                          'text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full',
+                          e.visivel_portal ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                        )}>
+                          {e.visivel_portal ? 'Visível no portal' : 'Oculta'}
+                        </span>
+                      </div>
+                      {e.descricao && <p className="text-[11px] text-slate-400 mt-0.5 truncate">{e.descricao}</p>}
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        atualizado em {format(new Date(e.updated_at), "d 'de' MMM yyyy", { locale: ptBR })}
+                      </p>
+                    </div>
+                    <span className="text-slate-300 text-lg">›</span>
                   </button>
                 ))}
               </div>

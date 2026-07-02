@@ -8,6 +8,52 @@ import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import { REQUEST_TYPE_LABELS } from '@/types'
 import type { RequestType, TicketStatus, DocumentoCliente, ChatMessage } from '@/types'
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  MiniMap,
+  type Node,
+  type Edge,
+  Handle,
+  Position,
+  type NodeTypes,
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
+
+interface Estrategia {
+  id: string
+  titulo: string
+  descricao: string | null
+  nodes: Node[]
+  edges: Edge[]
+  created_at: string
+  updated_at: string
+}
+
+type NodeData = { label: string; color: string }
+const NODE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  slate:  { bg: '#1e293b', text: '#f8fafc', border: '#334155' },
+  gold:   { bg: '#92400e', text: '#fef3c7', border: '#C5A880' },
+  green:  { bg: '#14532d', text: '#dcfce7', border: '#16a34a' },
+  blue:   { bg: '#1e3a5f', text: '#dbeafe', border: '#3b82f6' },
+  purple: { bg: '#3b0764', text: '#f3e8ff', border: '#9333ea' },
+  red:    { bg: '#7f1d1d', text: '#fee2e2', border: '#ef4444' },
+  white:  { bg: '#ffffff', text: '#1e293b', border: '#e2e8f0' },
+}
+function PortalMindNode({ data }: { data: NodeData }) {
+  const c = NODE_COLORS[data.color] ?? NODE_COLORS.slate
+  return (
+    <div style={{ background: c.bg, color: c.text, border: `2px solid ${c.border}`, borderRadius: 12, padding: '10px 16px', minWidth: 120, maxWidth: 220, fontSize: 13, fontWeight: 500, textAlign: 'center', lineHeight: 1.4, wordBreak: 'break-word' }}>
+      <Handle type="target" position={Position.Left} style={{ background: c.border, width: 8, height: 8 }} />
+      <Handle type="source" position={Position.Right} style={{ background: c.border, width: 8, height: 8 }} />
+      <Handle type="target" position={Position.Top} style={{ background: c.border, width: 8, height: 8 }} />
+      <Handle type="source" position={Position.Bottom} style={{ background: c.border, width: 8, height: 8 }} />
+      {data.label}
+    </div>
+  )
+}
+const portalNodeTypes: NodeTypes = { mind: PortalMindNode }
 
 interface PortalTicket {
   id: string
@@ -82,7 +128,9 @@ export default function PortalPage() {
   const router = useRouter()
   const [data, setData] = useState<PortalData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [aba, setAba] = useState<'andamento' | 'documentos'>('andamento')
+  const [aba, setAba] = useState<'andamento' | 'documentos' | 'estrategias'>('andamento')
+  const [estrategias, setEstrategias] = useState<Estrategia[]>([])
+  const [estrategiaSelecionada, setEstrategiaSelecionada] = useState<Estrategia | null>(null)
   const [ticketSelecionado, setTicketSelecionado] = useState<PortalTicket | null>(null)
   const [notaDraft, setNotaDraft] = useState('')
   const [salvandoNota, setSalvandoNota] = useState(false)
@@ -96,13 +144,16 @@ export default function PortalPage() {
   const [novoTicketId, setNovoTicketId] = useState<string | null>(null)
 
   function carregarPortal() {
-    return fetch('/api/portal/me')
-      .then(async r => {
-        if (!r.ok) { router.push('/portal/login'); return null }
-        return r.json()
-      })
-      .then(d => { if (d) setData(d); setLoading(false) })
-      .catch(() => router.push('/portal/login'))
+    return Promise.all([
+      fetch('/api/portal/me'),
+      fetch('/api/portal/estrategias'),
+    ]).then(async ([rMe, rEs]) => {
+      if (!rMe.ok) { router.push('/portal/login'); return }
+      const d = await rMe.json()
+      if (d) setData(d)
+      if (rEs.ok) setEstrategias(await rEs.json())
+      setLoading(false)
+    }).catch(() => router.push('/portal/login'))
   }
 
   useEffect(() => {
@@ -315,6 +366,12 @@ export default function PortalPage() {
             >
               Documentos {data.documentos.length > 0 && `(${data.documentos.length})`}
             </button>
+            <button
+              onClick={() => setAba('estrategias')}
+              className={clsx('px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors', aba === 'estrategias' ? 'text-slate-900 border-[#C5A880]' : 'text-slate-400 border-transparent')}
+            >
+              Estratégias {estrategias.length > 0 && `(${estrategias.length})`}
+            </button>
           </div>
           <button
             onClick={abrirNovaDemanda}
@@ -363,6 +420,32 @@ export default function PortalPage() {
               })}
             </div>
           </div>
+        ) : aba === 'estrategias' ? (
+          <div className="space-y-4">
+            {estrategias.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
+                <p className="text-sm text-slate-400">Nenhuma estratégia compartilhada ainda.</p>
+              </div>
+            ) : estrategias.map(e => (
+              <button
+                key={e.id}
+                onClick={() => setEstrategiaSelecionada(e)}
+                className="w-full text-left bg-white rounded-2xl border border-slate-100 shadow-sm hover:border-[#C5A880] hover:shadow-md transition-all p-5 flex items-center gap-4"
+              >
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0" style={{ background: '#0f0e0c' }}>
+                  🧠
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-base font-semibold text-slate-900">{e.titulo}</p>
+                  {e.descricao && <p className="text-sm text-slate-500 mt-0.5 truncate">{e.descricao}</p>}
+                  <p className="text-xs text-slate-400 mt-1">
+                    {(e.nodes as Node[]).length} nó{(e.nodes as Node[]).length !== 1 ? 's' : ''} · atualizado em {format(new Date(e.updated_at), "d 'de' MMM", { locale: ptBR })}
+                  </p>
+                </div>
+                <span className="text-slate-300 text-xl">›</span>
+              </button>
+            ))}
+          </div>
         ) : (
           <div className="space-y-6">
             {data.documentos.length === 0 ? (
@@ -397,6 +480,44 @@ export default function PortalPage() {
           </div>
         )}
       </div>
+
+      {/* MODAL DE VISUALIZAÇÃO DE ESTRATÉGIA */}
+      {estrategiaSelecionada && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex flex-col" onClick={() => setEstrategiaSelecionada(null)}>
+          <div className="flex items-center justify-between px-4 py-3 bg-[#1a1814] border-b border-white/10 flex-shrink-0" onClick={e => e.stopPropagation()}>
+            <div>
+              <p className="text-white font-semibold text-sm">{estrategiaSelecionada.titulo}</p>
+              {estrategiaSelecionada.descricao && <p className="text-white/50 text-xs mt-0.5">{estrategiaSelecionada.descricao}</p>}
+            </div>
+            <button onClick={() => setEstrategiaSelecionada(null)} className="text-white/40 hover:text-white/80 text-2xl leading-none transition-colors">×</button>
+          </div>
+          <div className="flex-1" onClick={e => e.stopPropagation()}>
+            <ReactFlow
+              nodes={estrategiaSelecionada.nodes as Node[]}
+              edges={estrategiaSelecionada.edges as Edge[]}
+              nodeTypes={portalNodeTypes}
+              fitView
+              fitViewOptions={{ padding: 0.3 }}
+              nodesDraggable={false}
+              nodesConnectable={false}
+              elementsSelectable={false}
+              panOnScroll
+              zoomOnScroll
+              style={{ background: '#0f0e0c' }}
+            >
+              <Background color="#2a2520" gap={24} size={1} />
+              <Controls showInteractive={false} style={{ background: '#1a1814', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }} />
+              <MiniMap
+                style={{ background: '#1a1814', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }}
+                nodeColor={(n) => {
+                  const c = NODE_COLORS[(n.data as NodeData)?.color ?? 'slate']
+                  return c?.bg ?? '#1e293b'
+                }}
+              />
+            </ReactFlow>
+          </div>
+        </div>
+      )}
 
       {/* MODAL DE DETALHE DA DEMANDA */}
       {ticketSelecionado && (
