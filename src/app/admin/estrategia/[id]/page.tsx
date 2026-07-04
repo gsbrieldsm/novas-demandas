@@ -10,6 +10,7 @@ import {
   addEdge,
   useNodesState,
   useEdgesState,
+  ConnectionMode,
   type Node,
   type Edge,
   type Connection,
@@ -63,9 +64,9 @@ function MindNode({ data, selected }: { data: NodeData; selected: boolean }) {
         wordBreak: 'break-word',
       }}
     >
-      <Handle type="target" position={Position.Left} style={{ background: c.border, width: 8, height: 8 }} />
-      <Handle type="source" position={Position.Right} style={{ background: c.border, width: 8, height: 8 }} />
-      <Handle type="target" position={Position.Top} style={{ background: c.border, width: 8, height: 8 }} />
+      <Handle type="source" position={Position.Left}   style={{ background: c.border, width: 8, height: 8 }} />
+      <Handle type="source" position={Position.Right}  style={{ background: c.border, width: 8, height: 8 }} />
+      <Handle type="source" position={Position.Top}    style={{ background: c.border, width: 8, height: 8 }} />
       <Handle type="source" position={Position.Bottom} style={{ background: c.border, width: 8, height: 8 }} />
       {data.label}
     </div>
@@ -348,6 +349,7 @@ export default function EstrategiaEditor() {
             style: { stroke: '#C5A880', strokeWidth: 2 },
           }}
           style={{ background: '#0f0e0c' }}
+          connectionMode={ConnectionMode.Loose}
           deleteKeyCode={['Backspace', 'Delete']}
         >
           <Background color="#2a2520" gap={24} size={1} />
