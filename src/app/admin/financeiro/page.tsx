@@ -10,7 +10,8 @@ import clsx from 'clsx'
 import { AdminNav } from '@/components/AdminNav'
 import type { Ticket } from '@/types'
 
-function formatBRL(v: number) {
+function formatBRL(v: number, oculto = false) {
+  if (oculto) return 'R$ ••••'
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
@@ -85,6 +86,8 @@ export default function FinanceiroPage() {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [despesas, setDespesas] = useState<Despesa[]>([])
   const [loading, setLoading] = useState(true)
+  const [ocultarValores, setOcultarValores] = useState(false)
+  const fmtBRL = (v: number) => formatBRL(v, ocultarValores)
   const [showDespForm, setShowDespForm] = useState(false)
   const [despForm, setDespForm] = useState<{ tipo: DespesaTipo; descricao: string; valor: string; vencimento: string; recorrente: boolean; recorrencia_meses: string }>({ tipo: 'corporativa', descricao: '', valor: '', vencimento: '', recorrente: false, recorrencia_meses: '12' })
   const [savingDesp, setSavingDesp] = useState(false)
@@ -344,12 +347,21 @@ export default function FinanceiroPage() {
               <button onClick={() => setMes(m => subMonths(m, 1))} className="w-8 h-8 md:w-9 md:h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">‹</button>
               <button onClick={() => setMes(new Date())} className="text-xs px-2.5 md:px-3 py-1.5 md:py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 transition-colors">Hoje</button>
               <button onClick={() => setMes(m => addMonths(m, 1))} className="w-8 h-8 md:w-9 md:h-9 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-500 transition-colors">›</button>
+              <button
+                onClick={() => setOcultarValores(v => !v)}
+                title={ocultarValores ? 'Mostrar valores' : 'Ocultar valores'}
+                className={clsx('w-8 h-8 md:w-9 md:h-9 rounded-lg border flex items-center justify-center transition-colors text-base',
+                  ocultarValores ? 'bg-slate-800 border-slate-800 text-white' : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-500'
+                )}
+              >
+                {ocultarValores ? '🙈' : '👁'}
+              </button>
             </div>
           </div>
           <div className="text-right">
             <p className="text-[10px] md:text-xs text-slate-400">Balanço do mês</p>
             <p className={clsx('text-lg md:text-2xl font-bold', balancoPositivo ? 'text-green-600' : 'text-red-500')}>
-              {balancoPositivo ? '+' : ''}{formatBRL(balanco)}
+              {balancoPositivo ? '+' : ''}{fmtBRL(balanco)}
             </p>
           </div>
         </div>
@@ -371,30 +383,30 @@ export default function FinanceiroPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <BalancoCard
               label="Entradas"
-              value={formatBRL(entradas)}
+              value={fmtBRL(entradas)}
               sub={[
-                `Fixo ${formatBRL(totalRecebidoFixo)}`,
-                `Avulso ${formatBRL(totalAvulsoRecebido)}`,
-                totalRecAvulsasRecebido > 0 ? `Outros ${formatBRL(totalRecAvulsasRecebido)}` : '',
+                `Fixo ${fmtBRL(totalRecebidoFixo)}`,
+                `Avulso ${fmtBRL(totalAvulsoRecebido)}`,
+                totalRecAvulsasRecebido > 0 ? `Outros ${fmtBRL(totalRecAvulsasRecebido)}` : '',
               ].filter(Boolean).join(' + ')}
               color="text-green-300"
             />
             <BalancoCard
               label="Saídas"
-              value={formatBRL(saidasPagas)}
-              sub={saidasAPagar > 0 ? `+ ${formatBRL(saidasAPagar)} a pagar` : 'Tudo pago ✓'}
+              value={fmtBRL(saidasPagas)}
+              sub={saidasAPagar > 0 ? `+ ${fmtBRL(saidasAPagar)} a pagar` : 'Tudo pago ✓'}
               color="text-red-300"
             />
             <BalancoCard
               label="Balanço"
-              value={`${balancoPositivo ? '+' : ''}${formatBRL(balanco)}`}
+              value={`${balancoPositivo ? '+' : ''}${fmtBRL(balanco)}`}
               sub={balancoPositivo ? 'Resultado positivo' : 'Resultado negativo'}
               color={balancoPositivo ? 'text-green-300' : 'text-red-300'}
               highlight
             />
             <BalancoCard
               label="Pendente"
-              value={formatBRL(pendente)}
+              value={fmtBRL(pendente)}
               sub={`${rows.filter(r => !r.pag?.recebido).length + avulsosMes.filter(t => !t.pagamento_recebido).length} a receber`}
               color={pendente > 0 ? 'text-amber-300' : 'text-white/60'}
             />
@@ -411,12 +423,12 @@ export default function FinanceiroPage() {
             <div className="flex items-center gap-4 text-right">
               <div>
                 <p className="text-[10px] text-slate-400 uppercase tracking-wider">A pagar até dez.</p>
-                <p className="text-sm font-bold text-red-500">{formatBRL(totalAPagarAteDezembro)}</p>
+                <p className="text-sm font-bold text-red-500">{fmtBRL(totalAPagarAteDezembro)}</p>
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 uppercase tracking-wider">Saldo acumulado</p>
                 <p className={clsx('text-sm font-bold', saldoAcumuladoAteDezembro >= 0 ? 'text-green-600' : 'text-red-500')}>
-                  {saldoAcumuladoAteDezembro >= 0 ? '+' : ''}{formatBRL(saldoAcumuladoAteDezembro)}
+                  {saldoAcumuladoAteDezembro >= 0 ? '+' : ''}{fmtBRL(saldoAcumuladoAteDezembro)}
                 </p>
               </div>
             </div>
@@ -441,16 +453,16 @@ export default function FinanceiroPage() {
                     <div className="space-y-1">
                       <div className="flex items-center justify-between gap-2">
                         <span className={clsx('text-[10px]', isAtual ? 'text-white/50' : 'text-slate-400')}>Receita</span>
-                        <span className={clsx('text-xs font-semibold', isAtual ? 'text-green-300' : 'text-green-600')}>{formatBRL(p.receita)}</span>
+                        <span className={clsx('text-xs font-semibold', isAtual ? 'text-green-300' : 'text-green-600')}>{fmtBRL(p.receita)}</span>
                       </div>
                       <div className="flex items-center justify-between gap-2">
                         <span className={clsx('text-[10px]', isAtual ? 'text-white/50' : 'text-slate-400')}>Despesas</span>
-                        <span className={clsx('text-xs font-semibold', isAtual ? 'text-red-300' : 'text-red-500')}>{formatBRL(p.despesas)}</span>
+                        <span className={clsx('text-xs font-semibold', isAtual ? 'text-red-300' : 'text-red-500')}>{fmtBRL(p.despesas)}</span>
                       </div>
                       <div className={clsx('flex items-center justify-between gap-2 pt-1 border-t', isAtual ? 'border-white/10' : 'border-slate-100')}>
                         <span className={clsx('text-[10px] font-bold', isAtual ? 'text-white/70' : 'text-slate-500')}>Saldo</span>
                         <span className={clsx('text-xs font-bold', p.saldo >= 0 ? (isAtual ? 'text-white' : 'text-slate-800') : 'text-red-500')}>
-                          {p.saldo >= 0 ? '+' : ''}{formatBRL(p.saldo)}
+                          {p.saldo >= 0 ? '+' : ''}{fmtBRL(p.saldo)}
                         </span>
                       </div>
                     </div>
@@ -471,11 +483,11 @@ export default function FinanceiroPage() {
               <h2 className="text-sm font-semibold text-slate-700">Recebimentos Fixos</h2>
               {totalEsperadoOutrasReceitas > 0 && (
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Clientes {formatBRL(totalEsperadoClientes)} · Outras receitas {formatBRL(totalEsperadoOutrasReceitas)}
+                  Clientes {fmtBRL(totalEsperadoClientes)} · Outras receitas {fmtBRL(totalEsperadoOutrasReceitas)}
                 </p>
               )}
             </div>
-            <span className="text-sm font-bold text-amber-600">{formatBRL(totalRecebidoFixo)} <span className="text-xs font-normal text-slate-400">de {formatBRL(totalEsperadoFixo)}</span></span>
+            <span className="text-sm font-bold text-amber-600">{fmtBRL(totalRecebidoFixo)} <span className="text-xs font-normal text-slate-400">de {fmtBRL(totalEsperadoFixo)}</span></span>
           </div>
 
           {loading ? (
@@ -508,7 +520,7 @@ export default function FinanceiroPage() {
                         {cliente.email && <p className="text-xs text-slate-400">{cliente.email}</p>}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-semibold text-slate-800">{formatBRL(Number(cliente.valor_mensal))}</span>
+                        <span className="text-sm font-semibold text-slate-800">{fmtBRL(Number(cliente.valor_mensal))}</span>
                       </td>
                       <td className="px-6 py-4">
                         {cliente.dia_vencimento ? (
@@ -568,7 +580,7 @@ export default function FinanceiroPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline gap-2">
                         <p className="text-sm font-semibold text-slate-800 truncate flex-1">{cliente.nome}</p>
-                        <span className="text-sm font-bold text-amber-600 whitespace-nowrap">{formatBRL(Number(cliente.valor_mensal))}</span>
+                        <span className="text-sm font-bold text-amber-600 whitespace-nowrap">{fmtBRL(Number(cliente.valor_mensal))}</span>
                       </div>
                       <div className="flex items-center gap-2 mt-0.5 text-[11px]">
                         {pag?.recebido ? (
@@ -595,7 +607,7 @@ export default function FinanceiroPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-100 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-700">Avulsos com Orçamento</h2>
-            <span className="text-sm font-bold text-slate-700">{formatBRL(totalAvulsoRecebido)} <span className="text-xs font-normal text-slate-400">de {formatBRL(totalAvulso)}</span></span>
+            <span className="text-sm font-bold text-slate-700">{fmtBRL(totalAvulsoRecebido)} <span className="text-xs font-normal text-slate-400">de {fmtBRL(totalAvulso)}</span></span>
           </div>
           {avulsosMes.length === 0 ? (
             <div className="px-6 py-6 md:py-8 text-center text-slate-400 text-xs md:text-sm">Nenhum avulso com orçamento este mês.</div>
@@ -622,7 +634,7 @@ export default function FinanceiroPage() {
                         <p className="text-sm text-slate-600">{t.client_name}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm font-semibold text-slate-800">{formatBRL(t.budget_value!)}</span>
+                        <span className="text-sm font-semibold text-slate-800">{fmtBRL(t.budget_value!)}</span>
                       </td>
                       <td className="px-6 py-4">
                         {t.pagamento_recebido ? (
@@ -673,7 +685,7 @@ export default function FinanceiroPage() {
                         >
                           {t.title}
                         </p>
-                        <span className="text-sm font-bold text-slate-800 whitespace-nowrap">{formatBRL(t.budget_value!)}</span>
+                        <span className="text-sm font-bold text-slate-800 whitespace-nowrap">{fmtBRL(t.budget_value!)}</span>
                       </div>
                       <div className="flex items-center gap-2 mt-0.5 text-[11px]">
                         <span className="text-slate-400">{t.client_name}</span>
@@ -701,9 +713,9 @@ export default function FinanceiroPage() {
             </div>
             <div className="flex items-center gap-3">
               <span className="text-sm font-bold text-green-600">
-                {formatBRL(totalRecAvulsasRecebido)}
+                {fmtBRL(totalRecAvulsasRecebido)}
                 {totalRecAvulsasPendente > 0 && (
-                  <span className="text-xs font-normal text-slate-400 ml-1">de {formatBRL(totalRecAvulsasRecebido + totalRecAvulsasPendente)}</span>
+                  <span className="text-xs font-normal text-slate-400 ml-1">de {fmtBRL(totalRecAvulsasRecebido + totalRecAvulsasPendente)}</span>
                 )}
               </span>
               <button
@@ -777,7 +789,7 @@ export default function FinanceiroPage() {
                       </td>
                       <td className="px-6 py-3">
                         <span className={clsx('text-sm font-semibold', ra.recebido ? 'text-slate-400' : 'text-green-600')}>
-                          + {formatBRL(Number(ra.valor))}
+                          + {fmtBRL(Number(ra.valor))}
                         </span>
                       </td>
                       <td className="px-6 py-3">
@@ -843,7 +855,7 @@ export default function FinanceiroPage() {
                           {ra.descricao}
                         </p>
                         <span className={clsx('text-sm font-bold whitespace-nowrap', ra.recebido ? 'text-slate-400' : 'text-green-600')}>
-                          {formatBRL(Number(ra.valor))}
+                          {fmtBRL(Number(ra.valor))}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
@@ -874,11 +886,11 @@ export default function FinanceiroPage() {
             <div>
               <h2 className="text-sm font-semibold text-slate-700">Despesas</h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                Pessoais {formatBRL(saidasPessoais)} · Corporativas {formatBRL(saidasCorp)} · <span className="text-green-600 font-medium">Pago {formatBRL(saidasPagas)}</span> · <span className="text-amber-600 font-medium">A pagar {formatBRL(saidasAPagar)}</span>
+                Pessoais {fmtBRL(saidasPessoais)} · Corporativas {fmtBRL(saidasCorp)} · <span className="text-green-600 font-medium">Pago {fmtBRL(saidasPagas)}</span> · <span className="text-amber-600 font-medium">A pagar {fmtBRL(saidasAPagar)}</span>
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-sm font-bold text-red-500">{formatBRL(saidasTotal)}</span>
+              <span className="text-sm font-bold text-red-500">{fmtBRL(saidasTotal)}</span>
               <button
                 onClick={() => setShowDespForm(v => !v)}
                 className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition-opacity"
@@ -893,12 +905,12 @@ export default function FinanceiroPage() {
           <div className="md:hidden px-4 py-3 border-b border-slate-100">
             <div className="flex items-baseline justify-between">
               <h2 className="text-sm font-semibold text-slate-700">Despesas</h2>
-              <span className="text-base font-bold text-red-500">{formatBRL(saidasTotal)}</span>
+              <span className="text-base font-bold text-red-500">{fmtBRL(saidasTotal)}</span>
             </div>
             <div className="flex items-center gap-2 mt-1.5 text-[11px]">
-              <span className="text-green-600 font-medium">Pago {formatBRL(saidasPagas)}</span>
+              <span className="text-green-600 font-medium">Pago {fmtBRL(saidasPagas)}</span>
               <span className="text-slate-300">·</span>
-              <span className="text-amber-600 font-medium">A pagar {formatBRL(saidasAPagar)}</span>
+              <span className="text-amber-600 font-medium">A pagar {fmtBRL(saidasAPagar)}</span>
             </div>
           </div>
 
@@ -1041,7 +1053,7 @@ export default function FinanceiroPage() {
                         </td>
                         <td className="px-6 py-3">
                           <span className={clsx('text-sm font-semibold', d.pago ? 'text-slate-400 line-through' : 'text-red-500')}>
-                            - {formatBRL(Number(d.valor))}
+                            - {fmtBRL(Number(d.valor))}
                           </span>
                         </td>
                         <td className="px-6 py-3">
@@ -1119,7 +1131,7 @@ export default function FinanceiroPage() {
                             {d.descricao}{d.recorrente && <span className="ml-1 text-[10px] text-slate-400">🔁{d.recorrencia_meses}x</span>}
                           </p>
                           <span className={clsx('text-sm font-bold whitespace-nowrap', d.pago ? 'text-slate-400 line-through' : 'text-red-500')}>
-                            {formatBRL(Number(d.valor))}
+                            {fmtBRL(Number(d.valor))}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
