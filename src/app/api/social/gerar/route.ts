@@ -3,6 +3,7 @@ import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod'
 import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/supabase'
 import { SOCIAL_SCHEMAS, SOCIAL_TIPO_LABELS, type SocialTipo } from '@/lib/social'
+import { contextoAoVivo } from '@/lib/contexto'
 
 // Planos e pautas longas passam do limite padrão das funções serverless.
 export const maxDuration = 300
@@ -13,7 +14,9 @@ const SYSTEM = `Você é o estrategista de conteúdo de uma agência de marketin
 
 O que você entrega vai direto para aprovação e depois vira demanda para a equipe executar, então precisa estar pronto para uso: legendas completas, falas exatas, ações que alguém consegue começar amanhã. Tudo deve ser específico para o cliente descrito no contexto — o segmento, o escopo contratado e o que já foi produzido. Um texto que serviria para qualquer empresa não serve.
 
-Escreva em português do Brasil, no tom de quem fala com o público do cliente, sem jargão de marketing nas legendas e falas. Não repita temas que já aparecem na lista de demandas recentes. Quando o contexto não trouxer uma informação (público, diferenciais, números), parta do que o segmento indica e deixe a suposição evidente no próprio texto do diagnóstico ou do resumo, em vez de inventar fatos sobre o cliente.`
+Escreva em português do Brasil, no tom de quem fala com o público do cliente, sem jargão de marketing nas legendas e falas. Não repita temas que já aparecem na lista de demandas recentes. Quando o contexto não trouxer uma informação (público, diferenciais, números), parta do que o segmento indica e deixe a suposição evidente no próprio texto do diagnóstico ou do resumo, em vez de inventar fatos sobre o cliente.
+
+Quando o contexto trouxer dados ao vivo do Instagram e do tráfego pago, baseie as escolhas neles: repita os formatos e temas que mais engajaram, evite o padrão dos posts que menos engajaram e alinhe o conteúdo orgânico com o que as campanhas pagas estão promovendo. Cite o número que justificou a escolha quando ele ajudar a agência a aprovar.`
 
 interface GerarBody {
   cliente_id: string
@@ -45,13 +48,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Informe cliente e tipo de conteúdo.' }, { status: 400 })
   }
 
-  const [cliente, metricas, tickets, documentos] = await Promise.all([
+  const [cliente, metricas, tickets, documentos, aoVivo] = await Promise.all([
     auth.db.from('clientes_fixos').select('nome, escopo_mensal, observacoes_internas').eq('id', cliente_id).single(),
     auth.db.from('metricas_mensais').select('mes, ano, seguidores, engajamento_percent, alcance, visualizacoes, observacoes')
       .eq('cliente_fixo_id', cliente_id).order('ano', { ascending: false }).order('mes', { ascending: false }).limit(3),
     auth.db.from('tickets').select('title, request_type, created_at')
       .eq('cliente_fixo_id', cliente_id).order('created_at', { ascending: false }).limit(20),
     auth.db.from('documentos_cliente').select('titulo, blocos').eq('cliente_fixo_id', cliente_id),
+    // Instagram e Meta Ads ao vivo; se falhar, gera só com o resto do contexto.
+    contextoAoVivo(auth.db, cliente_id).catch(() => null),
   ])
 
   if (cliente.error || !cliente.data) {
@@ -67,6 +72,8 @@ export async function POST(req: Request) {
       `Métricas recentes das redes:\n${metricas.data
         .map(m => `- ${MESES[m.mes - 1]}/${m.ano}: ${m.seguidores ?? '?'} seguidores, ${m.engajamento_percent ?? '?'}% de engajamento, ${m.alcance ?? '?'} de alcance, ${m.visualizacoes ?? '?'} visualizações${m.observacoes ? ` — ${m.observacoes}` : ''}`)
         .join('\n')}`,
+    aoVivo?.instagram && `Instagram ao vivo (dados de hoje):\n${aoVivo.instagram}`,
+    aoVivo?.trafego && `Tráfego pago no Meta Ads (dados de hoje):\n${aoVivo.trafego}`,
     tickets.data?.length &&
       `Demandas recentes já produzidas ou em produção:\n${tickets.data.map(t => `- ${t.title} (${t.request_type})`).join('\n')}`,
     ...(documentos.data ?? []).map(d => {

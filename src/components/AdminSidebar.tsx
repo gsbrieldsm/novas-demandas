@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import clsx from 'clsx'
 import { supabase } from '@/lib/supabase'
 
-type IconName = 'social' | 'gestao' | 'demandas' | 'agenda' | 'clientes' | 'comercial' | 'financeiro' | 'portal' | 'sair'
+type IconName = 'social' | 'trafego' | 'agentes' | 'gestao' | 'demandas' | 'agenda' | 'clientes' | 'comercial' | 'financeiro' | 'portal' | 'sair'
 
 interface NavLink {
   label: string
@@ -27,8 +27,12 @@ export const NAV_GROUPS: { title: string; links: NavLink[] }[] = [
     ],
   },
   {
-    title: 'Conteúdo',
-    links: [{ label: 'Social media', href: '/admin/social', icon: 'social' }],
+    title: 'Marketing',
+    links: [
+      { label: 'Social media', href: '/admin/social', icon: 'social' },
+      { label: 'Tráfego pago', href: '/admin/trafego', icon: 'trafego' },
+      { label: 'Agentes', href: '/admin/agentes', icon: 'agentes' },
+    ],
   },
   {
     title: 'Negócio',
@@ -50,6 +54,19 @@ const ICON_PATHS: Record<IconName, React.ReactNode> = {
     <>
       <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" />
       <path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z" />
+    </>
+  ),
+  agentes: (
+    <>
+      <rect x="2.5" y="4" width="9" height="7" rx="2" />
+      <rect x="12.5" y="13" width="9" height="7" rx="2" />
+      <path d="M7 11v3a2 2 0 002 2h3.5M17 13v-3a2 2 0 00-2-2h-3.5" />
+    </>
+  ),
+  trafego: (
+    <>
+      <path d="M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1z" />
+      <path d="M15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13" />
     </>
   ),
   gestao: (

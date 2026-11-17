@@ -7,6 +7,7 @@ import clsx from 'clsx'
 import { supabase } from '@/lib/supabase'
 import { api } from '@/lib/api'
 import { AdminNav } from '@/components/AdminNav'
+import { InstagramAoVivo } from '@/components/social/InstagramAoVivo'
 import {
   SOCIAL_TIPO_LABELS,
   demandasPropostas,
@@ -288,8 +289,9 @@ function SocialStudio() {
   const [carregando, setCarregando] = useState(true)
   const [semTabela, setSemTabela] = useState(false)
 
-  const [tipo, setTipo] = useState<SocialTipo>('pauta')
-  const [briefing, setBriefing] = useState('')
+  // A tela Agentes abre o Estúdio já com tipo e direcionamento preenchidos.
+  const [tipo, setTipo] = useState<SocialTipo>(() => (TIPOS as string[]).includes(params.get('tipo') ?? '') ? (params.get('tipo') as SocialTipo) : 'pauta')
+  const [briefing, setBriefing] = useState(params.get('briefing') ?? '')
   const [opcoes, setOpcoes] = useState({ quantidade: '8', inicio: hojeISO(), formato: 'Reels', duracao: '45 segundos', periodo: 'os próximos 3 meses' })
   const [gerando, setGerando] = useState(false)
   const [etapa, setEtapa] = useState(0)
@@ -524,6 +526,8 @@ function SocialStudio() {
             ))}
           </div>
         </div>
+
+        {clienteId && <InstagramAoVivo clienteId={clienteId} />}
 
         {semTabela && (
           <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">

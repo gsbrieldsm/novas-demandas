@@ -246,3 +246,67 @@ create policy "Autenticados gerenciam social_conteudos"
   to authenticated
   using (true)
   with check (true);
+
+-- ─── Tráfego pago ────────────────────────────────────────────────────────────
+-- Uma conta de anúncios do Meta por cliente, o plano de ação e o link público
+-- que o cliente usa para acompanhar as métricas.
+create table if not exists public.trafego_contas (
+  id uuid default uuid_generate_v4() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  cliente_fixo_id uuid not null unique references public.clientes_fixos(id) on delete cascade,
+  -- ex.: act_611355219446795
+  meta_ad_account_id text not null,
+  -- segredo do link público (/trafego/<link_token>)
+  link_token text not null unique default replace(gen_random_uuid()::text, '-', ''),
+  link_ativo boolean not null default true,
+  -- recado da agência mostrado no topo da página do cliente
+  recado text,
+  -- [{ id, titulo, descricao, prazo, status: proposto|aprovado|em_andamento|concluido }]
+  plano jsonb not null default '[]'::jsonb
+);
+
+drop trigger if exists update_trafego_contas_updated_at on public.trafego_contas;
+create trigger update_trafego_contas_updated_at
+  before update on public.trafego_contas
+  for each row execute procedure public.update_updated_at_column();
+
+-- Só o admin lê e escreve; a página pública lê pelo servidor com a service role.
+alter table public.trafego_contas enable row level security;
+
+drop policy if exists "Autenticados gerenciam trafego_contas" on public.trafego_contas;
+create policy "Autenticados gerenciam trafego_contas"
+  on public.trafego_contas for all
+  to authenticated
+  using (true)
+  with check (true);
+
+-- ─── Instagram do cliente ────────────────────────────────────────────────────
+-- ID da conta comercial do Instagram (Graph API) ligada ao cliente.
+alter table public.clientes_fixos add column if not exists instagram_user_id text;
+
+-- ─── Agentes: reuniões entre a IA de tráfego e a IA de social media ─────────
+create table if not exists public.agentes_reunioes (
+  id uuid default uuid_generate_v4() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  cliente_fixo_id uuid not null references public.clientes_fixos(id) on delete cascade,
+  -- pauta opcional dada pela agência antes da reunião
+  foco text,
+  -- [{ agente: 'trafego' | 'social', texto }]
+  mensagens jsonb not null default '[]'::jsonb,
+  -- { cenario, falta[], precisa[], melhorar[], acoes_trafego[], pautas_social[], briefing_social }
+  resumo jsonb,
+  -- o que já foi enviado: { plano_trafego: bool, estudio: bool }
+  enviados jsonb not null default '{}'::jsonb
+);
+
+create index if not exists agentes_reunioes_cliente_idx on public.agentes_reunioes(cliente_fixo_id, created_at desc);
+
+alter table public.agentes_reunioes enable row level security;
+
+drop policy if exists "Autenticados gerenciam agentes_reunioes" on public.agentes_reunioes;
+create policy "Autenticados gerenciam agentes_reunioes"
+  on public.agentes_reunioes for all
+  to authenticated
+  using (true)
+  with check (true);
