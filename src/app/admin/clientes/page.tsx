@@ -253,7 +253,7 @@ export default function ClientesPage() {
         <button
           onClick={() => setShowNovoCliente(true)}
           className="text-sm font-medium px-3 py-1.5 rounded-lg text-white hover:opacity-90"
-          style={{ background: '#C5A880' }}
+          style={{ background: 'rgb(var(--gm-accent))' }}
         >
           + Novo Cliente Fixo
         </button>
@@ -316,8 +316,8 @@ export default function ClientesPage() {
 
         {/* Painel resumo */}
         <div
-          className="rounded-2xl p-4 md:p-6 shadow-md text-white"
-          style={{ background: 'radial-gradient(ellipse 80% 150% at 95% 50%, #C5A880 0%, #6B4C28 40%, #1c1a18 80%), #100E0B' }}
+          className="gm-hero rounded-2xl p-4 md:p-6 text-white"
+          style={{ background: 'var(--gm-hero)' }}
         >
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div>
@@ -336,14 +336,14 @@ export default function ClientesPage() {
                     onKeyDown={e => { if (e.key === 'Enter') saveHoraAlvo(); if (e.key === 'Escape') setEditingAlvo(false) }}
                     className="w-20 text-sm px-2 py-1 rounded bg-white/10 text-white border border-white/20 focus:outline-none"
                   />
-                  <button onClick={saveHoraAlvo} className="text-xs px-2 py-1 rounded bg-[#C5A880] text-white">OK</button>
+                  <button onClick={saveHoraAlvo} className="text-xs px-2 py-1 rounded bg-gm-accent text-white">OK</button>
                 </div>
               ) : (
                 <button
                   onClick={() => { setAlvoInput(String(horaAlvo)); setEditingAlvo(true) }}
                   className="text-xs text-white/60 hover:text-white/90 transition-colors text-left md:text-right"
                 >
-                  Hora-alvo <span className="text-[#C5A880] font-semibold">{formatBRL(horaAlvo)}/h</span> <span className="text-white/40">· editar</span>
+                  Hora-alvo <span className="text-gm-glow font-semibold">{formatBRL(horaAlvo)}/h</span> <span className="text-white/40">· editar</span>
                 </button>
               )}
             </div>
@@ -411,7 +411,7 @@ export default function ClientesPage() {
                               {l.tipo === 'fixo' ? (
                                 <span
                                   onClick={(e) => { e.stopPropagation(); router.push(`/admin/cliente/${l.key.replace('fixo-', '')}`) }}
-                                  className="text-sm font-medium text-slate-800 hover:text-[#C5A880] hover:underline cursor-pointer"
+                                  className="text-sm font-medium text-slate-800 hover:text-gm-glow hover:underline cursor-pointer"
                                 >
                                   {l.nome}
                                 </span>
@@ -489,7 +489,7 @@ export default function ClientesPage() {
                             {l.tipo === 'fixo' ? (
                               <p
                                 onClick={(e) => { e.stopPropagation(); router.push(`/admin/cliente/${l.key.replace('fixo-', '')}`) }}
-                                className="text-sm font-semibold text-slate-800 truncate flex-1 hover:text-[#C5A880] hover:underline"
+                                className="text-sm font-semibold text-slate-800 truncate flex-1 hover:text-gm-glow hover:underline"
                               >{l.nome}</p>
                             ) : (
                               <p className="text-sm font-semibold text-slate-800 truncate flex-1">{l.nome}</p>
@@ -589,7 +589,7 @@ export default function ClientesPage() {
                   value={novoCliente.nome}
                   onChange={e => setNovoCliente(f => ({ ...f, nome: e.target.value }))}
                   placeholder="ex: Schornstein"
-                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                 />
               </div>
               <div>
@@ -599,13 +599,13 @@ export default function ClientesPage() {
                   value={novoCliente.email}
                   onChange={e => setNovoCliente(f => ({ ...f, email: e.target.value }))}
                   placeholder="cliente@empresa.com.br"
-                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 block mb-1.5">Valor mensal *</label>
-                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#C5A880]">
+                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-gm-accent">
                     <span className="px-3 text-sm text-slate-400 bg-slate-100 border-r border-slate-200 py-2">R$</span>
                     <input
                       value={novoCliente.valor_mensal}
@@ -625,7 +625,7 @@ export default function ClientesPage() {
                     value={novoCliente.dia_vencimento}
                     onChange={e => setNovoCliente(f => ({ ...f, dia_vencimento: e.target.value }))}
                     placeholder="5"
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                   />
                 </div>
               </div>
@@ -635,7 +635,7 @@ export default function ClientesPage() {
                   type="date"
                   value={novoCliente.data_inicio}
                   onChange={e => setNovoCliente(f => ({ ...f, data_inicio: e.target.value }))}
-                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">Importante pro relatório anual considerar só os meses corretos</p>
               </div>
@@ -650,7 +650,7 @@ export default function ClientesPage() {
                   onClick={criarClienteFixo}
                   disabled={savingNovo || !novoCliente.nome.trim() || !novoCliente.valor_mensal}
                   className="flex-1 text-sm py-2 rounded-lg text-white disabled:opacity-50"
-                  style={{ background: '#C5A880' }}
+                  style={{ background: 'rgb(var(--gm-accent))' }}
                 >
                   {savingNovo ? 'Criando...' : 'Criar e abrir'}
                 </button>

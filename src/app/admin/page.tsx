@@ -9,6 +9,7 @@ import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import type { Ticket } from '@/types'
 import { AdminNav } from '@/components/AdminNav'
+import { Briefing } from '@/components/Briefing'
 
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -209,36 +210,24 @@ export default function GestaoPage() {
 
       <div className="max-w-6xl mx-auto w-full px-4 py-4 md:px-6 md:py-8 space-y-4 md:space-y-6">
 
-        {/* Header com saudação */}
-        <div className="flex items-end justify-between gap-3 flex-wrap">
-          <div className="min-w-0">
-            <p className="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">Gestão</p>
-            <h1 className="text-lg md:text-2xl font-bold text-slate-900 mt-0.5 md:mt-1">
-              {format(now, "EEEE',' d 'de' MMMM", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())}
-            </h1>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] md:text-xs text-slate-400">Receita do mês</p>
-            <p className="text-lg md:text-2xl font-bold text-green-600">{formatBRL(receitaTotal)}</p>
-          </div>
-        </div>
-
-        {/* PAINEL HOJE */}
-        <div
-          className="rounded-2xl p-4 md:p-6 shadow-md text-white"
-          style={{
-            background: 'radial-gradient(ellipse 80% 150% at 95% 50%, #C5A880 0%, #6B4C28 40%, #1c1a18 80%), #100E0B',
+        {/* BRIEFING */}
+        <Briefing
+          data={{
+            nome: (process.env.NEXT_PUBLIC_PROFESSIONAL_NAME ?? '').trim().split(' ')[0],
+            atrasados: chamadosAtrasados.length,
+            prazoHoje: chamadosPrazoHoje.map(t => t.title),
+            novos: novosSemAcao.length,
+            abertos: tickets.filter(t => !['concluido', 'cancelado'].includes(t.status)).length,
+            leadsParados: leadsParados.length,
+            pagamentosPendentes,
+            recebido: receitaTotal,
+            previsto: mrr + esperadoAvulso,
+            meta: Number(meta.meta_fixo) + Number(meta.meta_avulso),
           }}
         >
-          <div className="flex items-center justify-between mb-3 md:mb-4">
-            <div>
-              <p className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-white/60">Painel Hoje</p>
-              <p className="text-xs md:text-sm text-white/80 mt-0.5">
-                {todayActions === 0 ? 'Tudo em dia ✨' : `${todayActions} ações pra você olhar`}
-              </p>
-            </div>
-          </div>
-
+          <p className="mb-2.5 text-[10px] md:text-xs font-semibold uppercase tracking-wider text-white/50">
+            {todayActions === 0 ? 'Tudo em dia' : `${todayActions} ações pra você olhar`}
+          </p>
           <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
             <PainelItem
               label="Atrasados"
@@ -274,7 +263,7 @@ export default function GestaoPage() {
               onClick={() => router.push('/admin/comercial')}
             />
           </div>
-        </div>
+        </Briefing>
 
         {/* METAS DO MÊS */}
         <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-slate-100">
@@ -293,7 +282,7 @@ export default function GestaoPage() {
               recebido={recebidoFixo}
               meta={Number(meta.meta_fixo)}
               pct={pctFixo}
-              color="#C5A880"
+              color="#7C6CFF"
               editing={editingMeta === 'fixo'}
               metaInput={metaInput}
               setMetaInput={setMetaInput}
@@ -346,7 +335,7 @@ export default function GestaoPage() {
                     <div className="bg-slate-100 rounded-full h-1.5 overflow-hidden ml-7">
                       <div
                         className="h-full rounded-full transition-all"
-                        style={{ width: `${(c.total / maxTop) * 100}%`, background: '#C5A880' }}
+                        style={{ width: `${(c.total / maxTop) * 100}%`, background: 'rgb(var(--gm-accent))' }}
                       />
                     </div>
                   </div>
@@ -458,7 +447,7 @@ function MetaCard({
 
       {editing ? (
         <div className="flex items-center gap-2 mb-3">
-          <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#C5A880] flex-1 bg-white">
+          <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-gm-accent flex-1 bg-white">
             <span className="px-3 text-sm text-slate-400 bg-slate-100 border-r border-slate-200 py-2">R$</span>
             <input
               autoFocus

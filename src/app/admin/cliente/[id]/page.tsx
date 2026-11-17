@@ -399,9 +399,9 @@ export default function ClienteDetailPage() {
 
         {/* HEADER */}
         <div
-          className="rounded-2xl p-6 md:p-8 text-white shadow-md"
+          className="gm-hero rounded-2xl p-6 md:p-8 text-white"
           style={{
-            background: 'radial-gradient(ellipse 70% 100% at 90% 50%, #C5A880 0%, #6B4C28 45%, #1c1a18 80%), #100E0B',
+            background: 'var(--gm-hero)',
           }}
         >
           <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -425,7 +425,7 @@ export default function ClienteDetailPage() {
             </div>
             <div className="text-right">
               <p className="text-[10px] md:text-xs text-white/50 uppercase tracking-wider">Contrato</p>
-              <p className="text-2xl md:text-3xl font-bold text-[#C5A880]">{formatBRL(Number(cliente.valor_mensal))}</p>
+              <p className="text-2xl md:text-3xl font-bold text-gm-glow">{formatBRL(Number(cliente.valor_mensal))}</p>
               <p className="text-xs text-white/40">por mês</p>
             </div>
           </div>
@@ -448,7 +448,7 @@ export default function ClienteDetailPage() {
           <button
             onClick={() => router.push(`/admin/relatorio/${id}`)}
             className="text-sm font-medium px-4 py-2 rounded-xl text-white hover:opacity-90 transition-opacity flex items-center gap-1.5"
-            style={{ background: '#C5A880' }}
+            style={{ background: 'rgb(var(--gm-accent))' }}
           >
             🖨 Gerar relatório do mês
           </button>
@@ -457,6 +457,12 @@ export default function ClienteDetailPage() {
             className="text-sm font-medium px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
           >
             📄 Nova proposta
+          </button>
+          <button
+            onClick={() => router.push(`/admin/social?cliente=${id}`)}
+            className="text-sm font-medium px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+          >
+            ✨ Social media
           </button>
           <button
             onClick={() => {
@@ -513,32 +519,32 @@ export default function ClienteDetailPage() {
                   </div>
                 </FormField>
                 <FormField label="Nome">
-                  <input value={identForm.nome} onChange={e => setIdentForm(f => ({ ...f, nome: e.target.value }))} className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]" />
+                  <input value={identForm.nome} onChange={e => setIdentForm(f => ({ ...f, nome: e.target.value }))} className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent" />
                 </FormField>
                 <FormField label="E-mail">
-                  <input value={identForm.email} onChange={e => setIdentForm(f => ({ ...f, email: e.target.value }))} type="email" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]" />
+                  <input value={identForm.email} onChange={e => setIdentForm(f => ({ ...f, email: e.target.value }))} type="email" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent" />
                 </FormField>
                 <FormField label="Valor mensal (R$)">
-                  <input value={identForm.valor_mensal} onChange={e => setIdentForm(f => ({ ...f, valor_mensal: e.target.value }))} inputMode="decimal" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]" />
+                  <input value={identForm.valor_mensal} onChange={e => setIdentForm(f => ({ ...f, valor_mensal: e.target.value }))} inputMode="decimal" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent" />
                 </FormField>
                 <FormField label="Dia do vencimento">
-                  <input value={identForm.dia_vencimento} onChange={e => setIdentForm(f => ({ ...f, dia_vencimento: e.target.value }))} type="number" min="1" max="31" placeholder="ex: 5" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]" />
+                  <input value={identForm.dia_vencimento} onChange={e => setIdentForm(f => ({ ...f, dia_vencimento: e.target.value }))} type="number" min="1" max="31" placeholder="ex: 5" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent" />
                 </FormField>
                 <FormField label="Data de início do contrato">
-                  <input value={identForm.data_inicio} onChange={e => setIdentForm(f => ({ ...f, data_inicio: e.target.value }))} type="date" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]" />
+                  <input value={identForm.data_inicio} onChange={e => setIdentForm(f => ({ ...f, data_inicio: e.target.value }))} type="date" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent" />
                 </FormField>
                 <FormField label="CNPJ">
-                  <input value={identForm.cnpj} onChange={e => setIdentForm(f => ({ ...f, cnpj: formatCNPJ(e.target.value) }))} placeholder="00.000.000/0000-00" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]" />
+                  <input value={identForm.cnpj} onChange={e => setIdentForm(f => ({ ...f, cnpj: formatCNPJ(e.target.value) }))} placeholder="00.000.000/0000-00" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent" />
                 </FormField>
                 <FormField label="Razão Social">
-                  <input value={identForm.razao_social} onChange={e => setIdentForm(f => ({ ...f, razao_social: e.target.value }))} className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]" />
+                  <input value={identForm.razao_social} onChange={e => setIdentForm(f => ({ ...f, razao_social: e.target.value }))} className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent" />
                 </FormField>
                 <FormField label="Telefone">
-                  <input value={identForm.telefone} onChange={e => setIdentForm(f => ({ ...f, telefone: formatTelefone(e.target.value) }))} placeholder="(00) 00000-0000" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]" />
+                  <input value={identForm.telefone} onChange={e => setIdentForm(f => ({ ...f, telefone: formatTelefone(e.target.value) }))} placeholder="(00) 00000-0000" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent" />
                 </FormField>
               </div>
               <div className="flex gap-2 pt-1">
-                <button onClick={salvarIdent} className="text-sm px-4 py-2 rounded-lg text-white" style={{ background: '#C5A880' }}>Salvar</button>
+                <button onClick={salvarIdent} className="text-sm px-4 py-2 rounded-lg text-white" style={{ background: 'rgb(var(--gm-accent))' }}>Salvar</button>
                 <button onClick={() => { setEditingIdent(false); if (cliente) setIdentForm({ nome: cliente.nome, email: cliente.email ?? '', valor_mensal: String(cliente.valor_mensal), dia_vencimento: cliente.dia_vencimento ? String(cliente.dia_vencimento) : '', data_inicio: cliente.data_inicio ?? '', cnpj: cliente.cnpj ?? '', razao_social: cliente.razao_social ?? '', telefone: cliente.telefone ?? '', tipo: cliente.tipo }) }} className="text-sm px-4 py-2 rounded-lg text-slate-500 hover:bg-slate-50">Cancelar</button>
               </div>
             </div>
@@ -569,7 +575,7 @@ export default function ClienteDetailPage() {
                     onChange={e => setPortalForm(f => ({ ...f, portal_email: e.target.value }))}
                     type="email"
                     placeholder="cliente@empresa.com.br"
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                   />
                 </FormField>
                 <FormField label="Nova senha (deixe vazio pra manter)">
@@ -578,7 +584,7 @@ export default function ClienteDetailPage() {
                     onChange={e => setPortalForm(f => ({ ...f, novaSenha: e.target.value }))}
                     type="text"
                     placeholder="mínimo 6 caracteres"
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                   />
                 </FormField>
                 <FormField label="URL da logo do cliente">
@@ -586,12 +592,12 @@ export default function ClienteDetailPage() {
                     value={portalForm.logo_url}
                     onChange={e => setPortalForm(f => ({ ...f, logo_url: e.target.value }))}
                     placeholder="https://..."
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                   />
                 </FormField>
               </div>
               <div className="flex gap-2 pt-1">
-                <button onClick={salvarPortal} disabled={salvandoPortal} className="text-sm px-4 py-2 rounded-lg text-white disabled:opacity-50" style={{ background: '#C5A880' }}>
+                <button onClick={salvarPortal} disabled={salvandoPortal} className="text-sm px-4 py-2 rounded-lg text-white disabled:opacity-50" style={{ background: 'rgb(var(--gm-accent))' }}>
                   {salvandoPortal ? 'Salvando...' : 'Salvar'}
                 </button>
                 <button onClick={() => { setEditingPortal(false); if (cliente) setPortalForm({ portal_email: cliente.portal_email ?? '', logo_url: cliente.logo_url ?? '', novaSenha: '' }) }} className="text-sm px-4 py-2 rounded-lg text-slate-500 hover:bg-slate-50">Cancelar</button>
@@ -639,7 +645,7 @@ export default function ClienteDetailPage() {
                   value={escopoForm.escopo_mensal}
                   onChange={e => setEscopoForm(f => ({ ...f, escopo_mensal: e.target.value }))}
                   rows={6}
-                  className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
+                  className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-gm-accent resize-none"
                   placeholder={'• 2 posts no Instagram por semana\n• 3 diárias gravadas no mês\n• 1 reunião estratégica mensal\n• Consultoria sob demanda'}
                 />
               </FormField>
@@ -648,12 +654,12 @@ export default function ClienteDetailPage() {
                   value={escopoForm.observacoes_internas}
                   onChange={e => setEscopoForm(f => ({ ...f, observacoes_internas: e.target.value }))}
                   rows={3}
-                  className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
+                  className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-gm-accent resize-none"
                   placeholder="Cobrar dia 15, aprovação com Marina..."
                 />
               </FormField>
               <div className="flex gap-2 pt-1">
-                <button onClick={salvarEscopo} className="text-sm px-4 py-2 rounded-lg text-white" style={{ background: '#C5A880' }}>Salvar</button>
+                <button onClick={salvarEscopo} className="text-sm px-4 py-2 rounded-lg text-white" style={{ background: 'rgb(var(--gm-accent))' }}>Salvar</button>
                 <button onClick={() => { setEditingEscopo(false); if (cliente) setEscopoForm({ escopo_mensal: cliente.escopo_mensal ?? '', observacoes_internas: cliente.observacoes_internas ?? '' }) }} className="text-sm px-4 py-2 rounded-lg text-slate-500 hover:bg-slate-50">Cancelar</button>
               </div>
             </div>
@@ -808,7 +814,7 @@ export default function ClienteDetailPage() {
             <button
               onClick={criarDocumento}
               className="text-xs font-medium px-3 py-1.5 rounded-lg text-white hover:opacity-90"
-              style={{ background: '#C5A880' }}
+              style={{ background: 'rgb(var(--gm-accent))' }}
             >
               + Novo documento
             </button>
@@ -850,7 +856,7 @@ export default function ClienteDetailPage() {
             <button
               onClick={criarEstrategia}
               className="text-xs font-medium px-3 py-1.5 rounded-lg text-white hover:opacity-90"
-              style={{ background: '#C5A880' }}
+              style={{ background: 'rgb(var(--gm-accent))' }}
             >
               + Nova estratégia
             </button>
@@ -900,7 +906,7 @@ export default function ClienteDetailPage() {
             <button
               onClick={() => router.push(`/admin/proposta/nova?cliente_fixo_id=${id}`)}
               className="text-xs font-medium px-3 py-1.5 rounded-lg text-white hover:opacity-90"
-              style={{ background: '#C5A880' }}
+              style={{ background: 'rgb(var(--gm-accent))' }}
             >
               + Nova
             </button>
@@ -995,12 +1001,12 @@ export default function ClienteDetailPage() {
                 type="date"
                 value={cancelDate}
                 onChange={e => setCancelDate(e.target.value)}
-                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
               />
             </FormField>
             <div className="flex gap-2 mt-4">
               <button onClick={() => setShowCancel(false)} className="flex-1 text-sm py-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50">Cancelar</button>
-              <button onClick={confirmarCancelamento} className="flex-1 text-sm py-2 rounded-lg text-white" style={{ background: '#C5A880' }}>Confirmar</button>
+              <button onClick={confirmarCancelamento} className="flex-1 text-sm py-2 rounded-lg text-white" style={{ background: 'rgb(var(--gm-accent))' }}>Confirmar</button>
             </div>
           </div>
         </div>

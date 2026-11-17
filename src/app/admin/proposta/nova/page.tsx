@@ -171,7 +171,7 @@ function NovaPropostaForm() {
                 }
               }}
               disabled={!!leadSelecionado}
-              className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white disabled:opacity-50"
+              className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white disabled:opacity-50"
             >
               <option value="">— Novo cliente (não vincular) —</option>
               {clientesFixos.map(cf => (
@@ -201,7 +201,7 @@ function NovaPropostaForm() {
                 }
               }}
               disabled={!!clienteFixoSelecionado}
-              className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white disabled:opacity-50"
+              className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white disabled:opacity-50"
             >
               <option value="">— Sem lead (cria um novo automaticamente) —</option>
               {leads.map(l => (
@@ -218,7 +218,7 @@ function NovaPropostaForm() {
               value={form.titulo}
               onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
               placeholder="Ex: Marketing Estratégico · Schornstein 2026"
-              className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+              className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
             />
           </Field>
 
@@ -247,7 +247,7 @@ function NovaPropostaForm() {
                 onChange={e => setForm(f => ({ ...f, valor: e.target.value }))}
                 inputMode="decimal"
                 placeholder="0,00"
-                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
               />
             </Field>
           </div>
@@ -258,7 +258,7 @@ function NovaPropostaForm() {
                 value={form.cliente_nome}
                 onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))}
                 placeholder="Nome do destinatário"
-                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
               />
             </Field>
             <Field label="Empresa">
@@ -266,7 +266,7 @@ function NovaPropostaForm() {
                 value={form.cliente_empresa}
                 onChange={e => setForm(f => ({ ...f, cliente_empresa: e.target.value }))}
                 placeholder="Opcional"
-                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
               />
             </Field>
           </div>
@@ -278,7 +278,7 @@ function NovaPropostaForm() {
                 onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))}
                 type="email"
                 placeholder="Opcional"
-                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
               />
             </Field>
             <Field label="Validade">
@@ -286,7 +286,7 @@ function NovaPropostaForm() {
                 value={form.validade}
                 onChange={e => setForm(f => ({ ...f, validade: e.target.value }))}
                 type="date"
-                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
               />
             </Field>
           </div>
@@ -298,7 +298,7 @@ function NovaPropostaForm() {
                 onChange={e => setForm(f => ({ ...f, prazo_dias: e.target.value }))}
                 type="number"
                 min="1"
-                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
               />
             </Field>
           )}
@@ -308,7 +308,7 @@ function NovaPropostaForm() {
               value={form.apresentacao}
               onChange={e => setForm(f => ({ ...f, apresentacao: e.target.value }))}
               rows={5}
-              className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none italic"
+              className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-gm-accent resize-none italic"
               placeholder="Aparece como seção 00, antes do escopo..."
             />
             <p className="text-[10px] text-slate-400 mt-1">
@@ -321,7 +321,7 @@ function NovaPropostaForm() {
               value={form.escopo}
               onChange={e => setForm(f => ({ ...f, escopo: e.target.value }))}
               rows={5}
-              className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
+              className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-gm-accent resize-none"
               placeholder={'• 2 posts no Instagram por semana\n• 3 diárias gravadas no mês\n• 1 reunião estratégica mensal'}
             />
           </Field>
@@ -331,7 +331,7 @@ function NovaPropostaForm() {
               value={form.observacoes}
               onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))}
               rows={3}
-              className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
+              className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-gm-accent resize-none"
               placeholder="Forma de pagamento, fidelidade, multa de rescisão..."
             />
           </Field>
@@ -341,7 +341,7 @@ function NovaPropostaForm() {
               onClick={criar}
               disabled={saving || !form.titulo.trim() || !form.cliente_nome.trim()}
               className="flex-1 text-sm px-4 py-2.5 rounded-lg text-white disabled:opacity-50"
-              style={{ background: '#C5A880' }}
+              style={{ background: 'rgb(var(--gm-accent))' }}
             >
               {saving ? 'Criando...' : 'Criar proposta'}
             </button>

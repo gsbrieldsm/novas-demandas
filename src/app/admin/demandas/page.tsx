@@ -249,7 +249,7 @@ export default function DemandasPage() {
           <select
             value={filter}
             onChange={e => setFilter(e.target.value as RequestType | 'todos')}
-            className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+            className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
           >
             <option value="todos">Todos os tipos</option>
             {Object.entries(REQUEST_TYPE_LABELS).map(([k, v]) => (
@@ -259,7 +259,7 @@ export default function DemandasPage() {
           <button
             onClick={() => setShowForm(true)}
             className="text-sm font-medium px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition-opacity"
-            style={{ background: '#C5A880' }}
+            style={{ background: 'rgb(var(--gm-accent))' }}
           >
             + Nova demanda
           </button>
@@ -287,7 +287,7 @@ export default function DemandasPage() {
                         {...provided.droppableProps}
                         className={clsx(
                           'flex-1 space-y-3 min-h-[200px] rounded-2xl p-2 transition-colors',
-                          snapshot.isDraggingOver && 'bg-indigo-50/50'
+                          snapshot.isDraggingOver && 'bg-gm-accent/10'
                         )}
                       >
                         {colTickets.map((ticket, i) => (
@@ -353,7 +353,7 @@ export default function DemandasPage() {
                   <select
                     value={form.cliente_fixo_id}
                     onChange={e => setForm(f => ({ ...f, cliente_fixo_id: e.target.value }))}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
                   >
                     <option value="">— Selecione —</option>
                     {clientesFixos.filter(c => c.ativo).map(c => (
@@ -369,7 +369,7 @@ export default function DemandasPage() {
                       value={form.client_name}
                       onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))}
                       placeholder="Nome"
-                      className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                      className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                     />
                   </div>
                   <div>
@@ -378,7 +378,7 @@ export default function DemandasPage() {
                       value={form.company}
                       onChange={e => setForm(f => ({ ...f, company: e.target.value }))}
                       placeholder="Opcional"
-                      className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                      className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                     />
                   </div>
                 </div>
@@ -391,7 +391,7 @@ export default function DemandasPage() {
                   value={form.title}
                   onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                   placeholder="Ex: Gravação institucional na praia"
-                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                 />
               </div>
 
@@ -402,7 +402,7 @@ export default function DemandasPage() {
                   <select
                     value={form.request_type}
                     onChange={e => setForm(f => ({ ...f, request_type: e.target.value as RequestType }))}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
                   >
                     {Object.entries(REQUEST_TYPE_LABELS).map(([k, v]) => (
                       <option key={k} value={k}>{v}</option>
@@ -414,7 +414,7 @@ export default function DemandasPage() {
                   <select
                     value={form.priority}
                     onChange={e => setForm(f => ({ ...f, priority: e.target.value as Priority }))}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
                   >
                     {Object.entries(PRIORITY_LABELS).map(([k, v]) => (
                       <option key={k} value={k}>{v}</option>
@@ -427,7 +427,7 @@ export default function DemandasPage() {
                     type="date"
                     value={form.deadline}
                     onChange={e => setForm(f => ({ ...f, deadline: e.target.value }))}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
                   />
                 </div>
               </div>
@@ -436,7 +436,7 @@ export default function DemandasPage() {
               {form.modo === 'avulso' && (
                 <div>
                   <label className="text-xs font-medium text-slate-500 block mb-1">Valor (R$)</label>
-                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#C5A880]">
+                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-gm-accent">
                     <span className="px-3 text-sm text-slate-400 bg-slate-100 border-r border-slate-200 py-2">R$</span>
                     <input
                       value={form.budget_value}
@@ -457,7 +457,7 @@ export default function DemandasPage() {
                     value={form.where_used}
                     onChange={e => setForm(f => ({ ...f, where_used: e.target.value }))}
                     placeholder="Instagram, site..."
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                   />
                 </div>
                 <div>
@@ -466,7 +466,7 @@ export default function DemandasPage() {
                     value={form.purpose}
                     onChange={e => setForm(f => ({ ...f, purpose: e.target.value }))}
                     placeholder="Objetivo estratégico"
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                   />
                 </div>
               </div>
@@ -479,7 +479,7 @@ export default function DemandasPage() {
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   placeholder="Detalhes da demanda (opcional)"
                   rows={3}
-                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent resize-none"
                 />
               </div>
 
@@ -500,7 +500,7 @@ export default function DemandasPage() {
                   onClick={handleCreate}
                   disabled={saving || !form.title.trim() || (form.modo === 'fixo' ? !form.cliente_fixo_id : !form.client_name.trim())}
                   className="flex-1 text-sm py-2 rounded-lg text-white hover:opacity-90 transition-opacity disabled:opacity-50"
-                  style={{ background: '#C5A880' }}
+                  style={{ background: 'rgb(var(--gm-accent))' }}
                 >
                   {saving ? 'Criando...' : 'Criar demanda'}
                 </button>

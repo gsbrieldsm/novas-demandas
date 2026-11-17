@@ -11,6 +11,35 @@ body {
   height: 100%;
 }
 
+/* Escala slate padrão (site, portal, chat e documentos impressos). */
+:root {
+  --slate-50: 248 250 252;
+  --slate-100: 241 245 249;
+  --slate-200: 226 232 240;
+  --slate-300: 203 213 225;
+  --slate-400: 148 163 184;
+  --slate-500: 100 116 139;
+  --slate-600: 71 85 105;
+  --slate-700: 51 65 85;
+  --slate-800: 30 41 59;
+  --slate-900: 15 23 42;
+  --slate-950: 2 6 23;
+}
+
+:root {
+  --gm-bg: 6 8 13;
+  --gm-surface: 13 17 25;
+  --gm-raised: 20 26 37;
+  --gm-line: 38 47 64;
+  --gm-text: 236 241 248;
+  --gm-muted: 124 138 160;
+  --gm-accent: 124 108 255;
+  --gm-glow: 45 212 238;
+  --gm-hero:
+    radial-gradient(ellipse 80% 150% at 95% 50%, rgb(var(--gm-accent) / 0.6) 0%, rgb(var(--gm-glow) / 0.14) 45%, transparent 75%),
+    rgb(var(--gm-raised));
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -26,4 +55,343 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.6);
+}
+
+/* ─── Tema do painel ─────────────────────────────────────────────────────────
+   Vale só dentro de .gm-shell (layout de /admin). Sidebar, barra superior e
+   painéis .gm-hero são escuros; a área de trabalho abaixo deles é clara. */
+
+.gm-shell {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  background: rgb(244 246 251);
+}
+
+/* Fundo ambiente: duas luzes que derivam devagar + grade sutil. */
+.gm-shell::before,
+.gm-shell::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.gm-shell::before {
+  background:
+    radial-gradient(42rem 28rem at 88% -8%, rgb(var(--gm-accent) / 0.12), transparent 70%),
+    radial-gradient(36rem 26rem at -6% 108%, rgb(var(--gm-glow) / 0.1), transparent 70%);
+  animation: gmAurora 22s ease-in-out infinite alternate;
+}
+
+.gm-shell::after {
+  background-image:
+    linear-gradient(rgb(15 23 42 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(15 23 42 / 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000 30%, transparent 100%);
+}
+
+@keyframes gmAurora {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(-3%, 2%, 0) scale(1.08); }
+}
+
+@keyframes gmPulseRing {
+  0% { box-shadow: 0 0 0 0 rgb(var(--gm-glow) / 0.55); }
+  100% { box-shadow: 0 0 0 10px rgb(var(--gm-glow) / 0); }
+}
+
+.gm-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgb(var(--gm-glow));
+  animation: gmPulseRing 1.8s ease-out infinite;
+}
+
+/* Sidebar, barra superior e menu mobile: sempre escuros. Botões e campos
+   que as telas colocam na barra herdam a escala slate invertida. */
+.gm-chrome {
+  --slate-50: 20 26 37;
+  --slate-100: 28 35 49;
+  --slate-200: 38 47 64;
+  --slate-300: 71 85 105;
+  --slate-400: 124 138 160;
+  --slate-500: 148 163 184;
+  --slate-600: 180 192 210;
+  --slate-700: 203 213 225;
+  --slate-800: 226 232 240;
+  --slate-900: 241 245 249;
+  --slate-950: 248 250 252;
+  color-scheme: dark;
+}
+
+.gm-chrome .bg-white,
+.gm-chrome select,
+.gm-chrome input {
+  background-color: rgb(var(--gm-raised));
+  color: rgb(var(--gm-text));
+}
+
+/* .gm-light fica fora das rotas de documento (proposta, relatório, recibo). */
+.gm-light .min-h-screen.bg-white,
+.gm-light .min-h-screen.bg-slate-50 {
+  background-color: transparent;
+}
+
+/* Botões escuros do tema antigo viram o botão primário. */
+.gm-light .bg-slate-700,
+.gm-light .bg-slate-800,
+.gm-light .bg-slate-900 {
+  background-color: rgb(var(--gm-accent));
+  color: #fff;
+}
+
+.gm-light .hover\:bg-slate-700:hover,
+.gm-light .hover\:bg-slate-800:hover,
+.gm-light .hover\:bg-slate-900:hover {
+  background-color: rgb(var(--gm-accent) / 0.85);
+}
+
+.gm-light input:focus,
+.gm-light select:focus,
+.gm-light textarea:focus {
+  outline: none;
+  border-color: rgb(var(--gm-accent));
+  box-shadow: 0 0 0 3px rgb(var(--gm-accent) / 0.18);
+}
+
+/* O ciano só tem contraste sobre fundo escuro; na área clara vira violeta. */
+.gm-light .text-gm-glow:not(.gm-hero *, .gm-chrome *),
+.gm-light .hover\:text-gm-glow:hover:not(.gm-hero *, .gm-chrome *) {
+  color: rgb(var(--gm-accent));
+}
+
+.gm-light .border-gm-glow:not(.gm-hero *, .gm-chrome *),
+.gm-light .hover\:border-gm-glow:hover:not(.gm-hero *, .gm-chrome *) {
+  border-color: rgb(var(--gm-accent));
+}
+
+/* ─── Linguagem "HUD": painéis, cartões, tipografia e entrada em cascata ─── */
+
+.gm-hero {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  border: 1px solid rgb(var(--gm-accent) / 0.28);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 0 80px -30px rgb(var(--gm-accent) / 0.9);
+}
+
+/* Feixe de luz que percorre a borda do painel. */
+@property --gm-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.gm-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--gm-angle),
+    transparent 0 70%,
+    rgb(var(--gm-accent)) 82%,
+    rgb(var(--gm-glow)) 92%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: gmOrbit 7s linear infinite;
+}
+
+@keyframes gmOrbit {
+  to { --gm-angle: 360deg; }
+}
+
+/* Cantoneiras de mira nos quatro cantos. */
+.gm-hero::after {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  pointer-events: none;
+  --c: rgb(var(--gm-glow) / 0.55);
+  background:
+    linear-gradient(var(--c), var(--c)) top left / 14px 1px,
+    linear-gradient(var(--c), var(--c)) top left / 1px 14px,
+    linear-gradient(var(--c), var(--c)) top right / 14px 1px,
+    linear-gradient(var(--c), var(--c)) top right / 1px 14px,
+    linear-gradient(var(--c), var(--c)) bottom left / 14px 1px,
+    linear-gradient(var(--c), var(--c)) bottom left / 1px 14px,
+    linear-gradient(var(--c), var(--c)) bottom right / 14px 1px,
+    linear-gradient(var(--c), var(--c)) bottom right / 1px 14px;
+  background-repeat: no-repeat;
+}
+
+.gm-light .bg-white.rounded-xl,
+.gm-light .bg-white.rounded-2xl,
+.gm-light .bg-white.rounded-3xl {
+  box-shadow:
+    inset 0 0 0 1px rgb(15 23 42 / 0.06),
+    0 1px 2px rgb(15 23 42 / 0.04),
+    0 18px 40px -28px rgb(var(--gm-accent) / 0.4);
+  transition: box-shadow 0.35s ease, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.gm-light .bg-white.rounded-xl:hover,
+.gm-light .bg-white.rounded-2xl:hover,
+.gm-light .bg-white.rounded-3xl:hover {
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--gm-accent) / 0.45),
+    0 0 0 4px rgb(var(--gm-accent) / 0.07),
+    0 22px 44px -24px rgb(var(--gm-accent) / 0.5);
+}
+
+.gm-light .bg-white.cursor-pointer:hover {
+  transform: translateY(-2px);
+}
+
+/* Botões e barras na cor de ação ganham gradiente e brilho. */
+.gm-light .bg-gm-accent,
+.gm-light [style*='--gm-accent'] {
+  background-image: linear-gradient(135deg, rgb(var(--gm-accent)), rgb(var(--gm-glow) / 0.85) 160%) !important;
+  box-shadow: 0 0 22px -6px rgb(var(--gm-accent) / 0.9);
+}
+
+.gm-light button.bg-gm-accent:hover,
+.gm-light button[style*='--gm-accent']:hover {
+  filter: brightness(1.15);
+}
+
+.gm-light h1,
+.gm-light h2,
+.gm-light h3,
+.gm-light .font-bold[class*='text-xl'],
+.gm-light .font-bold[class*='text-2xl'],
+.gm-light .font-bold[class*='text-3xl'] {
+  font-family: var(--font-display), inherit;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.gm-light h1 {
+  background: linear-gradient(90deg, rgb(15 23 42) 40%, rgb(var(--gm-accent)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.gm-light .uppercase[class*='tracking-wide'] {
+  font-family: var(--font-mono), inherit;
+  letter-spacing: 0.16em;
+}
+
+.gm-light .gm-hero h1 {
+  background-image: linear-gradient(90deg, #fff 35%, rgb(var(--gm-glow)));
+}
+
+.gm-light .uppercase.text-slate-400[class*='tracking-wide'] {
+  color: rgb(var(--gm-accent) / 0.85);
+}
+
+.gm-light tbody tr,
+.gm-light .divide-y > * {
+  transition: background-color 0.2s ease;
+}
+
+.gm-light tbody tr:hover {
+  background-color: rgb(var(--gm-accent) / 0.05);
+}
+
+/* Blocos da página entram em cascata. */
+.gm-light [class*='max-w-'].mx-auto > * {
+  animation: gmEnter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+.gm-light [class*='max-w-'].mx-auto > *:nth-child(2) { animation-delay: 0.07s; }
+.gm-light [class*='max-w-'].mx-auto > *:nth-child(3) { animation-delay: 0.14s; }
+.gm-light [class*='max-w-'].mx-auto > *:nth-child(4) { animation-delay: 0.21s; }
+.gm-light [class*='max-w-'].mx-auto > *:nth-child(5) { animation-delay: 0.28s; }
+.gm-light [class*='max-w-'].mx-auto > *:nth-child(n + 6) { animation-delay: 0.35s; }
+
+@keyframes gmEnter {
+  0% { transform: translateY(12px); opacity: 0; filter: blur(6px); }
+  100% { transform: translateY(0); opacity: 1; filter: blur(0); }
+}
+
+
+/* ─── Tela de login ─── */
+.gm-login {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 100vh;
+  background: rgb(var(--gm-bg));
+  color: rgb(var(--gm-text));
+  color-scheme: dark;
+}
+
+.gm-login::before,
+.gm-login::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.gm-login::before {
+  background:
+    radial-gradient(46rem 30rem at 85% -5%, rgb(var(--gm-accent) / 0.35), transparent 70%),
+    radial-gradient(40rem 28rem at 5% 105%, rgb(var(--gm-glow) / 0.2), transparent 70%);
+  animation: gmAurora 18s ease-in-out infinite alternate;
+}
+
+.gm-login::after {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 45%, #000 20%, transparent 100%);
+}
+
+.gm-login h1 {
+  font-family: var(--font-display), inherit;
+}
+
+.gm-login .gm-mono {
+  font-family: var(--font-mono), inherit;
+}
+
+@media print {
+  .gm-shell {
+    background: #fff;
+    color: #000;
+  }
+
+  .gm-shell::before,
+  .gm-shell::after {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gm-shell::before,
+  .gm-login::before,
+  .gm-login *,
+  .gm-hero::before,
+  .gm-live-dot,
+  .gm-shell .animate-gm-enter,
+  .gm-light [class*='max-w-'].mx-auto > * {
+    animation: none;
+  }
 }

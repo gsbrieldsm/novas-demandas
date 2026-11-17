@@ -7,7 +7,7 @@ export function AdminFooter() {
     <footer
       className="mt-auto px-8 py-6 flex items-center justify-between"
       style={{
-        background: 'radial-gradient(ellipse 80% 120% at 95% 50%, #C5A880 0%, #8B6840 40%, transparent 70%), #100E0B',
+        background: 'var(--gm-hero)',
       }}
     >
       <div className="flex items-center gap-3">
@@ -20,7 +20,7 @@ export function AdminFooter() {
           style={{ filter: 'brightness(0) invert(1)' }}
         />
       </div>
-      <p className="text-xs" style={{ color: '#C5A88099' }}>
+      <p className="text-xs" style={{ color: 'rgb(var(--gm-muted))' }}>
         Nada do que fazemos existe por acaso.
       </p>
     </footer>

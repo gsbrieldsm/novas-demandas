@@ -214,3 +214,35 @@ alter table public.tickets drop constraint if exists tickets_request_type_check;
 alter table public.tickets
   add constraint tickets_request_type_check
   check (request_type in ('estrategia', 'gravacao', 'conteudo', 'arte', 'edicao', 'outro'));
+
+-- Migração: estúdio de social media (pautas, roteiros e planos de marketing por cliente)
+create table if not exists public.social_conteudos (
+  id uuid default uuid_generate_v4() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  cliente_fixo_id uuid not null references public.clientes_fixos(id) on delete cascade,
+  tipo text not null check (tipo in ('pauta', 'roteiro', 'plano')),
+  titulo text not null,
+  briefing text,
+  conteudo jsonb not null,
+  status text not null default 'rascunho' check (status in ('rascunho', 'aprovado')),
+  -- [{ chave, ticket_id }] — o que já virou demanda
+  demandas jsonb not null default '[]'::jsonb
+);
+
+drop trigger if exists update_social_conteudos_updated_at on public.social_conteudos;
+create trigger update_social_conteudos_updated_at
+  before update on public.social_conteudos
+  for each row execute procedure public.update_updated_at_column();
+
+create index if not exists social_conteudos_cliente_idx on public.social_conteudos(cliente_fixo_id);
+
+-- Só usuários autenticados (o admin) leem e escrevem; a chave pública não tem acesso.
+alter table public.social_conteudos enable row level security;
+
+drop policy if exists "Autenticados gerenciam social_conteudos" on public.social_conteudos;
+create policy "Autenticados gerenciam social_conteudos"
+  on public.social_conteudos for all
+  to authenticated
+  using (true)
+  with check (true);

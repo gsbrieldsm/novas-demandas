@@ -368,9 +368,9 @@ export default function FinanceiroPage() {
 
         {/* PAINEL BALANÇO (gradiente dark/gold) */}
         <div
-          className="rounded-2xl p-4 md:p-6 shadow-md text-white"
+          className="gm-hero rounded-2xl p-4 md:p-6 text-white"
           style={{
-            background: 'radial-gradient(ellipse 80% 150% at 95% 50%, #C5A880 0%, #6B4C28 40%, #1c1a18 80%), #100E0B',
+            background: 'var(--gm-hero)',
           }}
         >
           <div className="flex items-center justify-between mb-4">
@@ -721,7 +721,7 @@ export default function FinanceiroPage() {
               <button
                 onClick={() => setShowRecAvForm(v => !v)}
                 className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition-opacity"
-                style={{ background: '#C5A880' }}
+                style={{ background: 'rgb(var(--gm-accent))' }}
               >
                 {showRecAvForm ? 'Cancelar' : '+ Adicionar'}
               </button>
@@ -736,11 +736,11 @@ export default function FinanceiroPage() {
                     placeholder="Descrição (ex: venda de equipamento, comissão...)"
                     value={recAvForm.descricao}
                     onChange={e => setRecAvForm(f => ({ ...f, descricao: e.target.value }))}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                   />
                 </div>
                 <div className="sm:col-span-3">
-                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#C5A880] bg-white">
+                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-gm-accent bg-white">
                     <span className="px-2 text-xs text-slate-400 bg-slate-100 border-r border-slate-200 py-2">R$</span>
                     <input
                       placeholder="0,00"
@@ -757,7 +757,7 @@ export default function FinanceiroPage() {
                     onClick={addReceitaAvulsa}
                     disabled={savingRecAv || !recAvForm.descricao || !recAvForm.valor}
                     className="w-full text-sm py-2 rounded-lg text-white hover:opacity-90 transition-opacity disabled:opacity-50"
-                    style={{ background: '#C5A880' }}
+                    style={{ background: 'rgb(var(--gm-accent))' }}
                   >
                     {savingRecAv ? 'Salvando...' : 'Salvar'}
                   </button>
@@ -894,7 +894,7 @@ export default function FinanceiroPage() {
               <button
                 onClick={() => setShowDespForm(v => !v)}
                 className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition-opacity"
-                style={{ background: '#C5A880' }}
+                style={{ background: 'rgb(var(--gm-accent))' }}
               >
                 {showDespForm ? 'Cancelar' : '+ Adicionar'}
               </button>
@@ -921,7 +921,7 @@ export default function FinanceiroPage() {
                   <select
                     value={despForm.tipo}
                     onChange={e => setDespForm(f => ({ ...f, tipo: e.target.value as DespesaTipo }))}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
                   >
                     <option value="corporativa">Corporativa</option>
                     <option value="pessoal">Pessoal</option>
@@ -932,11 +932,11 @@ export default function FinanceiroPage() {
                     placeholder="Descrição (ex: Adobe, conta de luz...)"
                     value={despForm.descricao}
                     onChange={e => setDespForm(f => ({ ...f, descricao: e.target.value }))}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#C5A880] bg-white">
+                  <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-gm-accent bg-white">
                     <span className="px-2 text-xs text-slate-400 bg-slate-100 border-r border-slate-200 py-2">R$</span>
                     <input
                       placeholder="0,00"
@@ -954,7 +954,7 @@ export default function FinanceiroPage() {
                     value={despForm.vencimento}
                     onChange={e => setDespForm(f => ({ ...f, vencimento: e.target.value }))}
                     title="Vencimento (opcional)"
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
                   />
                 </div>
                 <div className="sm:col-span-2">
@@ -962,7 +962,7 @@ export default function FinanceiroPage() {
                     onClick={addDespesa}
                     disabled={savingDesp || !despForm.descricao || !despForm.valor}
                     className="w-full text-sm py-2 rounded-lg text-white hover:opacity-90 transition-opacity disabled:opacity-50"
-                    style={{ background: '#C5A880' }}
+                    style={{ background: 'rgb(var(--gm-accent))' }}
                   >
                     {savingDesp ? 'Salvando...' : 'Salvar'}
                   </button>
@@ -974,7 +974,7 @@ export default function FinanceiroPage() {
                     type="checkbox"
                     checked={despForm.recorrente}
                     onChange={e => setDespForm(f => ({ ...f, recorrente: e.target.checked }))}
-                    className="rounded border-slate-300 text-[#C5A880] focus:ring-[#C5A880]"
+                    className="rounded border-slate-300 text-gm-glow focus:ring-gm-accent"
                   />
                   Despesa recorrente
                 </label>
@@ -987,7 +987,7 @@ export default function FinanceiroPage() {
                       max="60"
                       value={despForm.recorrencia_meses}
                       onChange={e => setDespForm(f => ({ ...f, recorrencia_meses: e.target.value }))}
-                      className="w-16 text-sm border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                      className="w-16 text-sm border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
                     />
                   </div>
                 )}
@@ -1175,7 +1175,7 @@ export default function FinanceiroPage() {
         onClick={() => setShowDespForm(true)}
         className="md:hidden fixed bottom-5 right-5 z-30 w-14 h-14 rounded-full shadow-xl text-white flex items-center justify-center hover:opacity-90 transition-opacity active:scale-95"
         style={{
-          background: 'linear-gradient(135deg, #C5A880 0%, #8B6840 100%)',
+          background: 'linear-gradient(135deg, rgb(var(--gm-accent)) 0%, rgb(var(--gm-glow)) 100%)',
           boxShadow: '0 8px 24px rgba(197,168,128,0.4)',
         }}
         aria-label="Adicionar despesa"
@@ -1192,13 +1192,13 @@ export default function FinanceiroPage() {
 function BalancoCard({ label, value, sub, color, highlight }: { label: string; value: string; sub?: string; color: string; highlight?: boolean }) {
   return (
     <div className={clsx(
-      'rounded-xl p-4 border',
+      'rounded-xl p-3 sm:p-4 border min-w-0',
       highlight
         ? 'bg-white/15 border-white/30 backdrop-blur-sm'
         : 'bg-white/5 border-white/10 backdrop-blur-sm'
     )}>
       <p className="text-xs uppercase tracking-wider text-white/60 mb-2">{label}</p>
-      <p className={clsx('text-2xl font-bold leading-tight', color)}>{value}</p>
+      <p className={clsx('text-base sm:text-2xl font-bold leading-tight whitespace-nowrap', color)}>{value}</p>
       {sub && <p className="text-[11px] text-white/50 mt-1.5 leading-tight">{sub}</p>}
     </div>
   )

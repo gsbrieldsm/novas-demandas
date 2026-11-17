@@ -324,13 +324,13 @@ export default function TicketDetailPage() {
                         className={clsx(
                           'max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
                           msg.role === 'user'
-                            ? 'bg-[#C5A880]/20 text-slate-800 rounded-br-sm'
+                            ? 'bg-gm-accent/20 text-slate-800 rounded-br-sm'
                             : 'bg-white border border-slate-200 text-slate-700 rounded-bl-sm'
                         )}
                       >
                         <p className={clsx(
                           'text-[10px] uppercase tracking-wider mb-1 font-semibold',
-                          msg.role === 'user' ? 'text-[#8B6840]' : 'text-slate-400'
+                          msg.role === 'user' ? 'text-gm-glow' : 'text-slate-400'
                         )}>
                           {msg.role === 'user' ? ticket.client_name || 'Cliente' : 'IA'}
                         </p>
@@ -372,13 +372,13 @@ export default function TicketDetailPage() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Adicione suas anotações, estratégia, referências, roteiro, ideias..."
-              className="w-full text-sm text-slate-700 border border-slate-200 rounded-xl p-4 resize-y focus:outline-none focus:ring-2 focus:ring-[#C5A880] min-h-[400px] leading-relaxed"
+              className="w-full text-sm text-slate-700 border border-slate-200 rounded-xl p-4 resize-y focus:outline-none focus:ring-2 focus:ring-gm-accent min-h-[400px] leading-relaxed"
             />
             <button
               onClick={saveNotes}
               disabled={saving}
               className="mt-2 text-sm text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-              style={{ background: '#C5A880' }}
+              style={{ background: 'rgb(var(--gm-accent))' }}
             >
               {saving ? 'Salvando...' : saved ? '✓ Salvo!' : 'Salvar notas'}
             </button>
@@ -446,7 +446,7 @@ export default function TicketDetailPage() {
                           body: JSON.stringify(patch),
                         })
                       }}
-                      className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                      className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
                     >
                       <option value="">— Selecione —</option>
                       {clientesFixos.filter(c => c.ativo).map(c => (
@@ -548,7 +548,7 @@ export default function TicketDetailPage() {
                 onClick={saveNotes}
                 disabled={saving}
                 className="text-sm text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-                style={{ background: '#C5A880' }}
+                style={{ background: 'rgb(var(--gm-accent))' }}
               >
                 {saving ? 'Salvando...' : saved ? '✓ Salvo!' : 'Salvar'}
               </button>
@@ -648,7 +648,7 @@ function TempoSection({
             <button
               onClick={iniciarTimer}
               className="text-sm font-medium px-3 py-2 rounded-lg text-white transition-opacity hover:opacity-90 flex items-center gap-1.5"
-              style={{ background: '#C5A880' }}
+              style={{ background: 'rgb(var(--gm-accent))' }}
             >
               ▶ Iniciar timer
             </button>
@@ -673,21 +673,21 @@ function TempoSection({
             value={tempoInput}
             onChange={e => setTempoInput(e.target.value)}
             placeholder="1h 30min"
-            className="col-span-3 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+            className="col-span-3 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
             onKeyDown={e => { if (e.key === 'Enter') addManualTempo() }}
           />
           <input
             value={tempoDesc}
             onChange={e => setTempoDesc(e.target.value)}
             placeholder="Descrição (opcional)"
-            className="col-span-7 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+            className="col-span-7 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
             onKeyDown={e => { if (e.key === 'Enter') addManualTempo() }}
           />
           <button
             onClick={addManualTempo}
             disabled={!tempoInput.trim() || parseMinutos(tempoInput) <= 0}
             className="col-span-2 text-sm py-2 rounded-lg text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-            style={{ background: '#C5A880' }}
+            style={{ background: 'rgb(var(--gm-accent))' }}
           >
             Adicionar
           </button>

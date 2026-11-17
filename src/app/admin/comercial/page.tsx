@@ -279,14 +279,14 @@ function ComercialContent() {
         aba === 'pipeline' ? (
           <button
             onClick={() => setShowForm(true)}
-            className="text-sm font-medium px-3 py-1.5 rounded-lg bg-[#C5A880] text-white hover:bg-[#b39470] transition-colors"
+            className="text-sm font-medium px-3 py-1.5 rounded-lg bg-gm-accent text-white hover:bg-gm-accent/85 transition-colors"
           >
             + Novo Lead
           </button>
         ) : (
           <button
             onClick={() => router.push('/admin/proposta/nova')}
-            className="text-sm font-medium px-3 py-1.5 rounded-lg bg-[#C5A880] text-white hover:bg-[#b39470] transition-colors"
+            className="text-sm font-medium px-3 py-1.5 rounded-lg bg-gm-accent text-white hover:bg-gm-accent/85 transition-colors"
           >
             + Nova Proposta
           </button>
@@ -300,7 +300,7 @@ function ComercialContent() {
             onClick={() => setAba('pipeline')}
             className={clsx(
               'px-4 md:px-5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
-              aba === 'pipeline' ? 'text-slate-900 border-[#C5A880]' : 'text-slate-400 border-transparent hover:text-slate-600'
+              aba === 'pipeline' ? 'text-slate-900 border-gm-glow' : 'text-slate-400 border-transparent hover:text-slate-600'
             )}
           >
             Pipeline
@@ -310,7 +310,7 @@ function ComercialContent() {
             onClick={() => setAba('propostas')}
             className={clsx(
               'px-4 md:px-5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
-              aba === 'propostas' ? 'text-slate-900 border-[#C5A880]' : 'text-slate-400 border-transparent hover:text-slate-600'
+              aba === 'propostas' ? 'text-slate-900 border-gm-glow' : 'text-slate-400 border-transparent hover:text-slate-600'
             )}
           >
             Propostas
@@ -320,7 +320,7 @@ function ComercialContent() {
             onClick={() => setAba('parceiros')}
             className={clsx(
               'px-4 md:px-5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
-              aba === 'parceiros' ? 'text-slate-900 border-[#C5A880]' : 'text-slate-400 border-transparent hover:text-slate-600'
+              aba === 'parceiros' ? 'text-slate-900 border-gm-glow' : 'text-slate-400 border-transparent hover:text-slate-600'
             )}
           >
             Parceiros
@@ -363,7 +363,7 @@ function ComercialContent() {
             </p>
             <button
               onClick={() => window.open('/parceiros.html', '_blank')}
-              className="text-[11px] md:text-xs text-[#C5A880] hover:underline ml-auto"
+              className="text-[11px] md:text-xs text-gm-glow hover:underline ml-auto"
             >
               ↗ Ver página pública
             </button>
@@ -394,7 +394,7 @@ function ComercialContent() {
                           {...provided.droppableProps}
                           className={clsx(
                             'flex-1 space-y-3 min-h-[200px] rounded-2xl p-2 transition-colors',
-                            snapshot.isDraggingOver && 'bg-indigo-50/50'
+                            snapshot.isDraggingOver && 'bg-gm-accent/10'
                           )}
                         >
                           {colLeads.map((lead, i) => (
@@ -442,7 +442,7 @@ function ComercialContent() {
                   required
                   value={form.nome}
                   onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
-                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                   placeholder="Nome do contato"
                 />
               </div>
@@ -452,7 +452,7 @@ function ComercialContent() {
                   <input
                     value={form.empresa}
                     onChange={e => setForm(f => ({ ...f, empresa: e.target.value }))}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                     placeholder="Opcional"
                   />
                 </div>
@@ -461,7 +461,7 @@ function ComercialContent() {
                   <input
                     value={form.telefone}
                     onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                     placeholder="(00) 00000-0000"
                   />
                 </div>
@@ -472,7 +472,7 @@ function ComercialContent() {
                   <select
                     value={form.canal}
                     onChange={e => setForm(f => ({ ...f, canal: e.target.value as LeadCanal }))}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
                   >
                     <option value="pessoal">Pessoal</option>
                     <option value="whatsapp">WhatsApp</option>
@@ -485,7 +485,7 @@ function ComercialContent() {
                   <input
                     value={form.valor_estimado}
                     onChange={e => setForm(f => ({ ...f, valor_estimado: e.target.value }))}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                     placeholder="0,00"
                     inputMode="decimal"
                   />
@@ -502,7 +502,7 @@ function ComercialContent() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 text-sm py-2 rounded-lg bg-[#C5A880] text-white hover:bg-[#b39470] transition-colors disabled:opacity-60"
+                  className="flex-1 text-sm py-2 rounded-lg bg-gm-accent text-white hover:bg-gm-accent/85 transition-colors disabled:opacity-60"
                 >
                   {saving ? 'Salvando...' : 'Criar lead'}
                 </button>
@@ -562,7 +562,7 @@ function PropostasView({
             <button
               onClick={onNova}
               className="text-xs mt-3 px-3 py-1.5 rounded-lg text-white"
-              style={{ background: '#C5A880' }}
+              style={{ background: 'rgb(var(--gm-accent))' }}
             >
               + Criar primeira proposta
             </button>
@@ -672,7 +672,7 @@ function ParceirosView({
               }}
               placeholder="Observações internas (só você vê)..."
               rows={2}
-              className="w-full text-xs border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none placeholder:text-slate-400"
+              className="w-full text-xs border border-slate-100 bg-slate-50 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent resize-none placeholder:text-slate-400"
             />
           </div>
         </div>

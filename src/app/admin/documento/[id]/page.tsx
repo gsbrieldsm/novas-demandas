@@ -101,10 +101,10 @@ export default function DocumentoEditorPage() {
             <input
               value={titulo}
               onChange={e => setTitulo(e.target.value)}
-              className="text-xl font-bold text-slate-900 border-none focus:outline-none focus:ring-2 focus:ring-[#C5A880] rounded-lg px-2 py-1 -ml-2 flex-1 min-w-[200px]"
+              className="text-xl font-bold text-slate-900 border-none focus:outline-none focus:ring-2 focus:ring-gm-accent rounded-lg px-2 py-1 -ml-2 flex-1 min-w-[200px]"
             />
             <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer flex-shrink-0">
-              <input type="checkbox" checked={visivelPortal} onChange={e => setVisivelPortal(e.target.checked)} className="rounded border-slate-300 text-[#C5A880] focus:ring-[#C5A880]" />
+              <input type="checkbox" checked={visivelPortal} onChange={e => setVisivelPortal(e.target.checked)} className="rounded border-slate-300 text-gm-glow focus:ring-gm-accent" />
               Visível no portal do cliente
             </label>
           </div>
@@ -115,13 +115,13 @@ export default function DocumentoEditorPage() {
           {blocos.map((bloco, i) => (
             <div key={bloco.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C5A880] tabular-nums flex-shrink-0">
+                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-gm-glow tabular-nums flex-shrink-0">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <input
                   value={bloco.titulo}
                   onChange={e => atualizarBloco(bloco.id, 'titulo', e.target.value)}
-                  className="flex-1 text-sm font-bold text-slate-800 border-none focus:outline-none focus:ring-2 focus:ring-[#C5A880] rounded-lg px-2 py-1"
+                  className="flex-1 text-sm font-bold text-slate-800 border-none focus:outline-none focus:ring-2 focus:ring-gm-accent rounded-lg px-2 py-1"
                 />
                 <button onClick={() => moverBloco(i, -1)} disabled={i === 0} className="text-slate-400 hover:text-slate-700 disabled:opacity-30 px-1">↑</button>
                 <button onClick={() => moverBloco(i, 1)} disabled={i === blocos.length - 1} className="text-slate-400 hover:text-slate-700 disabled:opacity-30 px-1">↓</button>
@@ -132,7 +132,7 @@ export default function DocumentoEditorPage() {
                 onChange={e => atualizarBloco(bloco.id, 'conteudo', e.target.value)}
                 rows={5}
                 placeholder="Escreva o conteúdo desse bloco..."
-                className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
+                className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-gm-accent resize-none"
               />
             </div>
           ))}
@@ -140,7 +140,7 @@ export default function DocumentoEditorPage() {
 
         <button
           onClick={adicionarBloco}
-          className="w-full text-sm py-3 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-[#C5A880] hover:text-[#C5A880] transition-colors"
+          className="w-full text-sm py-3 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-gm-glow hover:text-gm-glow transition-colors"
         >
           + Adicionar bloco
         </button>
@@ -153,7 +153,7 @@ export default function DocumentoEditorPage() {
             onClick={salvar}
             disabled={saving}
             className="text-sm px-6 py-2.5 rounded-lg text-white font-medium disabled:opacity-50"
-            style={{ background: '#C5A880' }}
+            style={{ background: 'rgb(var(--gm-accent))' }}
           >
             {saving ? 'Salvando...' : 'Salvar'}
           </button>

@@ -178,7 +178,7 @@ export default function LeadDetailPage() {
             ) : (
               <button
                 onClick={() => setShowConvert(true)}
-                className="text-sm font-medium px-4 py-2 rounded-xl bg-[#C5A880] text-white hover:bg-[#b39470] transition-colors"
+                className="text-sm font-medium px-4 py-2 rounded-xl bg-gm-accent text-white hover:bg-gm-accent/85 transition-colors"
               >
                 Converter em Chamado
               </button>
@@ -236,7 +236,7 @@ export default function LeadDetailPage() {
                   const v = e.target.value.trim()
                   if (v && v !== lead.nome) updateField('nome', v)
                 }}
-                className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#C5A880] w-full"
+                className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-gm-accent w-full"
                 placeholder="Nome do contato"
               />
             </div>
@@ -245,7 +245,7 @@ export default function LeadDetailPage() {
               <input
                 defaultValue={lead.empresa ?? ''}
                 onBlur={e => updateField('empresa', e.target.value.trim() || null)}
-                className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#C5A880] w-full"
+                className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-gm-accent w-full"
                 placeholder="Opcional"
               />
             </div>
@@ -254,7 +254,7 @@ export default function LeadDetailPage() {
               <select
                 value={lead.status}
                 onChange={e => updateField('status', e.target.value)}
-                className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white w-full"
+                className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white w-full"
               >
                 {Object.entries(STATUS_LABELS).map(([k, v]) => (
                   <option key={k} value={k}>{v}</option>
@@ -266,7 +266,7 @@ export default function LeadDetailPage() {
               <select
                 value={lead.canal}
                 onChange={e => updateField('canal', e.target.value)}
-                className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white w-full"
+                className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white w-full"
               >
                 {Object.entries(CANAL_LABELS).map(([k, v]) => (
                   <option key={k} value={k}>{v}</option>
@@ -278,7 +278,7 @@ export default function LeadDetailPage() {
               <input
                 defaultValue={lead.telefone ?? ''}
                 onBlur={e => updateField('telefone', e.target.value || null)}
-                className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#C5A880] w-full"
+                className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-gm-accent w-full"
                 placeholder="(00) 00000-0000"
               />
             </div>
@@ -290,7 +290,7 @@ export default function LeadDetailPage() {
                   const v = parseFloat(e.target.value.replace(',', '.'))
                   updateField('valor_estimado', isNaN(v) ? null : v)
                 }}
-                className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#C5A880] w-full"
+                className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-gm-accent w-full"
                 placeholder="0,00"
                 inputMode="decimal"
               />
@@ -308,7 +308,7 @@ export default function LeadDetailPage() {
             {lead.ticket_id && (
               <button
                 onClick={() => router.push(`/admin/chamado/${lead.ticket_id}`)}
-                className="text-[#C5A880] hover:underline"
+                className="text-gm-glow hover:underline"
               >
                 Ver chamado →
               </button>
@@ -325,7 +325,7 @@ export default function LeadDetailPage() {
             <textarea
               value={anotacoes}
               onChange={e => setAnotacoes(e.target.value)}
-              className="w-full text-sm text-slate-700 placeholder-slate-300 border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
+              className="w-full text-sm text-slate-700 placeholder-slate-300 border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-gm-accent resize-none"
               rows={5}
               placeholder="O que foi conversado, interesses, objeções, próximos passos..."
             />
@@ -368,7 +368,7 @@ export default function LeadDetailPage() {
                 <select
                   value={convertForm.request_type}
                   onChange={e => setConvertForm(f => ({ ...f, request_type: e.target.value as RequestType }))}
-                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] bg-white"
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
                 >
                   {Object.entries(REQUEST_TYPE_LABELS).map(([k, v]) => (
                     <option key={k} value={k}>{v}</option>
@@ -381,7 +381,7 @@ export default function LeadDetailPage() {
                   required
                   value={convertForm.title}
                   onChange={e => setConvertForm(f => ({ ...f, title: e.target.value }))}
-                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                   placeholder="Ex: Criação de conteúdo mensal"
                 />
               </div>
@@ -390,7 +390,7 @@ export default function LeadDetailPage() {
                 <textarea
                   value={convertForm.description}
                   onChange={e => setConvertForm(f => ({ ...f, description: e.target.value }))}
-                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent resize-none"
                   rows={3}
                   placeholder="Opcional..."
                 />
@@ -406,7 +406,7 @@ export default function LeadDetailPage() {
                 <button
                   type="submit"
                   disabled={converting}
-                  className="flex-1 text-sm py-2 rounded-lg bg-[#C5A880] text-white hover:bg-[#b39470] transition-colors disabled:opacity-60"
+                  className="flex-1 text-sm py-2 rounded-lg bg-gm-accent text-white hover:bg-gm-accent/85 transition-colors disabled:opacity-60"
                 >
                   {converting ? 'Criando...' : 'Criar chamado'}
                 </button>

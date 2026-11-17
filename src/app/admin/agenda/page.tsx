@@ -85,11 +85,13 @@ function formatBRL(v: number) {
 }
 
 export default function AgendaPage() {
-  const [view, setView] = useState<ViewMode>(() => {
-    // Mobile defaulta pra mês (semana fica horrível em tela pequena)
-    if (typeof window !== 'undefined' && window.innerWidth < 768) return 'mes'
-    return 'semana'
-  })
+  const [view, setView] = useState<ViewMode>('semana')
+
+  // Mobile defaulta pra mês (semana fica horrível em tela pequena). Feito após
+  // montar para o HTML do servidor e do cliente coincidirem.
+  useEffect(() => {
+    if (window.innerWidth < 768) setView('mes')
+  }, [])
   const [ref, setRef] = useState(new Date())
   const [loading, setLoading] = useState(true)
   const [tickets, setTickets] = useState<Ticket[]>([])
@@ -367,7 +369,7 @@ export default function AgendaPage() {
             <button
               onClick={() => openNewEvent()}
               className="text-xs md:text-sm font-medium px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-white hover:opacity-90 transition-opacity whitespace-nowrap"
-              style={{ background: '#C5A880' }}
+              style={{ background: 'rgb(var(--gm-accent))' }}
             >
               + Novo
             </button>
@@ -409,7 +411,7 @@ export default function AgendaPage() {
                   autoFocus
                   value={form.titulo}
                   onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
-                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                   placeholder="Reunião com cliente, ligação, tarefa..."
                 />
               </div>
@@ -421,7 +423,7 @@ export default function AgendaPage() {
                     type="date"
                     value={form.data}
                     onChange={e => setForm(f => ({ ...f, data: e.target.value }))}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                   />
                 </div>
                 {!form.all_day && (
@@ -431,7 +433,7 @@ export default function AgendaPage() {
                       type="time"
                       value={form.hora}
                       onChange={e => setForm(f => ({ ...f, hora: e.target.value }))}
-                      className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                      className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                     />
                   </div>
                 )}
@@ -451,7 +453,7 @@ export default function AgendaPage() {
                 <textarea
                   value={form.descricao}
                   onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))}
-                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C5A880] resize-none"
+                  className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent resize-none"
                   rows={2}
                   placeholder="Detalhes (opcional)"
                 />
@@ -476,7 +478,7 @@ export default function AgendaPage() {
                 <button
                   onClick={saveEvent}
                   className="text-sm py-2 px-4 rounded-lg text-white hover:opacity-90 transition-opacity"
-                  style={{ background: '#C5A880' }}
+                  style={{ background: 'rgb(var(--gm-accent))' }}
                 >
                   {editing ? 'Salvar' : 'Criar'}
                 </button>
@@ -509,9 +511,9 @@ function WeekView({
         {days.map(d => {
           const isToday = isSameDay(d, today)
           return (
-            <div key={d.toISOString()} className={clsx('py-3 text-center border-l border-slate-100', isToday && 'bg-amber-50/30')}>
+            <div key={d.toISOString()} className={clsx('py-3 text-center border-l border-slate-100', isToday && 'bg-gm-accent/10')}>
               <p className="text-xs uppercase tracking-wider text-slate-400">{format(d, 'EEE', { locale: ptBR })}</p>
-              <p className={clsx('text-2xl font-bold mt-0.5', isToday ? 'text-[#C5A880]' : 'text-slate-800')}>
+              <p className={clsx('text-2xl font-bold mt-0.5', isToday ? 'text-gm-glow' : 'text-slate-800')}>
                 {format(d, 'd')}
               </p>
             </div>
@@ -559,7 +561,7 @@ function WeekView({
                 return (
                   <div
                     key={d.toISOString() + h}
-                    className={clsx('border-t border-l border-slate-100 min-h-[48px] p-1 group relative cursor-pointer hover:bg-slate-50', isToday && 'bg-amber-50/20')}
+                    className={clsx('border-t border-l border-slate-100 min-h-[48px] p-1 group relative cursor-pointer hover:bg-slate-50', isToday && 'bg-gm-accent/10')}
                     onClick={(e) => {
                       // Só dispara se o clique foi no fundo, não num evento
                       if (e.target === e.currentTarget) onNewAt(d, h)
@@ -633,13 +635,13 @@ function MonthView({
                   className={clsx(
                     'border-l border-slate-100 first:border-l-0 p-2 min-h-[110px] cursor-pointer hover:bg-slate-50/50',
                     !inMonth && 'bg-slate-50/30',
-                    isToday && 'bg-amber-50/30'
+                    isToday && 'bg-gm-accent/10'
                   )}
                 >
                   <p
                     className={clsx(
                       'text-xs font-semibold mb-1.5 inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full',
-                      isToday ? 'bg-[#C5A880] text-white' : !inMonth ? 'text-slate-300' : 'text-slate-700'
+                      isToday ? 'bg-gm-accent text-white' : !inMonth ? 'text-slate-300' : 'text-slate-700'
                     )}
                   >
                     {format(d, 'd')}

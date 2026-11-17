@@ -237,12 +237,14 @@ export default function PropostaPage() {
             >
               {linkCopiado ? '✓ Copiado!' : '📋 Copiar link'}
             </button>
-            <button
-              onClick={() => window.open(`/proposta/${id}`, '_blank')}
-              className="text-xs px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 whitespace-nowrap"
+            <a
+              href={`/proposta/${id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 whitespace-nowrap inline-flex items-center"
             >
               ↗ Abrir
-            </button>
+            </a>
           </div>
         </div>
 
