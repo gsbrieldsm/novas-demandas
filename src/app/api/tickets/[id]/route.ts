@@ -1,6 +1,7 @@
 import { requireAuth } from '@/lib/supabase'
 import { sendClientStatusChanged } from '@/lib/email'
 import { NextResponse } from 'next/server'
+import { CAMPOS_FINANCEIROS, removerCampos, semCampos } from '@/lib/acesso'
 
 export async function GET(
   req: Request,
@@ -17,18 +18,21 @@ export async function GET(
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 404 })
-  return NextResponse.json(data)
+  return NextResponse.json(auth.pode('financeiro') ? data : semCampos(data, CAMPOS_FINANCEIROS.tickets))
 }
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: ['demandas', 'social', 'clientes'] })
   if ('error' in auth) return auth.error
 
   const { id } = await params
-  const body = await req.json()
+  const financeiro = auth.pode('financeiro')
+  const recebido = await req.json()
+  // Quem não vê valores não consegue alterá-los (nem apagar sem querer ao salvar a tela).
+  const body = financeiro ? recebido : removerCampos(recebido, CAMPOS_FINANCEIROS.tickets)
 
   // Se status mudou, buscamos o anterior pra comparar
   let statusAnterior: string | null = null
@@ -69,14 +73,14 @@ export async function PATCH(
     ).catch(err => console.error('email cliente status:', err))
   }
 
-  return NextResponse.json(data)
+  return NextResponse.json(financeiro ? data : semCampos(data, CAMPOS_FINANCEIROS.tickets))
 }
 
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'demandas' })
   if ('error' in auth) return auth.error
 
   const { id } = await params

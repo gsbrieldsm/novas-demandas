@@ -5,8 +5,10 @@ import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import clsx from 'clsx'
 import { supabase } from '@/lib/supabase'
+import { moduloDaTela, pode, type Acesso } from '@/lib/acesso'
+import { useAcesso } from '@/lib/useAcesso'
 
-type IconName = 'social' | 'trafego' | 'agentes' | 'gestao' | 'demandas' | 'agenda' | 'clientes' | 'comercial' | 'financeiro' | 'portal' | 'sair'
+type IconName = 'equipes' | 'social' | 'trafego' | 'agentes' | 'gestao' | 'demandas' | 'agenda' | 'clientes' | 'comercial' | 'financeiro' | 'portal' | 'sair'
 
 interface NavLink {
   label: string
@@ -41,7 +43,25 @@ export const NAV_GROUPS: { title: string; links: NavLink[] }[] = [
       { label: 'Financeiro', href: '/admin/financeiro', icon: 'financeiro', match: ['/admin/recibo'] },
     ],
   },
+  {
+    title: 'Administração',
+    links: [{ label: 'Equipes', href: '/admin/equipes', icon: 'equipes' }],
+  },
 ]
+
+/** Menu só com o que o membro pode ver; grupos vazios somem. */
+export function gruposVisiveis(acesso: Acesso | null | undefined) {
+  if (!acesso) return []
+  return NAV_GROUPS.map(g => ({
+    ...g,
+    links: g.links.filter(l => {
+      const m = moduloDaTela(l.href)
+      if (m === null) return true
+      if (m === 'dono') return acesso.papel === 'dono'
+      return pode(acesso, m)
+    }),
+  })).filter(g => g.links.length > 0)
+}
 
 export function isNavActive(link: NavLink, pathname: string) {
   if (pathname === link.href) return true
@@ -54,6 +74,13 @@ const ICON_PATHS: Record<IconName, React.ReactNode> = {
     <>
       <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" />
       <path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z" />
+    </>
+  ),
+  equipes: (
+    <>
+      <circle cx="12" cy="7.5" r="3.5" />
+      <path d="M5.5 20c.5-3.6 3.2-6 6.5-6s6 2.4 6.5 6" />
+      <path d="M17.5 10.5l1.2 1.2 2.3-2.4" />
     </>
   ),
   agentes: (
@@ -150,6 +177,8 @@ const ITEM =
 export function AdminSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const acesso = useAcesso()
+  const grupos = gruposVisiveis(acesso)
 
   async function logout() {
     await supabase.auth.signOut()
@@ -178,7 +207,7 @@ export function AdminSidebar() {
       </Link>
 
       <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 pb-3">
-        {NAV_GROUPS.map(group => (
+        {grupos.map(group => (
           <div key={group.title} className="mt-4 first:mt-2">
             <p className={clsx(LABEL, 'px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-gm-muted/70')}>
               {group.title}

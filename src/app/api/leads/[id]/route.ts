@@ -5,7 +5,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'comercial' })
   if ('error' in auth) return auth.error
 
   const { id } = await params
@@ -18,7 +18,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'comercial' })
   if ('error' in auth) return auth.error
 
   const { id } = await params
@@ -37,7 +37,7 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'comercial' })
   if ('error' in auth) return auth.error
 
   const { id } = await params

@@ -8,7 +8,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: ['agentes', 'trafego'] })
   if ('error' in auth) return auth.error
 
   const { id } = await params

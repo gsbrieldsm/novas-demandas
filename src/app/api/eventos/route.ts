@@ -2,7 +2,7 @@ import { requireAuth } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 
 export async function GET(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'agenda', vazio: [] })
   if ('error' in auth) return auth.error
 
   const { searchParams } = new URL(req.url)
@@ -19,7 +19,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'agenda' })
   if ('error' in auth) return auth.error
 
   const body = await req.json()

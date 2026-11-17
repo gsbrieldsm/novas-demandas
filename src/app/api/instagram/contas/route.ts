@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 
 /** Contas do Instagram que o System User enxerga (via páginas do Facebook). */
 export async function GET(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'social' })
   if ('error' in auth) return auth.error
 
   if (!metaConfigurado()) return NextResponse.json({ configurado: false, contas: [] })

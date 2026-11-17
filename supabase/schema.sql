@@ -310,3 +310,71 @@ create policy "Autenticados gerenciam agentes_reunioes"
   to authenticated
   using (true)
   with check (true);
+
+-- ─── Equipes e acessos ──────────────────────────────────────────────────────
+-- Quem pode entrar no painel e quais módulos vê. Dono vê tudo e gerencia a
+-- equipe; membro vê só os módulos de `permissoes`. Login sem linha aqui não
+-- entra no painel.
+create table if not exists public.equipe_membros (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  nome text not null,
+  email text not null,
+  cargo text,
+  papel text not null default 'membro' check (papel in ('dono', 'membro')),
+  -- gestao, demandas, agenda, clientes, social, trafego, agentes, comercial, financeiro
+  permissoes text[] not null default '{}',
+  ativo boolean not null default true
+);
+
+drop trigger if exists update_equipe_membros_updated_at on public.equipe_membros;
+create trigger update_equipe_membros_updated_at
+  before update on public.equipe_membros
+  for each row execute procedure public.update_updated_at_column();
+
+-- Só o servidor (service role) lê e escreve a equipe.
+alter table public.equipe_membros enable row level security;
+
+create or replace function public.eh_dono()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.equipe_membros
+    where user_id = auth.uid() and papel = 'dono' and ativo
+  );
+$$;
+
+-- Primeiro dono: troque o e-mail pelo do login do dono antes de rodar.
+insert into public.equipe_membros (user_id, nome, email, papel)
+select id, coalesce(raw_user_meta_data->>'name', split_part(email, '@', 1)), email, 'dono'
+from auth.users
+where email = 'EMAIL_DO_DONO'
+on conflict (user_id) do update set papel = 'dono', ativo = true;
+
+-- Trava o acesso direto ao banco: todo o painel passa pelas rotas do
+-- servidor, que conferem a permissão de cada membro. Pelo acesso direto
+-- (chave pública + login), só o dono lê e escreve; visitantes não leem nada.
+do $$
+declare
+  t record;
+  p record;
+begin
+  for t in
+    select tablename from pg_tables
+    where schemaname = 'public' and tablename <> 'equipe_membros'
+  loop
+    execute format('alter table public.%I enable row level security', t.tablename);
+    for p in select policyname from pg_policies where schemaname = 'public' and tablename = t.tablename loop
+      execute format('drop policy %I on public.%I', p.policyname, t.tablename);
+    end loop;
+    execute format(
+      'create policy "Dono acessa direto" on public.%I for all to authenticated using (public.eh_dono()) with check (public.eh_dono())',
+      t.tablename
+    );
+  end loop;
+end $$;

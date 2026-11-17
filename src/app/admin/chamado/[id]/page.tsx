@@ -7,6 +7,8 @@ import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import { supabase } from '@/lib/supabase'
 import { api } from '@/lib/api'
+import { pode } from '@/lib/acesso'
+import { useAcesso } from '@/lib/useAcesso'
 import { formatMinutos, parseMinutos, minutosDesde, valorHora } from '@/lib/tempo'
 import type { Ticket, TicketStatus, Priority, TempoApontamento } from '@/types'
 import { REQUEST_TYPE_LABELS, STATUS_LABELS, PRIORITY_LABELS } from '@/types'
@@ -52,6 +54,9 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 }
 
 export default function TicketDetailPage() {
+
+  // Sem o módulo Financeiro os valores chegam vazios do servidor.
+  const fin = pode(useAcesso(), 'financeiro')
   const [ticket, setTicket] = useState<Ticket | null>(null)
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
@@ -451,7 +456,7 @@ export default function TicketDetailPage() {
                       <option value="">— Selecione —</option>
                       {clientesFixos.filter(c => c.ativo).map(c => (
                         <option key={c.id} value={c.id}>
-                          {c.nome} ({Number(c.valor_mensal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}/mês)
+                          {c.nome}{fin ? ` (${Number(c.valor_mensal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}/mês)` : ''}
                         </option>
                       ))}
                     </select>
@@ -460,7 +465,7 @@ export default function TicketDetailPage() {
                     <p className="text-xs text-amber-600 font-semibold">Incluso no pacote mensal</p>
                   </div>
                 </div>
-              ) : (
+              ) : !fin ? null : (
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Valor do serviço</p>
                   <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500">

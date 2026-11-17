@@ -4,6 +4,8 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { api } from '@/lib/api'
+import { pode } from '@/lib/acesso'
+import { useAcesso } from '@/lib/useAcesso'
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
@@ -90,6 +92,9 @@ interface Metrica {
 }
 
 export default function ClienteDetailPage() {
+
+  // Sem o módulo Financeiro os valores chegam vazios do servidor.
+  const fin = pode(useAcesso(), 'financeiro')
   const router = useRouter()
   const params = useParams()
   const id = params.id as string
@@ -425,7 +430,7 @@ export default function ClienteDetailPage() {
             </div>
             <div className="text-right">
               <p className="text-[10px] md:text-xs text-white/50 uppercase tracking-wider">Contrato</p>
-              <p className="text-2xl md:text-3xl font-bold text-gm-glow">{formatBRL(Number(cliente.valor_mensal))}</p>
+              <p className="text-2xl md:text-3xl font-bold text-gm-glow">{fin ? formatBRL(Number(cliente.valor_mensal)) : '—'}</p>
               <p className="text-xs text-white/40">por mês</p>
             </div>
           </div>
@@ -524,12 +529,12 @@ export default function ClienteDetailPage() {
                 <FormField label="E-mail">
                   <input value={identForm.email} onChange={e => setIdentForm(f => ({ ...f, email: e.target.value }))} type="email" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent" />
                 </FormField>
-                <FormField label="Valor mensal (R$)">
+                {fin && <><FormField label="Valor mensal (R$)">
                   <input value={identForm.valor_mensal} onChange={e => setIdentForm(f => ({ ...f, valor_mensal: e.target.value }))} inputMode="decimal" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent" />
                 </FormField>
                 <FormField label="Dia do vencimento">
                   <input value={identForm.dia_vencimento} onChange={e => setIdentForm(f => ({ ...f, dia_vencimento: e.target.value }))} type="number" min="1" max="31" placeholder="ex: 5" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent" />
-                </FormField>
+                </FormField></>}
                 <FormField label="Data de início do contrato">
                   <input value={identForm.data_inicio} onChange={e => setIdentForm(f => ({ ...f, data_inicio: e.target.value }))} type="date" className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent" />
                 </FormField>

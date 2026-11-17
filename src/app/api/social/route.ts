@@ -2,7 +2,7 @@ import { requireAuth } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 
 export async function GET(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'social' })
   if ('error' in auth) return auth.error
 
   const clienteId = new URL(req.url).searchParams.get('cliente_id')
@@ -16,7 +16,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'social' })
   if ('error' in auth) return auth.error
 
   const { cliente_fixo_id, tipo, titulo, briefing, conteudo } = await req.json()

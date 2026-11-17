@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 
 /** Contas de anúncios que o System User do Meta enxerga. */
 export async function GET(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'trafego' })
   if ('error' in auth) return auth.error
 
   if (!metaConfigurado()) return NextResponse.json({ configurado: false, contas: [] })

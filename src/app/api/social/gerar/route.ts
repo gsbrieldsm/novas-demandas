@@ -39,7 +39,7 @@ function pedido(tipo: SocialTipo, o: Record<string, string>) {
 }
 
 export async function POST(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'social' })
   if ('error' in auth) return auth.error
 
   const { cliente_id, tipo, briefing, opcoes = {}, ajuste }: GerarBody = await req.json()

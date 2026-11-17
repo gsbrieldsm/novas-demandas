@@ -7,7 +7,8 @@ import Image from 'next/image'
 import clsx from 'clsx'
 import { api } from '@/lib/api'
 import { formatMinutos, minutosDesde } from '@/lib/tempo'
-import { NAV_GROUPS, NavIcon, isNavActive } from '@/components/AdminSidebar'
+import { NAV_GROUPS, NavIcon, gruposVisiveis, isNavActive } from '@/components/AdminSidebar'
+import { useAcesso } from '@/lib/useAcesso'
 
 interface TimerAtivo {
   id: string
@@ -43,6 +44,7 @@ export function AdminNav({ onLogout, extra }: { onLogout: () => void; extra?: Re
   const [timer, setTimer] = useState<TimerAtivo | null>(null)
   const [, setTick] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
+  const grupos = gruposVisiveis(useAcesso())
 
   const secao = ALL_LINKS.find(l => isNavActive(l, pathname))
 
@@ -194,7 +196,7 @@ export function AdminNav({ onLogout, extra }: { onLogout: () => void; extra?: Re
             </div>
 
             <nav className="flex-1 py-3 px-3 overflow-y-auto">
-              {NAV_GROUPS.map(group => (
+              {grupos.map(group => (
                 <div key={group.title} className="mb-4">
                   <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-gm-muted/70">
                     {group.title}

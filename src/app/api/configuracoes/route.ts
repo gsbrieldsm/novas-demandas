@@ -2,7 +2,7 @@ import { requireAuth } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 
 export async function GET(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: ['clientes', 'financeiro', 'gestao'], vazio: {} })
   if ('error' in auth) return auth.error
 
   const { data, error } = await auth.db.from('configuracoes').select('*')
@@ -13,7 +13,7 @@ export async function GET(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'financeiro' })
   if ('error' in auth) return auth.error
 
   const { chave, valor } = await req.json()

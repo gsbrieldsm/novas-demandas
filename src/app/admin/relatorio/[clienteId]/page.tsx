@@ -5,6 +5,8 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { api } from '@/lib/api'
+import { pode } from '@/lib/acesso'
+import { useAcesso } from '@/lib/useAcesso'
 import { format, addMonths, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
@@ -47,6 +49,9 @@ interface Metrica {
 }
 
 export default function RelatorioPage() {
+
+  // Sem o módulo Financeiro os valores chegam vazios do servidor.
+  const fin = pode(useAcesso(), 'financeiro')
   const router = useRouter()
   const params = useParams()
   const search = useSearchParams()
@@ -396,7 +401,7 @@ export default function RelatorioPage() {
 
                 {/* Linha de stats no rodapé do header */}
                 <div className="mt-5 md:mt-7 print:mt-6 pt-4 border-t border-white/10 grid grid-cols-3 gap-4">
-                  <HeaderStat label="Contrato" value={formatBRL(Number(cliente.valor_mensal))} />
+                  <HeaderStat label="Contrato" value={fin ? formatBRL(Number(cliente.valor_mensal)) : '—'} />
                   <HeaderStat label="Entregas" value={String(concluidas)} sub={`de ${entregas.length}`} />
                   <HeaderStat label="Tempo investido" value={formatMinutos(tempoTotal)} />
                 </div>

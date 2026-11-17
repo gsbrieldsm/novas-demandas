@@ -9,6 +9,8 @@ import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import { AdminNav } from '@/components/AdminNav'
 import { formatMinutos, valorHora } from '@/lib/tempo'
+import { pode } from '@/lib/acesso'
+import { useAcesso } from '@/lib/useAcesso'
 import type { Ticket, TempoApontamento } from '@/types'
 
 function formatBRL(v: number) {
@@ -56,9 +58,12 @@ export default function ClientesPage() {
   const [savingNovo, setSavingNovo] = useState(false)
   const [erroNovo, setErroNovo] = useState<string | null>(null)
   const router = useRouter()
+  // Sem o módulo Financeiro os valores chegam vazios do servidor; a tela mostra "—" em vez de R$ 0,00.
+  const fin = pode(useAcesso(), 'financeiro')
+  const brl = (v: number) => (fin ? formatBRL(v) : '—')
 
   async function criarClienteFixo() {
-    if (!novoCliente.nome.trim() || !novoCliente.valor_mensal) {
+    if (!novoCliente.nome.trim() || (fin && !novoCliente.valor_mensal)) {
       setErroNovo('Nome e valor mensal são obrigatórios')
       return
     }
@@ -67,7 +72,7 @@ export default function ClientesPage() {
     const body = {
       nome: novoCliente.nome.trim(),
       email: novoCliente.email.trim() || null,
-      valor_mensal: parseFloat(novoCliente.valor_mensal.replace(',', '.')),
+      valor_mensal: fin ? parseFloat(novoCliente.valor_mensal.replace(',', '.')) : 0,
       dia_vencimento: novoCliente.dia_vencimento ? parseInt(novoCliente.dia_vencimento, 10) : null,
       data_inicio: novoCliente.data_inicio || null,
       tipo: novoCliente.tipo,
@@ -274,7 +279,7 @@ export default function ClientesPage() {
           <div className="text-right">
             <p className="text-[10px] md:text-xs text-slate-400">R$/h médio</p>
             <p className={clsx('text-lg md:text-2xl font-bold', rhMedio == null ? 'text-slate-300' : rhMedio >= horaAlvo ? 'text-green-600' : rhMedio >= horaAlvo * 0.5 ? 'text-amber-500' : 'text-red-500')}>
-              {rhMedio == null ? '—' : formatBRL(rhMedio)}
+              {rhMedio == null ? '—' : brl(rhMedio)}
             </p>
           </div>
         </div>
@@ -325,7 +330,7 @@ export default function ClientesPage() {
               <p className="text-xs md:text-sm text-white/80 mt-0.5">Receita, tempo e rentabilidade do período</p>
             </div>
             <div className="md:text-right">
-              {editingAlvo ? (
+              {!fin ? null : editingAlvo ? (
                 <div className="flex items-center gap-2 md:justify-end">
                   <span className="text-xs text-white/60">Hora-alvo R$</span>
                   <input
@@ -343,18 +348,18 @@ export default function ClientesPage() {
                   onClick={() => { setAlvoInput(String(horaAlvo)); setEditingAlvo(true) }}
                   className="text-xs text-white/60 hover:text-white/90 transition-colors text-left md:text-right"
                 >
-                  Hora-alvo <span className="text-gm-glow font-semibold">{formatBRL(horaAlvo)}/h</span> <span className="text-white/40">· editar</span>
+                  Hora-alvo <span className="text-gm-glow font-semibold">{brl(horaAlvo)}/h</span> <span className="text-white/40">· editar</span>
                 </button>
               )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
-            <Card label="Receita total" value={formatBRL(totalReceita)} color="text-green-300" />
+            <Card label="Receita total" value={brl(totalReceita)} color="text-green-300" />
             <Card label="Tempo trabalhado" value={formatMinutos(totalMinutos)} color="text-blue-300" />
             <Card
               label="R$/h médio"
-              value={rhMedio == null ? '—' : formatBRL(rhMedio)}
+              value={rhMedio == null ? '—' : brl(rhMedio)}
               sub={rhMedio == null ? 'Aponte tempo nos chamados' : rhMedio >= horaAlvo ? `Acima da meta` : `Abaixo da meta`}
               color={rhMedio == null ? 'text-white/60' : rhMedio >= horaAlvo ? 'text-green-300' : 'text-amber-300'}
               highlight
@@ -420,12 +425,12 @@ export default function ClientesPage() {
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm font-semibold text-slate-800">{formatBRL(l.receita)}</td>
+                          <td className="px-6 py-4 text-sm font-semibold text-slate-800">{brl(l.receita)}</td>
                           <td className="px-6 py-4 text-sm text-slate-700 tabular-nums">{l.minutos > 0 ? formatMinutos(l.minutos) : '—'}</td>
                           <td className="px-6 py-4">
                             {l.rh != null ? (
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-bold text-slate-800">{formatBRL(l.rh)}</span>
+                                <span className="text-sm font-bold text-slate-800">{brl(l.rh)}</span>
                                 {ind && <span className={clsx('text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full', ind.cor)}>{ind.label}</span>}
                               </div>
                             ) : (
@@ -453,7 +458,7 @@ export default function ClientesPage() {
                                     </div>
                                     <div className="flex items-center gap-3 flex-shrink-0">
                                       <span className="text-xs text-slate-500 tabular-nums">{formatMinutos(minutosPorTicket.get(t.id) ?? 0)}</span>
-                                      {t.budget_value != null && <span className="text-xs font-semibold text-green-600">{formatBRL(t.budget_value)}</span>}
+                                      {t.budget_value != null && <span className="text-xs font-semibold text-green-600">{brl(t.budget_value)}</span>}
                                     </div>
                                   </div>
                                 ))}
@@ -496,14 +501,14 @@ export default function ClientesPage() {
                             )}
                             {l.rh != null && (
                               <span className={clsx('text-sm font-bold whitespace-nowrap', ind?.label === 'alto' ? 'text-green-600' : ind?.label === 'médio' ? 'text-amber-600' : 'text-red-500')}>
-                                {formatBRL(l.rh)}/h
+                                {brl(l.rh)}/h
                               </span>
                             )}
                           </div>
                           <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
                             <span>{l.tipo === 'fixo' ? 'Fixo' : 'Avulso'}</span>
                             <span className="text-slate-200">·</span>
-                            <span className="text-slate-600 font-medium">{formatBRL(l.receita)}</span>
+                            <span className="text-slate-600 font-medium">{brl(l.receita)}</span>
                             <span className="text-slate-200">·</span>
                             <span>{l.minutos > 0 ? formatMinutos(l.minutos) : 'sem tempo'}</span>
                             <span className="text-slate-200">·</span>
@@ -528,7 +533,7 @@ export default function ClientesPage() {
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
                                 <span className="text-[10px] text-slate-500 tabular-nums">{formatMinutos(minutosPorTicket.get(t.id) ?? 0)}</span>
-                                {t.budget_value != null && <span className="text-[10px] font-semibold text-green-600">{formatBRL(t.budget_value)}</span>}
+                                {t.budget_value != null && <span className="text-[10px] font-semibold text-green-600">{brl(t.budget_value)}</span>}
                               </div>
                             </div>
                           ))}
@@ -602,7 +607,7 @@ export default function ClientesPage() {
                   className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className={clsx('grid gap-3', fin ? 'grid-cols-2' : 'hidden')}>
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 block mb-1.5">Valor mensal *</label>
                   <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-gm-accent">
@@ -648,7 +653,7 @@ export default function ClientesPage() {
                 </button>
                 <button
                   onClick={criarClienteFixo}
-                  disabled={savingNovo || !novoCliente.nome.trim() || !novoCliente.valor_mensal}
+                  disabled={savingNovo || !novoCliente.nome.trim() || (fin && !novoCliente.valor_mensal)}
                   className="flex-1 text-sm py-2 rounded-lg text-white disabled:opacity-50"
                   style={{ background: 'rgb(var(--gm-accent))' }}
                 >

@@ -3,7 +3,7 @@ import { normalizarContaId } from '@/lib/meta'
 import { NextResponse } from 'next/server'
 
 export async function GET(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'trafego' })
   if ('error' in auth) return auth.error
 
   const { data, error } = await auth.db.from('trafego_contas').select('*')
@@ -13,7 +13,7 @@ export async function GET(req: Request) {
 
 /** Vincula (ou troca) a conta de anúncios de um cliente. */
 export async function POST(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'trafego' })
   if ('error' in auth) return auth.error
 
   const { cliente_fixo_id, meta_ad_account_id } = await req.json()

@@ -47,7 +47,7 @@ function transcricao(mensagens: MensagemAgente[]) {
 }
 
 export async function POST(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'agentes' })
   if ('error' in auth) return auth.error
 
   const { cliente_id, foco }: { cliente_id?: string; foco?: string } = await req.json()

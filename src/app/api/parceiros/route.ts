@@ -2,7 +2,7 @@ import { requireAuth } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 
 export async function GET(req: Request) {
-  const auth = await requireAuth(req)
+  const auth = await requireAuth(req, { modulo: 'comercial', vazio: [] })
   if ('error' in auth) return auth.error
 
   const { data, error } = await auth.db
