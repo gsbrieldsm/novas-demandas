@@ -162,7 +162,8 @@ export default function AgendaPage() {
       if (t.scheduled_at && t.status !== 'cancelado') {
         out.push({
           id: `g-${t.id}`,
-          type: 'gravacao',
+          // Demanda com horário marcado: gravação mantém o 🎬; as demais aparecem como prazo, na hora certa.
+          type: t.request_type === 'gravacao' ? 'gravacao' : 'prazo',
           title: t.title,
           subtitle: t.client_name,
           date: new Date(t.scheduled_at),
@@ -174,7 +175,8 @@ export default function AgendaPage() {
 
     // 2. Prazos (deadline)
     tickets.forEach(t => {
-      if (t.deadline && !['concluido', 'cancelado'].includes(t.status)) {
+      // Quem já tem horário marcado aparece só uma vez, no horário.
+      if (t.deadline && !t.scheduled_at && !['concluido', 'cancelado'].includes(t.status)) {
         const d = new Date(t.deadline + 'T12:00:00')
         out.push({
           id: `p-${t.id}`,

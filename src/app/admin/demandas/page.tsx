@@ -122,6 +122,7 @@ export default function DemandasPage() {
     request_type: 'estrategia' as RequestType,
     priority: 'normal' as Priority,
     deadline: '',
+    hora: '',
     budget_value: '',
     where_used: '',
     purpose: '',
@@ -158,6 +159,8 @@ export default function DemandasPage() {
       priority: form.priority,
       status: 'novo',
       deadline: form.deadline || null,
+      // Com horário, a demanda entra na agenda no horário certo (não só como prazo do dia).
+      scheduled_at: form.deadline && form.hora ? new Date(`${form.deadline}T${form.hora}:00`).toISOString() : null,
       where_used: form.where_used.trim() || null,
       purpose: form.purpose.trim() || null,
       client_email: '',
@@ -193,7 +196,7 @@ export default function DemandasPage() {
         setForm({
           modo: 'avulso', cliente_fixo_id: '', client_name: '', company: '',
           title: '', description: '', request_type: 'estrategia',
-          priority: 'normal', deadline: '', budget_value: '',
+          priority: 'normal', deadline: '', hora: '', budget_value: '',
           where_used: '', purpose: '',
         })
       } else {
@@ -422,13 +425,25 @@ export default function DemandasPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-slate-500 block mb-1">Prazo</label>
-                  <input
-                    type="date"
-                    value={form.deadline}
-                    onChange={e => setForm(f => ({ ...f, deadline: e.target.value }))}
-                    className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
-                  />
+                  <label className="text-xs font-medium text-slate-500 block mb-1">Prazo e horário</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={form.deadline}
+                      onChange={e => setForm(f => ({ ...f, deadline: e.target.value }))}
+                      aria-label="Data do prazo"
+                      className="min-w-0 flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white"
+                    />
+                    <input
+                      type="time"
+                      value={form.hora}
+                      onChange={e => setForm(f => ({ ...f, hora: e.target.value }))}
+                      disabled={!form.deadline}
+                      aria-label="Horário (opcional)"
+                      title="Horário (opcional) — com horário, a demanda aparece na agenda nessa hora"
+                      className="w-[104px] text-sm border border-slate-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-gm-accent bg-white disabled:opacity-40"
+                    />
+                  </div>
                 </div>
               </div>
 

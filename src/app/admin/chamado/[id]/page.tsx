@@ -53,6 +53,76 @@ function Field({ label, value }: { label: string; value?: string | null }) {
   )
 }
 
+/**
+ * Prazo (data) + horário opcional. Com horário, grava `scheduled_at` e a demanda
+ * aparece na agenda nessa hora; sem horário, fica só como prazo do dia.
+ */
+function PrazoEditavel({
+  deadline,
+  scheduledAt,
+  onSalvar,
+}: {
+  deadline: string | null
+  scheduledAt: string | null
+  onSalvar: (deadline: string | null, scheduledAt: string | null) => Promise<void>
+}) {
+  const inicialData = scheduledAt ? format(new Date(scheduledAt), 'yyyy-MM-dd') : deadline?.slice(0, 10) ?? ''
+  const inicialHora = scheduledAt ? format(new Date(scheduledAt), 'HH:mm') : ''
+  const [data, setData] = useState(inicialData)
+  const [hora, setHora] = useState(inicialHora)
+  const [salvando, setSalvando] = useState(false)
+  const [salvo, setSalvo] = useState(false)
+
+  useEffect(() => {
+    setData(inicialData)
+    setHora(inicialHora)
+  }, [inicialData, inicialHora])
+
+  const alterado = data !== inicialData || hora !== inicialHora
+  const CAMPO = 'text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-gm-accent'
+
+  async function salvar() {
+    setSalvando(true)
+    await onSalvar(data || null, data && hora ? new Date(`${data}T${hora}:00`).toISOString() : null)
+    setSalvando(false)
+    setSalvo(true)
+    setTimeout(() => setSalvo(false), 2000)
+  }
+
+  return (
+    <div>
+      <p className="text-xs text-slate-400 mb-1">Prazo e horário</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <input type="date" value={data} onChange={e => setData(e.target.value)} aria-label="Data do prazo" className={clsx(CAMPO, 'min-w-0')} />
+        <input
+          type="time"
+          value={hora}
+          onChange={e => setHora(e.target.value)}
+          disabled={!data}
+          aria-label="Horário"
+          className={clsx(CAMPO, 'w-[110px] disabled:opacity-40')}
+        />
+        {hora && (
+          <button type="button" onClick={() => setHora('')} className="text-xs text-slate-400 hover:text-slate-700">
+            sem horário
+          </button>
+        )}
+        {(alterado || salvo) && (
+          <button
+            type="button"
+            onClick={salvar}
+            disabled={salvando || !alterado}
+            className="rounded-lg bg-gm-accent px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+          >
+            {salvando ? 'Salvando…' : salvo ? '✓ Salvo' : 'Salvar'}
+          </button>
+        )}
+      </div>
+      <p className="mt-1 text-[11px] text-slate-400">Com horário, a demanda aparece na agenda nessa hora.</p>
+    </div>
+  )
+}
+
 export default function TicketDetailPage() {
 
   // Sem o módulo Financeiro os valores chegam vazios do servidor.
@@ -269,14 +339,25 @@ export default function TicketDetailPage() {
               )}
               {ticket.scheduled_at && (
                 <div className="bg-amber-50 rounded-xl p-4 border-l-4 border-amber-500">
-                  <p className="text-xs font-semibold text-amber-600 mb-1">Data e Horário da Gravação</p>
+                  <p className="text-xs font-semibold text-amber-600 mb-1">Na agenda</p>
                   <p className="text-sm font-bold text-amber-900">
                     {format(new Date(ticket.scheduled_at), "EEEE, d 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
                   </p>
                 </div>
               )}
               <Field label="Onde será usado" value={ticket.where_used} />
-              <Field label="Prazo" value={ticket.deadline ? format(new Date(ticket.deadline), "d 'de' MMMM 'de' yyyy", { locale: ptBR }) : null} />
+              <PrazoEditavel
+                deadline={ticket.deadline}
+                scheduledAt={ticket.scheduled_at}
+                onSalvar={async (deadline, scheduled_at) => {
+                  setTicket(prev => (prev ? { ...prev, deadline, scheduled_at } : null))
+                  await api(`/api/tickets/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deadline, scheduled_at }),
+                  })
+                }}
+              />
             </div>
           </Section>
 
