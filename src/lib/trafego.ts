@@ -41,6 +41,14 @@ export function planoPublico(plano: PlanoItem[]) {
   return plano.filter(p => p.status !== 'proposto')
 }
 
+/** Metas da agência para o cliente. Só aparecem no admin, nunca no link público. */
+export interface MetasTrafego {
+  custo_compra?: number | null
+  roas?: number | null
+  custo_conversa?: number | null
+  verba_mensal?: number | null
+}
+
 export interface TrafegoConta {
   id: string
   created_at: string
@@ -51,6 +59,7 @@ export interface TrafegoConta {
   link_ativo: boolean
   recado: string | null
   plano: PlanoItem[]
+  metas?: MetasTrafego | null
 }
 
 /** Métricas já normalizadas a partir dos "actions" do Meta. */
@@ -74,13 +83,13 @@ export interface Metricas {
   engajamento: number
 }
 
-export interface SerieDia {
+export interface SerieDia extends Metricas {
   data: string // AAAA-MM-DD
-  investimento: number
-  cliquesLink: number
-  visitas: number
-  carrinho: number
-  compras: number
+}
+
+export interface Intervalo {
+  inicio: string // AAAA-MM-DD
+  fim: string
 }
 
 export type SituacaoCampanha = 'rodando' | 'sem_entrega' | 'pausada' | 'encerrada'
@@ -102,9 +111,22 @@ export interface DadosTrafego {
   atualizadoEm: string
   conta: { nome: string; moeda: string }
   resumo: Metricas | null
+  /** Mesmo número de dias, imediatamente antes do período escolhido. */
+  anterior: Metricas | null
+  intervaloAnterior: Intervalo
+  /** Gasto do mês corrente, para o ritmo da verba. */
+  mes: { investimento: number; dia: number; diasNoMes: number }
   serie: SerieDia[]
   campanhas: Campanha[]
 }
+
+/** Variação percentual de `atual` sobre `anterior`; null quando não dá para comparar. */
+export function variacao(atual: number, anterior: number | null | undefined) {
+  if (anterior == null || anterior === 0) return null
+  return ((atual - anterior) / anterior) * 100
+}
+
+export const razao = (a: number, b: number) => (b > 0 ? a / b : null)
 
 export const OBJETIVO_LABEL: Record<string, string> = {
   OUTCOME_SALES: 'Vendas',

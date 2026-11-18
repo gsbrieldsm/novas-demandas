@@ -378,3 +378,7 @@ begin
     );
   end loop;
 end $$;
+
+-- Migração: metas de tráfego por cliente (CPA, ROAS, custo por conversa, verba mensal)
+alter table public.trafego_contas
+  add column if not exists metas jsonb not null default '{}'::jsonb;

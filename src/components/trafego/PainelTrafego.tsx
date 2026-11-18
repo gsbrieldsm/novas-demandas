@@ -11,9 +11,12 @@ import {
   dataBR,
   num,
   pct,
+  razao,
+  variacao,
   type Campanha,
   type DadosTrafego,
   type Metricas,
+  type MetasTrafego,
   type SerieDia,
   type SituacaoCampanha,
 } from '@/lib/trafego'
@@ -24,7 +27,35 @@ import {
 const CARD = 'bg-white rounded-2xl border border-slate-100 shadow-sm'
 const ROTULO = 'text-[10px] md:text-xs font-semibold uppercase tracking-wider text-slate-400'
 
-function Kpi({ rotulo, valor, nota, destaque }: { rotulo: string; valor: string; nota?: string; destaque?: 'bom' | 'ruim' }) {
+/** Para onde a métrica precisa andar para ser boa notícia. */
+type Sentido = 'sobe' | 'desce' | 'neutro'
+
+function Variacao({ v, sentido }: { v: number | null; sentido: Sentido }) {
+  if (v == null || !isFinite(v)) return <span className="text-slate-300">sem comparação</span>
+  const bom = sentido === 'neutro' ? null : (v > 0) === (sentido === 'sobe')
+  const quase = Math.abs(v) < 1
+  return (
+    <span
+      className={clsx(
+        'font-semibold tabular-nums',
+        quase || bom == null ? 'text-slate-500' : bom ? 'text-emerald-600' : 'text-rose-600'
+      )}
+    >
+      {quase ? '=' : v > 0 ? '▲' : '▼'} {Math.abs(v).toLocaleString('pt-BR', { maximumFractionDigits: Math.abs(v) < 10 ? 1 : 0 })}%
+    </span>
+  )
+}
+
+interface KpiProps {
+  rotulo: string
+  valor: string
+  nota?: string
+  destaque?: 'bom' | 'ruim'
+  delta?: { v: number | null; sentido: Sentido }
+  meta?: string
+}
+
+function Kpi({ rotulo, valor, nota, destaque, delta, meta }: KpiProps) {
   return (
     <div className={clsx(CARD, 'p-4 min-w-0')}>
       <p className={clsx(ROTULO, 'truncate')}>{rotulo}</p>
@@ -37,27 +68,230 @@ function Kpi({ rotulo, valor, nota, destaque }: { rotulo: string; valor: string;
         {valor}
       </p>
       {nota && <p className="mt-0.5 text-xs text-slate-500 truncate">{nota}</p>}
+      {(delta || meta) && (
+        <p className="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-400 truncate">
+          {delta && <><Variacao {...delta} /> vs. anterior</>}
+          {delta && meta && ' · '}
+          {meta}
+        </p>
+      )}
     </div>
   )
 }
 
-export function Kpis({ m }: { m: Metricas }) {
-  const roas = m.investimento > 0 ? m.receita / m.investimento : 0
-  const itens: React.ComponentProps<typeof Kpi>[] = [
-    { rotulo: 'Investimento', valor: brl(m.investimento), nota: `CPM ${brl(m.cpm)}` },
-    { rotulo: 'Alcance', valor: compacto(m.alcance), nota: `${compacto(m.impressoes)} impressões` },
-    { rotulo: 'Cliques no link', valor: num(m.cliquesLink), nota: `${custoPor(m.investimento, m.cliquesLink)} por clique` },
-    { rotulo: 'Taxa de cliques', valor: pct(m.ctr), nota: 'cliques ÷ impressões' },
-    { rotulo: 'Visitas ao site', valor: num(m.visitas), nota: `${custoPor(m.investimento, m.visitas)} por visita` },
-    { rotulo: 'Carrinhos', valor: num(m.carrinho), nota: `${custoPor(m.investimento, m.carrinho)} por carrinho` },
-    { rotulo: 'Compras', valor: num(m.compras), nota: `${custoPor(m.investimento, m.compras)} por venda` },
+const vezes = (v: number) => `${v.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}×`
+
+/** "bom" quando o valor bate a meta (para custo, ficar abaixo; para ROAS, acima). */
+function contraMeta(valor: number | null, meta: number | null | undefined, sentido: 'sobe' | 'desce') {
+  if (valor == null || !meta) return undefined
+  return (sentido === 'sobe' ? valor >= meta : valor <= meta) ? 'bom' : 'ruim'
+}
+
+export function Kpis({ m, anterior, metas }: { m: Metricas; anterior?: Metricas | null; metas?: MetasTrafego | null }) {
+  const a = anterior ?? null
+  const d = (atual: number | null, ant: number | null | undefined, sentido: Sentido) =>
+    a ? { v: atual == null ? null : variacao(atual, ant), sentido } : undefined
+
+  const cpc = razao(m.investimento, m.cliquesLink)
+  const cpv = razao(m.investimento, m.visitas)
+  const cpa = razao(m.investimento, m.compras)
+  const roas = razao(m.receita, m.investimento)
+  const cpConversa = razao(m.investimento, m.conversas)
+
+  const itens: KpiProps[] = [
+    { rotulo: 'Investimento', valor: brl(m.investimento), nota: `CPM ${brl(m.cpm)}`, delta: d(m.investimento, a?.investimento, 'neutro') },
+    { rotulo: 'Alcance', valor: compacto(m.alcance), nota: `${compacto(m.impressoes)} impressões`, delta: d(m.alcance, a?.alcance, 'sobe') },
+    { rotulo: 'Cliques no link', valor: num(m.cliquesLink), nota: `${custoPor(m.investimento, m.cliquesLink)} por clique`, delta: d(cpc, a && razao(a.investimento, a.cliquesLink), 'desce') },
+    { rotulo: 'Taxa de cliques', valor: pct(m.ctr), nota: 'cliques ÷ impressões', delta: d(m.ctr, a?.ctr, 'sobe') },
+    { rotulo: 'Visitas ao site', valor: num(m.visitas), nota: `${custoPor(m.investimento, m.visitas)} por visita`, delta: d(cpv, a && razao(a.investimento, a.visitas), 'desce') },
+    { rotulo: 'Carrinhos', valor: num(m.carrinho), nota: `${custoPor(m.investimento, m.carrinho)} por carrinho`, delta: d(m.carrinho, a?.carrinho, 'sobe') },
+    {
+      rotulo: 'Compras',
+      valor: num(m.compras),
+      nota: `${custoPor(m.investimento, m.compras)} por venda`,
+      delta: d(cpa, a && razao(a.investimento, a.compras), 'desce'),
+      meta: metas?.custo_compra ? `meta ${brl(metas.custo_compra)}/venda` : undefined,
+      destaque: contraMeta(cpa, metas?.custo_compra, 'desce'),
+    },
     m.receita > 0
-      ? { rotulo: 'Retorno (ROAS)', valor: `${roas.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}×`, nota: `${brl(m.receita)} em vendas`, destaque: roas >= 1 ? 'bom' : 'ruim' }
-      : { rotulo: 'Conversas iniciadas', valor: num(m.conversas), nota: `${custoPor(m.investimento, m.conversas)} por conversa` },
+      ? {
+          rotulo: 'Retorno (ROAS)',
+          valor: vezes(roas ?? 0),
+          nota: `${brl(m.receita)} em vendas`,
+          delta: d(roas, a && razao(a.receita, a.investimento), 'sobe'),
+          meta: metas?.roas ? `meta ${vezes(metas.roas)}` : undefined,
+          destaque: contraMeta(roas, metas?.roas, 'sobe') ?? ((roas ?? 0) >= 1 ? 'bom' : 'ruim'),
+        }
+      : {
+          rotulo: 'Conversas iniciadas',
+          valor: num(m.conversas),
+          nota: `${custoPor(m.investimento, m.conversas)} por conversa`,
+          delta: d(cpConversa, a && razao(a.investimento, a.conversas), 'desce'),
+          meta: metas?.custo_conversa ? `meta ${brl(metas.custo_conversa)}/conversa` : undefined,
+          destaque: contraMeta(cpConversa, metas?.custo_conversa, 'desce'),
+        },
   ]
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {itens.map(k => <Kpi key={k.rotulo} {...k} />)}
+    </div>
+  )
+}
+
+/** Verba do mês: quanto já foi, ritmo ideal e projeção de fechamento. */
+export function RitmoVerba({ mes, verba }: { mes: DadosTrafego['mes']; verba: number }) {
+  const ideal = (verba * mes.dia) / mes.diasNoMes
+  const projecao = mes.dia > 0 ? (mes.investimento / mes.dia) * mes.diasNoMes : 0
+  const desvio = ideal > 0 ? ((mes.investimento - ideal) / ideal) * 100 : 0
+  const usado = Math.min((mes.investimento / verba) * 100, 100)
+  const marcaIdeal = Math.min((ideal / verba) * 100, 100)
+  const status =
+    Math.abs(desvio) <= 10
+      ? { txt: 'No ritmo', cor: 'text-emerald-600 bg-emerald-50' }
+      : desvio > 0
+        ? { txt: `Gastando ${Math.round(desvio)}% acima do ritmo`, cor: 'text-rose-600 bg-rose-50' }
+        : { txt: `Gastando ${Math.round(-desvio)}% abaixo do ritmo`, cor: 'text-amber-700 bg-amber-50' }
+
+  return (
+    <div className={clsx(CARD, 'p-4 md:p-6')}>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <p className={ROTULO}>Verba do mês</p>
+          <p className="mt-1 text-sm text-slate-500">
+            <b className="text-slate-900 tabular-nums">{brl(mes.investimento)}</b> de {brl(verba, 0)} · dia {mes.dia} de {mes.diasNoMes}
+          </p>
+        </div>
+        <span className={clsx('rounded-full px-2.5 py-1 text-xs font-semibold', status.cor)}>{status.txt}</span>
+      </div>
+      <div className="relative mt-4 h-3 rounded-full bg-slate-100">
+        <div className="h-full rounded-full bg-gradient-to-r from-gm-accent to-gm-glow" style={{ width: `${usado}%` }} />
+        <span
+          className="absolute -top-1 h-5 w-0.5 rounded bg-slate-900/70"
+          style={{ left: `${marcaIdeal}%` }}
+          title={`Ritmo ideal hoje: ${brl(ideal, 0)}`}
+        />
+      </div>
+      <div className="mt-2 flex justify-between gap-3 text-xs text-slate-500 flex-wrap">
+        <span>Ideal até hoje: <b className="text-slate-700 tabular-nums">{brl(ideal, 0)}</b></span>
+        <span>
+          Fecha o mês em <b className={clsx('tabular-nums', projecao > verba * 1.05 ? 'text-rose-600' : 'text-slate-700')}>{brl(projecao, 0)}</b> neste ritmo
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// ─── Tabela diária com mapa de calor ─────────────────────────────────────────
+
+interface LinhaMatriz {
+  rotulo: string
+  valor: (m: Metricas) => number | null
+  fmt: (v: number) => string
+  /** Sem sentido = só mostra o número, sem cor. */
+  sentido?: 'sobe' | 'desce'
+  meta?: number | null
+}
+
+function mediana(xs: number[]) {
+  if (xs.length === 0) return null
+  const s = [...xs].sort((a, b) => a - b)
+  const meio = Math.floor(s.length / 2)
+  return s.length % 2 ? s[meio] : (s[meio - 1] + s[meio]) / 2
+}
+
+/** Cor da célula pela distância até a referência (meta ou mediana do período). */
+function corCelula(v: number | null, ref: number | null, sentido?: 'sobe' | 'desce') {
+  if (v == null || ref == null || ref === 0 || !sentido) return ''
+  const desvio = ((v - ref) / ref) * (sentido === 'sobe' ? 1 : -1)
+  if (desvio >= 0.3) return 'bg-emerald-200/80 text-emerald-900'
+  if (desvio >= 0.1) return 'bg-emerald-100/80 text-emerald-800'
+  if (desvio <= -0.3) return 'bg-rose-200/80 text-rose-900'
+  if (desvio <= -0.1) return 'bg-rose-100/80 text-rose-800'
+  return ''
+}
+
+export function MatrizDiaria({ serie, total, metas }: { serie: SerieDia[]; total: Metricas; metas?: MetasTrafego | null }) {
+  const dias = [...serie].reverse() // mais recente primeiro
+  const temVenda = total.compras > 0 || total.receita > 0
+  const temConversa = total.conversas > 0
+
+  const linhas: LinhaMatriz[] = [
+    { rotulo: 'Investimento', valor: m => m.investimento, fmt: v => brl(v) },
+    { rotulo: 'Impressões', valor: m => m.impressoes, fmt: num },
+    { rotulo: 'CPM', valor: m => (m.impressoes > 0 ? m.cpm : null), fmt: v => brl(v), sentido: 'desce' },
+    { rotulo: 'Cliques no link', valor: m => m.cliquesLink, fmt: num },
+    { rotulo: 'CPC', valor: m => razao(m.investimento, m.cliquesLink), fmt: v => brl(v), sentido: 'desce' },
+    { rotulo: 'CTR', valor: m => (m.impressoes > 0 ? m.ctr : null), fmt: v => pct(v, 2), sentido: 'sobe' },
+    { rotulo: 'Visitas ao site', valor: m => m.visitas, fmt: num },
+    { rotulo: 'Custo / visita', valor: m => razao(m.investimento, m.visitas), fmt: v => brl(v), sentido: 'desce' },
+    { rotulo: 'Taxa de chegada', valor: m => (m.cliquesLink > 0 ? (m.visitas / m.cliquesLink) * 100 : null), fmt: v => pct(v), sentido: 'sobe' },
+    ...(temVenda
+      ? ([
+          { rotulo: 'Carrinhos', valor: m => m.carrinho, fmt: num },
+          { rotulo: 'Compras', valor: m => m.compras, fmt: num },
+          { rotulo: 'Custo / compra', valor: m => razao(m.investimento, m.compras), fmt: v => brl(v), sentido: 'desce', meta: metas?.custo_compra },
+          { rotulo: 'ROAS', valor: m => (m.investimento > 0 ? m.receita / m.investimento : null), fmt: vezes, sentido: 'sobe', meta: metas?.roas },
+        ] satisfies LinhaMatriz[])
+      : []),
+    ...(temConversa
+      ? ([
+          { rotulo: 'Conversas', valor: m => m.conversas, fmt: num },
+          { rotulo: 'Custo / conversa', valor: m => razao(m.investimento, m.conversas), fmt: v => brl(v), sentido: 'desce', meta: metas?.custo_conversa },
+        ] satisfies LinhaMatriz[])
+      : []),
+  ]
+
+  if (dias.length === 0) return null
+
+  return (
+    <div className={clsx(CARD, 'overflow-hidden')}>
+      <div className="p-4 md:p-6 pb-3 md:pb-4 flex items-end justify-between gap-3 flex-wrap">
+        <div>
+          <p className={ROTULO}>Dia a dia</p>
+          <p className="mt-1 text-sm text-slate-500">Verde: dia melhor que a referência. Vermelho: pior. Referência é a meta do cliente quando existe; se não, a mediana do período.</p>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+          <span className="h-3 w-5 rounded bg-rose-200/80" /><span className="h-3 w-5 rounded bg-rose-100/80" />
+          <span className="px-1">pior · melhor</span>
+          <span className="h-3 w-5 rounded bg-emerald-100/80" /><span className="h-3 w-5 rounded bg-emerald-200/80" />
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-max min-w-full text-xs tabular-nums">
+          <thead>
+            <tr className="border-y border-slate-100 bg-slate-50/70 text-[10px] uppercase tracking-wider text-slate-400">
+              <th className="sticky left-0 z-10 bg-slate-50 text-left font-semibold px-4 md:px-6 py-2.5 min-w-[140px]">Métrica</th>
+              <th className="text-right font-semibold px-3 py-2.5 bg-slate-100/70 text-slate-500">Período</th>
+              {dias.map(dia => (
+                <th key={dia.data} className="text-right font-semibold px-3 py-2.5 whitespace-nowrap">{dataBR(dia.data)}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {linhas.map(l => {
+              const valores = dias.map(dia => (dia.investimento > 0 ? l.valor(dia) : null))
+              const ref = l.meta || mediana(valores.filter((v): v is number => v != null))
+              const vTotal = l.valor(total)
+              return (
+                <tr key={l.rotulo} className="border-b border-slate-100 last:border-0">
+                  <th scope="row" className="sticky left-0 z-10 bg-white text-left font-medium text-slate-700 px-4 md:px-6 py-2 whitespace-nowrap">
+                    {l.rotulo}
+                    {l.meta ? <span className="ml-1.5 text-[10px] font-normal text-slate-400">meta {l.fmt(l.meta)}</span> : null}
+                  </th>
+                  <td className={clsx('text-right px-3 py-2 font-semibold whitespace-nowrap bg-slate-50/70', l.meta ? corCelula(vTotal, l.meta, l.sentido) : 'text-slate-900')}>
+                    {vTotal == null ? '—' : l.fmt(vTotal)}
+                  </td>
+                  {valores.map((v, i) => (
+                    <td key={dias[i].data} className={clsx('text-right px-3 py-2 whitespace-nowrap text-slate-600', corCelula(v, ref, l.sentido))}>
+                      {v == null ? '—' : l.fmt(v)}
+                    </td>
+                  ))}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
@@ -249,16 +483,25 @@ export function TabelaCampanhas({ campanhas }: { campanhas: Campanha[] }) {
   )
 }
 
-export function PainelTrafego({ dados }: { dados: DadosTrafego }) {
+/** `metas` só é passado no admin; o link público mostra o painel sem as metas da agência. */
+export function PainelTrafego({ dados, metas }: { dados: DadosTrafego; metas?: MetasTrafego | null }) {
+  const ant = dados.intervaloAnterior
   return (
     <div className="space-y-4 md:space-y-6">
+      {metas?.verba_mensal ? <RitmoVerba mes={dados.mes} verba={metas.verba_mensal} /> : null}
       {dados.resumo ? (
         <>
-          <Kpis m={dados.resumo} />
+          <Kpis m={dados.resumo} anterior={dados.anterior} metas={metas} />
+          {dados.anterior && ant && (
+            <p className="-mt-2 md:-mt-4 text-[11px] text-slate-400">
+              Comparado com {dataBR(ant.inicio)} a {dataBR(ant.fim)} · nos custos, ▼ é bom
+            </p>
+          )}
           <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
             <Funil m={dados.resumo} />
             <GraficoDiario serie={dados.serie} />
           </div>
+          <MatrizDiaria serie={dados.serie} total={dados.resumo} metas={metas} />
         </>
       ) : (
         <div className={clsx(CARD, 'p-6 text-sm text-slate-500')}>Nenhum investimento neste período.</div>

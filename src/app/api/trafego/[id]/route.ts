@@ -2,7 +2,8 @@ import { requireAuth } from '@/lib/supabase'
 import { normalizarContaId } from '@/lib/meta'
 import { NextResponse } from 'next/server'
 
-const EDITAVEIS = ['plano', 'link_ativo', 'recado', 'meta_ad_account_id'] as const
+const EDITAVEIS = ['plano', 'link_ativo', 'recado', 'meta_ad_account_id', 'metas'] as const
+const CHAVES_META = ['custo_compra', 'roas', 'custo_conversa', 'verba_mensal'] as const
 
 export async function PATCH(
   req: Request,
@@ -19,6 +20,15 @@ export async function PATCH(
     const act = normalizarContaId(String(update.meta_ad_account_id ?? ''))
     if (!act) return NextResponse.json({ error: 'ID de conta inválido.' }, { status: 400 })
     update.meta_ad_account_id = act
+  }
+  if ('metas' in update) {
+    const bruto = (update.metas ?? {}) as Record<string, unknown>
+    update.metas = Object.fromEntries(
+      CHAVES_META.map(k => {
+        const v = Number(bruto[k])
+        return [k, isFinite(v) && v > 0 ? v : null]
+      })
+    )
   }
   // Gera um link novo; o antigo deixa de funcionar na hora.
   if (body.novo_link) update.link_token = crypto.randomUUID().replace(/-/g, '')

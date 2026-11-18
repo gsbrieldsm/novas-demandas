@@ -1,4 +1,4 @@
-import type { Campanha, DadosTrafego, Metricas, Periodo, SerieDia, SituacaoCampanha } from './trafego'
+import type { Campanha, DadosTrafego, Intervalo, Metricas, Periodo, SerieDia, SituacaoCampanha } from './trafego'
 
 // Cliente da Marketing API do Meta. Só roda no servidor: o token do System
 // User fica em META_ACCESS_TOKEN e nunca vai para o navegador.
@@ -111,6 +111,49 @@ function situacao(c: CampanhaBruta, entregou: boolean): SituacaoCampanha {
   return entregou && c.effective_status === 'ACTIVE' ? 'rodando' : 'sem_entrega'
 }
 
+// ─── Datas ───────────────────────────────────────────────────────────────────
+
+/** Data de hoje no fuso de Brasília, como AAAA-MM-DD. */
+function hojeBR() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date())
+}
+
+const iso = (d: Date) => d.toISOString().slice(0, 10)
+const dataUTC = (s: string) => new Date(`${s}T00:00:00Z`)
+function somaDias(s: string, n: number) {
+  const d = dataUTC(s)
+  d.setUTCDate(d.getUTCDate() + n)
+  return iso(d)
+}
+function diasNoMes(ano: number, mes: number) {
+  return new Date(Date.UTC(ano, mes + 1, 0)).getUTCDate()
+}
+
+/**
+ * Período de comparação: o mesmo tamanho, logo antes do período escolhido.
+ * "Este mês" compara com os mesmos dias do mês passado (1 a hoje).
+ */
+export function intervaloAnterior(periodo: Periodo, hoje = hojeBR()): Intervalo {
+  const dias = { last_7d: 7, last_14d: 14, last_30d: 30 } as const
+  if (periodo in dias) {
+    const n = dias[periodo as keyof typeof dias]
+    const inicioAtual = somaDias(hoje, -n) // os presets do Meta terminam ontem
+    return { inicio: somaDias(inicioAtual, -n), fim: somaDias(inicioAtual, -1) }
+  }
+  const h = dataUTC(hoje)
+  const ano = h.getUTCFullYear()
+  const mes = h.getUTCMonth()
+  if (periodo === 'this_month') {
+    const a = mes === 0 ? ano - 1 : ano
+    const m = mes === 0 ? 11 : mes - 1
+    const dia = Math.min(h.getUTCDate(), diasNoMes(a, m))
+    return { inicio: iso(new Date(Date.UTC(a, m, 1))), fim: iso(new Date(Date.UTC(a, m, dia))) }
+  }
+  // last_month → o mês anterior a ele
+  const alvo = new Date(Date.UTC(ano, mes - 2, 1))
+  return { inicio: iso(alvo), fim: iso(new Date(Date.UTC(alvo.getUTCFullYear(), alvo.getUTCMonth() + 1, 0))) }
+}
+
 /** Orçamentos vêm em centavos. */
 const centavos = (v?: string) => (v ? Number(v) / 100 : null)
 
@@ -126,11 +169,19 @@ export async function dadosTrafego(contaId: string, periodo: Periodo): Promise<D
   const act = normalizarContaId(contaId)
   if (!act) throw new MetaErro('ID da conta de anúncios inválido.', 400)
 
-  const [conta, resumo, serie, porCampanha, campanhas, recentes] = await Promise.all([
+  const hoje = hojeBR()
+  const intervaloAnt = intervaloAnterior(periodo, hoje)
+
+  const [conta, resumo, anterior, doMes, serie, porCampanha, campanhas, recentes] = await Promise.all([
     graph<{ name: string; currency: string }>(act, { fields: 'name,currency' }),
     graph<{ data: InsightBruto[] }>(`${act}/insights`, { fields: CAMPOS_INSIGHT, date_preset: periodo }),
     graph<{ data: InsightBruto[] }>(`${act}/insights`, {
-      fields: 'spend,actions,date_start',
+      fields: CAMPOS_INSIGHT,
+      time_range: JSON.stringify({ since: intervaloAnt.inicio, until: intervaloAnt.fim }),
+    }),
+    graph<{ data: InsightBruto[] }>(`${act}/insights`, { fields: 'spend', date_preset: 'this_month' }),
+    graph<{ data: InsightBruto[] }>(`${act}/insights`, {
+      fields: `${CAMPOS_INSIGHT},date_start`,
       date_preset: periodo,
       time_increment: '1',
       limit: '100',
@@ -177,23 +228,21 @@ export async function dadosTrafego(contaId: string, periodo: Periodo): Promise<D
       return ordem[a.situacao] - ordem[b.situacao] || (b.metricas?.investimento ?? 0) - (a.metricas?.investimento ?? 0)
     })
 
-  const dias: SerieDia[] = serie.data.map(d => {
-    const m = normalizar(d)
-    return {
-      data: d.date_start!,
-      investimento: m.investimento,
-      cliquesLink: m.cliquesLink,
-      visitas: m.visitas,
-      carrinho: m.carrinho,
-      compras: m.compras,
-    }
-  })
+  const dias: SerieDia[] = serie.data.map(d => ({ data: d.date_start!, ...normalizar(d) }))
+  const h = dataUTC(hoje)
 
   return {
     periodo,
     atualizadoEm: new Date().toISOString(),
     conta: { nome: conta.name, moeda: conta.currency },
     resumo: resumo.data[0] ? normalizar(resumo.data[0]) : null,
+    anterior: anterior.data[0] ? normalizar(anterior.data[0]) : null,
+    intervaloAnterior: intervaloAnt,
+    mes: {
+      investimento: Number(doMes.data[0]?.spend) || 0,
+      dia: h.getUTCDate(),
+      diasNoMes: diasNoMes(h.getUTCFullYear(), h.getUTCMonth()),
+    },
     serie: dias,
     campanhas: lista,
   }

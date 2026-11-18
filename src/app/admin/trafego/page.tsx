@@ -15,6 +15,7 @@ import {
   dataBR,
   novoId,
   type DadosTrafego,
+  type MetasTrafego,
   type Periodo,
   type PlanoItem,
   type TrafegoConta,
@@ -37,6 +38,29 @@ const CAMPO = 'w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-wh
 const ROTULO = 'block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5'
 const CARD = 'bg-white rounded-2xl border border-slate-100 shadow-sm'
 
+const CAMPOS_META: { k: keyof MetasTrafego; rotulo: string; prefixo?: string; sufixo?: string; dica: string }[] = [
+  { k: 'custo_compra', rotulo: 'Custo por venda', prefixo: 'R$', dica: 'CPA máximo aceitável' },
+  { k: 'roas', rotulo: 'ROAS mínimo', sufixo: '×', dica: 'retorno sobre o investimento' },
+  { k: 'custo_conversa', rotulo: 'Custo por conversa', prefixo: 'R$', dica: 'campanhas de mensagem' },
+  { k: 'verba_mensal', rotulo: 'Verba do mês', prefixo: 'R$', dica: 'controla o ritmo de gasto' },
+]
+const METAS_VAZIAS = { custo_compra: '', roas: '', custo_conversa: '', verba_mensal: '' }
+
+function metasComoTexto(m: MetasTrafego | null | undefined) {
+  return Object.fromEntries(
+    CAMPOS_META.map(({ k }) => [k, m?.[k] ? String(m[k]).replace('.', ',') : ''])
+  ) as Record<keyof MetasTrafego, string>
+}
+
+function textoComoMetas(t: Record<keyof MetasTrafego, string>): MetasTrafego {
+  return Object.fromEntries(
+    CAMPOS_META.map(({ k }) => {
+      const v = parseFloat(t[k].replace(/\./g, '').replace(',', '.'))
+      return [k, isFinite(v) && v > 0 ? v : null]
+    })
+  )
+}
+
 function Trafego() {
   const router = useRouter()
   const params = useSearchParams()
@@ -56,6 +80,7 @@ function Trafego() {
   const [vinculo, setVinculo] = useState('')
   const [plano, setPlano] = useState<PlanoItem[]>([])
   const [recado, setRecado] = useState('')
+  const [metas, setMetas] = useState<Record<keyof MetasTrafego, string>>(METAS_VAZIAS)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
   const [copiado, setCopiado] = useState(false)
@@ -98,6 +123,7 @@ function Trafego() {
   useEffect(() => {
     setPlano(conta?.plano ?? [])
     setRecado(conta?.recado ?? '')
+    setMetas(metasComoTexto(conta?.metas))
     setErro('')
   }, [conta?.id, conta?.updated_at]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -167,6 +193,7 @@ function Trafego() {
 
   const planoAlterado = useMemo(() => JSON.stringify(plano) !== JSON.stringify(conta?.plano ?? []), [plano, conta?.plano])
   const recadoAlterado = (recado.trim() || null) !== (conta?.recado ?? null)
+  const metasAlteradas = JSON.stringify(textoComoMetas(metas)) !== JSON.stringify(textoComoMetas(metasComoTexto(conta?.metas)))
 
   function editarItem(id: string, mudancas: Partial<PlanoItem>) {
     setPlano(prev => prev.map(p => (p.id === id ? { ...p, ...mudancas } : p)))
@@ -356,12 +383,49 @@ function Trafego() {
               <SkeletonPainel />
             ) : (
               <>
-                <PainelTrafego dados={dados} />
+                <PainelTrafego dados={dados} metas={conta.metas} />
                 <p className="text-right text-[11px] text-slate-400">
                   Dados do Meta Ads · atualizados às {new Date(dados.atualizadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} (cache de 5 min)
                 </p>
               </>
             )}
+
+            {/* METAS */}
+            <div className={clsx(CARD, 'p-4 md:p-6')}>
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-[10px] md:text-xs font-semibold text-slate-400 uppercase tracking-wider">Metas do cliente</p>
+                  <p className="mt-1 text-sm text-slate-500">Pintam os indicadores e a tabela dia a dia contra a meta. Ficam só aqui; o link do cliente não mostra.</p>
+                </div>
+                <button
+                  onClick={() => salvar({ metas: textoComoMetas(metas) })}
+                  disabled={metasAlteradas === false || salvando}
+                  className="rounded-lg bg-gm-accent px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
+                >
+                  Salvar metas
+                </button>
+              </div>
+              <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {CAMPOS_META.map(c => (
+                  <div key={c.k}>
+                    <label htmlFor={`meta-${c.k}`} className={ROTULO}>{c.rotulo}</label>
+                    <div className="flex items-center rounded-lg border border-slate-200 bg-white overflow-hidden focus-within:border-gm-accent">
+                      {c.prefixo && <span className="px-2 text-xs text-slate-400">{c.prefixo}</span>}
+                      <input
+                        id={`meta-${c.k}`}
+                        inputMode="decimal"
+                        value={metas[c.k]}
+                        onChange={e => setMetas(m => ({ ...m, [c.k]: e.target.value }))}
+                        placeholder="—"
+                        className={clsx('w-full text-sm py-2 focus:outline-none tabular-nums', c.prefixo ? 'pr-3' : 'px-3')}
+                      />
+                      {c.sufixo && <span className="px-2 text-xs text-slate-400">{c.sufixo}</span>}
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-400">{c.dica}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* PLANO DE AÇÃO */}
             <div className={clsx(CARD, 'p-4 md:p-6')}>
