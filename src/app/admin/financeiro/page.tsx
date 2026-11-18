@@ -8,6 +8,7 @@ import { format, addMonths, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import clsx from 'clsx'
 import { AdminNav } from '@/components/AdminNav'
+import { ImportarDespesas } from '@/components/ImportarDespesas'
 import type { Ticket } from '@/types'
 
 function formatBRL(v: number, oculto = false) {
@@ -89,6 +90,7 @@ export default function FinanceiroPage() {
   const [ocultarValores, setOcultarValores] = useState(false)
   const fmtBRL = (v: number) => formatBRL(v, ocultarValores)
   const [showDespForm, setShowDespForm] = useState(false)
+  const [showImportar, setShowImportar] = useState(false)
   const [despForm, setDespForm] = useState<{ tipo: DespesaTipo; descricao: string; valor: string; vencimento: string; recorrente: boolean; recorrencia_meses: string }>({ tipo: 'corporativa', descricao: '', valor: '', vencimento: '', recorrente: false, recorrencia_meses: '12' })
   const [savingDesp, setSavingDesp] = useState(false)
   const [despesasTodas, setDespesasTodas] = useState<Despesa[]>([])
@@ -892,7 +894,13 @@ export default function FinanceiroPage() {
             <div className="flex items-center gap-3">
               <span className="text-sm font-bold text-red-500">{fmtBRL(saidasTotal)}</span>
               <button
-                onClick={() => setShowDespForm(v => !v)}
+                onClick={() => { setShowImportar(v => !v); setShowDespForm(false) }}
+                className="text-xs px-3 py-1.5 rounded-lg border border-gm-accent/40 text-gm-accent hover:bg-gm-accent/10 transition-colors"
+              >
+                🧾 Lançar por print
+              </button>
+              <button
+                onClick={() => { setShowDespForm(v => !v); setShowImportar(false) }}
                 className="text-xs px-3 py-1.5 rounded-lg text-white hover:opacity-90 transition-opacity"
                 style={{ background: 'rgb(var(--gm-accent))' }}
               >
@@ -911,8 +919,34 @@ export default function FinanceiroPage() {
               <span className="text-green-600 font-medium">Pago {fmtBRL(saidasPagas)}</span>
               <span className="text-slate-300">·</span>
               <span className="text-amber-600 font-medium">A pagar {fmtBRL(saidasAPagar)}</span>
+              <button
+                onClick={() => { setShowImportar(v => !v); setShowDespForm(false) }}
+                className="ml-auto text-gm-accent font-medium"
+              >
+                🧾 Por print
+              </button>
             </div>
           </div>
+
+          {showImportar && (
+            <ImportarDespesas
+              mes={mes.getMonth() + 1}
+              ano={mes.getFullYear()}
+              existentes={despesas.map(d => d.descricao)}
+              onFechar={() => setShowImportar(false)}
+              onImportado={async () => {
+                const m = mes.getMonth() + 1
+                const a = mes.getFullYear()
+                const [d, dTodas] = await Promise.all([
+                  api(`/api/despesas?mes=${m}&ano=${a}`).then(r => r.json()),
+                  api('/api/despesas').then(r => r.json()),
+                ])
+                setDespesas(d)
+                setDespesasTodas(dTodas)
+                setShowImportar(false)
+              }}
+            />
+          )}
 
           {showDespForm && (
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
