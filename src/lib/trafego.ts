@@ -106,6 +106,48 @@ export interface Campanha {
   metricas: Metricas | null // null = não veiculou no período
 }
 
+/** Sinal de cansaço do criativo: últimos 7 dias contra os 7 anteriores. */
+export interface Fadiga {
+  nivel: 'trocar' | 'atencao'
+  frequencia: number
+  ctrAgora: number
+  ctrAntes: number | null
+  motivo: string
+}
+
+export interface Criativo {
+  id: string
+  nome: string
+  campanha: string
+  ativo: boolean
+  tipo: 'video' | 'imagem' | 'outro'
+  thumb: string | null
+  link: string | null // post no Instagram, quando existe
+  metricas: Metricas
+  ctrLink: number
+  thruplays: number // vídeo assistido até o fim (ou 15s)
+  fadiga: Fadiga | null
+}
+
+export interface Regiao {
+  nome: string
+  uf: string | null
+  metricas: Metricas
+}
+
+/** Uma célula do mapa dia da semana × hora, já no horário de Brasília. */
+export interface CelulaHora {
+  dia: number // 0 = domingo
+  hora: number
+  investimento: number
+  impressoes: number
+  cliquesLink: number
+  visitas: number
+  compras: number
+  conversas: number
+  receita: number
+}
+
 export interface DadosTrafego {
   periodo: Periodo
   atualizadoEm: string
@@ -118,6 +160,30 @@ export interface DadosTrafego {
   mes: { investimento: number; dia: number; diasNoMes: number }
   serie: SerieDia[]
   campanhas: Campanha[]
+  /** Os blocos abaixo são opcionais: se o Meta falhar em um deles, o painel segue sem ele. */
+  criativos?: Criativo[]
+  regioes?: Regiao[]
+  horas?: CelulaHora[]
+}
+
+const UFS: Record<string, string> = {
+  acre: 'AC', alagoas: 'AL', amapa: 'AP', amazonas: 'AM', bahia: 'BA', ceara: 'CE',
+  'distrito federal': 'DF', 'federal district': 'DF', 'espirito santo': 'ES', goias: 'GO',
+  maranhao: 'MA', 'mato grosso': 'MT', 'mato grosso do sul': 'MS', 'minas gerais': 'MG',
+  para: 'PA', paraiba: 'PB', parana: 'PR', pernambuco: 'PE', piaui: 'PI',
+  'rio de janeiro': 'RJ', 'rio grande do norte': 'RN', 'rio grande do sul': 'RS',
+  rondonia: 'RO', roraima: 'RR', 'santa catarina': 'SC', 'sao paulo': 'SP', sergipe: 'SE', tocantins: 'TO',
+}
+
+/** "São Paulo (state)" → "SP". */
+export function ufDaRegiao(nome: string) {
+  const chave = nome
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/\(.*?\)/g, '')
+    .trim()
+    .toLowerCase()
+  return UFS[chave] ?? null
 }
 
 /** Variação percentual de `atual` sobre `anterior`; null quando não dá para comparar. */

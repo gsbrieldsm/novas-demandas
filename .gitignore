@@ -40,3 +40,6 @@ next-env.d.ts
 /public/videos/copy_*.mp4
 /public/videos/IMG_*.PNG
 public/videos/meninas correndo.mp4
+
+# backups do salvar-token (contêm segredos)
+*.bak

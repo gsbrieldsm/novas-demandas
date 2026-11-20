@@ -1,4 +1,4 @@
-import { MetaErro, graph } from './meta'
+import { MetaErro, comCadaToken, comTokenDe, graph } from './meta'
 
 // Instagram Graph API (contas Comerciais/Criador ligadas a uma página do
 // Facebook que o System User enxerga). Só servidor — usa META_ACCESS_TOKEN.
@@ -62,6 +62,11 @@ export interface SnapshotInstagram {
 }
 
 export async function contasInstagram(): Promise<ContaInstagram[]> {
+  const todas = await comCadaToken(contasInstagramDoToken)
+  return [...new Map(todas.map(c => [c.id, c])).values()]
+}
+
+async function contasInstagramDoToken(): Promise<ContaInstagram[]> {
   const r = await graph<{
     data: {
       name: string
@@ -118,6 +123,10 @@ const media = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.
 
 export async function snapshotInstagram(igId: string): Promise<SnapshotInstagram> {
   if (!/^\d+$/.test(igId)) throw new MetaErro('ID do Instagram inválido.', 400)
+  return comTokenDe(igId, () => montarSnapshot(igId))
+}
+
+async function montarSnapshot(igId: string): Promise<SnapshotInstagram> {
   const avisos: string[] = []
 
   const agora = Math.floor(Date.now() / 1000)

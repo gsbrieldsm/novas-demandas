@@ -20,6 +20,7 @@ import {
   type SerieDia,
   type SituacaoCampanha,
 } from '@/lib/trafego'
+import { Criativos, MapaBrasil, MapaHoras } from './Extras'
 
 // Painel de métricas usado no admin (/admin/trafego) e no link do cliente
 // (/trafego/[token]). Só apresenta dados; quem busca é a página.
@@ -483,8 +484,11 @@ export function TabelaCampanhas({ campanhas }: { campanhas: Campanha[] }) {
   )
 }
 
-/** `metas` só é passado no admin; o link público mostra o painel sem as metas da agência. */
-export function PainelTrafego({ dados, metas }: { dados: DadosTrafego; metas?: MetasTrafego | null }) {
+/**
+ * `metas` e `interno` só são passados no admin: o link público mostra o painel
+ * sem as metas da agência e sem os alertas de fadiga dos criativos.
+ */
+export function PainelTrafego({ dados, metas, interno }: { dados: DadosTrafego; metas?: MetasTrafego | null; interno?: boolean }) {
   const ant = dados.intervaloAnterior
   return (
     <div className="space-y-4 md:space-y-6">
@@ -501,6 +505,9 @@ export function PainelTrafego({ dados, metas }: { dados: DadosTrafego; metas?: M
             <Funil m={dados.resumo} />
             <GraficoDiario serie={dados.serie} />
           </div>
+          {dados.criativos?.length ? <Criativos criativos={dados.criativos} total={dados.resumo} interno={interno} /> : null}
+          {dados.horas?.length ? <MapaHoras horas={dados.horas} total={dados.resumo} /> : null}
+          {dados.regioes?.length ? <MapaBrasil regioes={dados.regioes} total={dados.resumo} /> : null}
           <MatrizDiaria serie={dados.serie} total={dados.resumo} metas={metas} />
         </>
       ) : (

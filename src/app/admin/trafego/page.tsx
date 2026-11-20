@@ -383,7 +383,7 @@ function Trafego() {
               <SkeletonPainel />
             ) : (
               <>
-                <PainelTrafego dados={dados} metas={conta.metas} />
+                <PainelTrafego dados={dados} metas={conta.metas} interno />
                 <p className="text-right text-[11px] text-slate-400">
                   Dados do Meta Ads · atualizados às {new Date(dados.atualizadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} (cache de 5 min)
                 </p>
