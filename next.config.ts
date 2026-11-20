@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true
   },
+  async redirects() {
+    // A versão animada virou o site principal; o link de teste leva para a raiz.
+    return [{ source: '/site-v2.html', destination: '/', permanent: false }]
+  },
   async rewrites() {
     return [
       // Site institucional (estático) na raiz

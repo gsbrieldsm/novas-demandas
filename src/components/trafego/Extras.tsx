@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import clsx from 'clsx'
 import { brl, num, pct, razao, type CelulaHora, type Criativo, type Metricas, type Regiao } from '@/lib/trafego'
+import { BRASIL_VIEWBOX, UF_CENTROS, UF_PATHS } from './brasil-uf'
 
 // Blocos visuais extras do painel de tráfego: criativos (com alerta de
 // fadiga), mapa do Brasil por estado e mapa de calor dia da semana × hora.
@@ -177,18 +178,10 @@ export function Criativos({ criativos, total, interno }: { criativos: Criativo[]
   )
 }
 
-// ─── Mapa do Brasil (grade de estados) ───────────────────────────────────────
+// ─── Mapa do Brasil (contorno real dos estados, malha do IBGE) ───────────────
 
-/** Cada estado numa célula, aproximando a geografia: [coluna, linha]. */
-const GRADE_UF: Record<string, [number, number]> = {
-  RR: [2, 0], AP: [4, 0],
-  AM: [1, 1], PA: [3, 1], MA: [4, 1], CE: [5, 1], RN: [6, 1],
-  AC: [0, 2], RO: [1, 2], MT: [2, 2], TO: [3, 2], PI: [4, 2], PE: [5, 2], PB: [6, 2],
-  MS: [2, 3], GO: [3, 3], DF: [4, 3], BA: [5, 3], AL: [6, 3],
-  PR: [2, 4], SP: [3, 4], MG: [4, 4], ES: [5, 4], SE: [6, 4],
-  SC: [2, 5], RJ: [4, 5],
-  RS: [2, 6],
-}
+/** Estados pequenos demais para caber o rótulo dentro. */
+const UF_PEQUENAS = new Set(['DF', 'SE', 'AL', 'RN', 'PB', 'ES', 'RJ'])
 
 type MetricaMapa = 'investimento' | 'resultado' | 'custo'
 
@@ -243,31 +236,54 @@ export function MapaBrasil({ regioes, total }: { regioes: Regiao[]; total: Metri
       </div>
 
       <div className="mt-5 grid gap-6 md:grid-cols-[auto_minmax(0,1fr)] md:items-start">
-        <div className="mx-auto w-full max-w-[300px]">
-          <div className="grid grid-cols-7 gap-1.5" onMouseLeave={() => setFoco(null)}>
-            {Object.entries(GRADE_UF).map(([uf, [c, l]]) => {
+        <div className="mx-auto w-full max-w-[380px] md:w-[360px]">
+          <svg viewBox={BRASIL_VIEWBOX} className="h-auto w-full" role="img" aria-label="Mapa do Brasil por estado" onMouseLeave={() => setFoco(null)}>
+            {Object.entries(UF_PATHS).map(([uf, d]) => {
               const r = porUf.get(uf)
               const k = intensidade(valor(r))
               return (
-                <button
+                <path
                   key={uf}
-                  type="button"
+                  d={d}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={r ? `${r.nome}: ${fmt(valor(r))}` : `${uf}: sem investimento`}
                   onMouseEnter={() => setFoco(uf)}
                   onFocus={() => setFoco(uf)}
                   onClick={() => setFoco(uf)}
-                  aria-label={r ? `${r.nome}: ${fmt(valor(r))}` : `${uf}: sem investimento`}
-                  className={clsx(
-                    'aspect-square rounded-lg text-[10px] font-semibold transition-transform hover:scale-110 focus-visible:scale-110',
-                    k == null ? 'bg-slate-100 text-slate-400' : k > 0.45 ? 'text-white' : 'text-slate-700',
-                    foco === uf && 'ring-2 ring-slate-900/70'
-                  )}
-                  style={{ gridColumnStart: c + 1, gridRowStart: l + 1, ...(k != null ? { background: tom(k) } : {}) }}
-                >
-                  {uf}
-                </button>
+                  className="cursor-pointer outline-none transition-[fill,opacity] duration-200"
+                  fill={k == null ? 'rgb(241 245 249)' : tom(k)}
+                  stroke={foco === uf ? 'rgb(15 23 42)' : 'white'}
+                  strokeWidth={foco === uf ? 2 : 1}
+                  strokeLinejoin="round"
+                  opacity={foco && foco !== uf ? 0.75 : 1}
+                />
               )
             })}
-          </div>
+            {/* foco por cima para a borda não ficar escondida pelos vizinhos */}
+            {foco && UF_PATHS[foco] && (
+              <path d={UF_PATHS[foco]} fill="none" stroke="rgb(15 23 42)" strokeWidth={2} strokeLinejoin="round" pointerEvents="none" />
+            )}
+            {Object.entries(UF_CENTROS).map(([uf, [x, y]]) => {
+              const k = intensidade(valor(porUf.get(uf)))
+              if (UF_PEQUENAS.has(uf) && k == null) return null
+              return (
+                <text
+                  key={uf}
+                  x={x}
+                  y={y}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  pointerEvents="none"
+                  className="font-semibold"
+                  fontSize={UF_PEQUENAS.has(uf) ? 11 : 14}
+                  fill={k == null ? 'rgb(148 163 184)' : k > 0.45 ? 'white' : 'rgb(51 65 85)'}
+                >
+                  {uf}
+                </text>
+              )
+            })}
+          </svg>
           <p className="mt-3 min-h-[2.5rem] text-center text-xs text-slate-500">
             {atual ? (
               <>

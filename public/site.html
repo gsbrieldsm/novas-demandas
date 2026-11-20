@@ -589,8 +589,96 @@
       html { scroll-behavior: auto; }
     }
   </style>
+  <noscript><style>.intro { display: none !important; }</style></noscript>
+  <style id="v2-css">
+    /* ═══ V2 · camada de movimento (GSAP + ScrollTrigger + Lenis + WebGL) ═══ */
+    html.lenis, html.lenis body { height: auto; }
+    .lenis.lenis-smooth { scroll-behavior: auto !important; }
+    .lenis.lenis-stopped { overflow: hidden; }
+
+    /* intro "1..2..3...gravando!" */
+    .intro { position: fixed; inset: 0; z-index: 10000; background: var(--navy-950); display: grid; place-items: center; color: #fff; overflow: hidden; }
+    .intro::before { content: ''; position: absolute; inset: -20%; background: radial-gradient(500px 300px at 50% 55%, rgba(47, 107, 255, 0.22), transparent 70%); }
+    .intro-meta { position: absolute; top: 26px; left: 28px; right: 28px; display: flex; justify-content: space-between; font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .intro-meta b { color: #ff4d4d; font-weight: 600; }
+    .intro-inner { position: relative; display: flex; align-items: center; gap: clamp(12px, 2vw, 22px); }
+    .rec-dot { width: clamp(10px, 1.4vw, 16px); height: clamp(10px, 1.4vw, 16px); border-radius: 50%; background: #ff3b3b; box-shadow: 0 0 26px #ff3b3b; animation: pulse 0.9s infinite; flex-shrink: 0; }
+    .intro-count { position: relative; height: 1.12em; width: 5.4em; font-size: clamp(44px, 8.4vw, 104px); font-weight: 700; letter-spacing: -0.045em; line-height: 1.12; overflow: hidden; }
+    .intro-count span { position: absolute; left: 0; top: 0; white-space: nowrap; }
+    .intro-count .go { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: -0.01em; color: var(--blue-2); }
+    .intro-bar { position: absolute; left: 50%; bottom: 13vh; width: min(260px, 52vw); height: 2px; background: rgba(255, 255, 255, 0.1); transform: translateX(-50%); border-radius: 2px; overflow: hidden; }
+    .intro-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--blue), var(--cyan)); transform: scaleX(0); transform-origin: left; }
+
+    /* títulos que sobem palavra por palavra */
+    .v2 .w { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 0.07em 0.16em; margin: 0 -0.07em -0.16em; }
+    .v2 .wi { display: inline-block; transform-origin: 0 100%; }
+
+    /* shader do topo */
+    .hero-gl { position: absolute; left: 0; top: 0; z-index: 0; width: 100%; height: min(100%, 120vh); opacity: 0; pointer-events: none; -webkit-mask-image: linear-gradient(#000 50%, transparent); mask-image: linear-gradient(#000 50%, transparent); }
+    .v2 .hero.grid-bg::before { z-index: 1; }
+    .v2 .hero > .wrap, .v2 .hero > .logos { position: relative; z-index: 2; }
+    .v2 .stage-inner { transform-style: preserve-3d; }
+    .v2 .float-card { translate: 0 var(--py, 0px); }
+    .v2-hold .draw path.line { transition: none !important; stroke-dashoffset: var(--len, 1200) !important; }
+    .v2-hold .draw path.area { transition: none !important; opacity: 0 !important; }
+
+    /* faixa cinética */
+    .kinetic { padding: clamp(46px, 7vw, 96px) 0; overflow: hidden; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .k-row { white-space: nowrap; line-height: 1.02; font-size: clamp(52px, 10vw, 156px); font-weight: 700; letter-spacing: -0.045em; }
+    .k-track { display: inline-flex; will-change: transform; }
+    .k-track > span { padding-right: 0.3em; }
+    .k1 .k-track { color: transparent; -webkit-text-stroke: 1.4px rgba(238, 242, 251, 0.32); }
+    .k1 b { color: #fff; -webkit-text-stroke: 0; font-weight: 700; }
+    .k1 em { font-style: normal; color: var(--blue-2); -webkit-text-stroke: 0; }
+    .k2 { margin-top: 0.06em; }
+    .k2 .k-track { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: -0.02em; color: var(--blue-2); }
+    .k2 .k-track span:nth-child(even) { color: var(--cyan); }
+
+    /* trilho do método preenchendo */
+    .v2 .method-rail { position: relative; }
+    .rail-line { position: absolute; left: 16.25px; top: 17px; bottom: 17px; width: 1.5px; background: var(--line-strong); }
+    .rail-line i { display: block; width: 100%; height: 100%; background: linear-gradient(var(--blue), var(--cyan)); transform-origin: top; transform: scaleY(0); box-shadow: 0 0 12px var(--blue); }
+    .v2 .rail-item b { background: var(--navy-900); position: relative; z-index: 1; }
+    .v2 .rail-item.on b { background: var(--blue); }
+
+    /* luz que segue o mouse nos cards */
+    .v2 .spot { position: relative; }
+    .v2 .spot::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 0.45s; background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgba(47, 107, 255, 0.11), transparent 50%); }
+    .v2 .dark .spot::after, .v2 .spot.dark-card::after, .v2 .spot.good::after { background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgba(91, 140, 255, 0.2), transparent 50%); }
+    .v2 .cta-box.spot::after { background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 50%), rgba(56, 197, 245, 0.22), transparent 55%); }
+    .v2 .spot:hover::after { opacity: 1; }
+    .v2 .spot > * { position: relative; z-index: 1; }
+
+    /* botões magnéticos */
+    .v2 .mag { transition: box-shadow 0.25s var(--ease), background 0.25s; }
+    .v2 .mag:hover { transform: none; }
+    .v2 .av video { transition: none; }
+    .v2 .av figure { will-change: clip-path; }
+    .v2 .portrait img { will-change: transform; }
+
+    /* menu some ao descer, volta ao subir */
+    .v2 .nav { transition: transform 0.55s var(--ease), background 0.3s, border-color 0.3s, backdrop-filter 0.3s; }
+    .v2 .nav.hide { transform: translateY(-100%); }
+
+    /* grão de filme */
+    .grain { position: fixed; inset: -100%; z-index: 9997; pointer-events: none; opacity: 0.07; mix-blend-mode: overlay; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); animation: grain 0.9s steps(5) infinite; }
+    @keyframes grain { 0% { transform: translate(0, 0); } 20% { transform: translate(-3%, 2%); } 40% { transform: translate(2%, -4%); } 60% { transform: translate(-4%, -1%); } 80% { transform: translate(3%, 3%); } 100% { transform: translate(0, 0); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .intro, .grain, .hero-gl { display: none !important; }
+    }
+  </style>
 </head>
 <body>
+  <div class="intro" id="intro" aria-hidden="true">
+    <div class="intro-meta"><span>GM&amp;Co · cena 01</span><span><b>● rec</b>&nbsp;&nbsp;take 1</span></div>
+    <div class="intro-inner">
+      <span class="rec-dot"></span>
+      <div class="intro-count"><span>1..</span><span>2..</span><span>3...</span><span class="go">gravando!</span></div>
+    </div>
+    <div class="intro-bar"><i></i></div>
+  </div>
+  <div class="grain" aria-hidden="true"></div>
   <!-- ícones -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
@@ -779,6 +867,17 @@
           <svg class="draw" id="principleChart" viewBox="0 0 600 190" preserveAspectRatio="none" aria-label="Gráfico ilustrativo comparando engajamento e faturamento"></svg>
         </div>
       </div>
+    </section>
+
+    <!-- ═══ FAIXA CINÉTICA (v2) ═══ -->
+    <section class="kinetic dark" aria-label="Estratégia, conteúdo, tráfego, audiovisual, tecnologia e IA — nada por acaso">
+      <div class="k-row k1" aria-hidden="true"><div class="k-track">
+        <span>Estratégia <em>✦</em> <b>Conteúdo</b> <em>✦</em> Tráfego <em>✦</em> <b>Audiovisual</b> <em>✦</em> Tecnologia <em>✦</em> <b>IA</b> <em>✦</em></span>
+        <span>Estratégia <em>✦</em> <b>Conteúdo</b> <em>✦</em> Tráfego <em>✦</em> <b>Audiovisual</b> <em>✦</em> Tecnologia <em>✦</em> <b>IA</b> <em>✦</em></span>
+      </div></div>
+      <div class="k-row k2" aria-hidden="true"><div class="k-track">
+        <span>nada por acaso —</span><span>tudo com propósito —</span><span>nada por acaso —</span><span>tudo com propósito —</span><span>nada por acaso —</span><span>tudo com propósito —</span>
+      </div></div>
     </section>
 
     <!-- ═══ MÉTODO (escuro, sticky) ═══ -->
@@ -1223,6 +1322,268 @@
   </footer>
 
   <a class="wa" href="https://wa.me/5547988194822?text=Vim%20pelo%20site%20da%20Gabriel%20Moraes%20%26%20Co%20e%20quero%20saber%20mais" target="_blank" rel="noopener" aria-label="Falar no WhatsApp"><svg><use href="#i-wa"/></svg></a>
+
+  <!-- ═══ V2 · motor de movimento ═══ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+  <script>
+  (() => {
+    const intro = document.getElementById('intro')
+    const reduz = matchMedia('(prefers-reduced-motion: reduce)').matches
+    // Sem GSAP (CDN bloqueado) ou com movimento reduzido: o site original segue sozinho.
+    if (reduz || !window.gsap || !window.ScrollTrigger) { if (intro) intro.remove(); return }
+    gsap.registerPlugin(ScrollTrigger)
+    const $ = (s, el = document) => el.querySelector(s)
+    const $$ = (s, el = document) => [...el.querySelectorAll(s)]
+    const html = document.documentElement
+    const fino = matchMedia('(hover: hover) and (pointer: fine)').matches
+    html.classList.add('v2')
+
+    // ── rolagem suave (Lenis) sincronizada com o ScrollTrigger ──
+    let lenis = null
+    if (window.Lenis) {
+      lenis = new Lenis({ lerp: 0.095 })
+      lenis.on('scroll', ScrollTrigger.update)
+      gsap.ticker.add(t => lenis.raf(t * 1000))
+      gsap.ticker.lagSmoothing(0)
+      $$('a[href^="#"]').forEach(a => a.addEventListener('click', e => {
+        const alvo = document.querySelector(a.getAttribute('href'))
+        if (!alvo) return
+        e.preventDefault()
+        lenis.scrollTo(alvo.id === 'topo' ? 0 : alvo, { offset: -76, duration: 1.5 })
+      }))
+    }
+
+    // ── quebra um título em palavras mascaradas, preservando <span class="serif"> e <br> ──
+    function dividir(el) {
+      const palavras = []
+      const andar = no => [...no.childNodes].forEach(n => {
+        if (n.nodeType === 3) {
+          const frag = document.createDocumentFragment()
+          n.textContent.split(/(\s+)/).forEach(p => {
+            if (!p) return
+            if (/^\s+$/.test(p)) return frag.appendChild(document.createTextNode(' '))
+            const w = document.createElement('span'); w.className = 'w'
+            const i = document.createElement('span'); i.className = 'wi'; i.textContent = p
+            w.appendChild(i); frag.appendChild(w); palavras.push(i)
+          })
+          n.replaceWith(frag)
+        } else if (n.nodeType === 1 && n.tagName !== 'BR') andar(n)
+      })
+      andar(el)
+      return palavras
+    }
+
+    // ── HERO: assume o controle (o script original não mexe mais nele) ──
+    const hero = $('.hero')
+    const chip = $('.hero .chip'), h1 = $('.hero h1'), lead = $('.hero .lead'), ctas = $('.hero .hero-ctas'), proof = $('.hero-proof')
+    const stage = $('.hero .stage')
+    ;[chip, h1, lead, ctas, proof].forEach(el => el && el.removeAttribute('data-reveal'))
+    const h1w = dividir(h1)
+    gsap.set(h1w, { yPercent: 115, rotate: 5 })
+    gsap.set([chip, lead, ctas, proof], { autoAlpha: 0, y: 26 })
+    gsap.set(stage, { autoAlpha: 0, y: 90 })
+    stage.classList.add('v2-hold')
+    // contadores do painel ficam para quando o painel aparecer
+    const kpis = $$('.hero .kpi [data-count]')
+    kpis.forEach(el => { el.dataset.v2count = el.dataset.count; delete el.dataset.count })
+    function contar(el) {
+      const alvo = +el.dataset.v2count, div = +(el.dataset.div || 1), pre = el.dataset.prefix || '', suf = el.dataset.suffix || ''
+      const casas = div > 1 ? 2 : 0, o = { v: 0 }
+      gsap.to(o, { v: alvo, duration: 2, ease: 'power3.out', onUpdate: () => {
+        el.textContent = pre + (Math.round(o.v) / div).toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas }) + suf
+      } })
+    }
+    let entrou = false
+    function entrarHero() {
+      if (entrou) return; entrou = true
+      gsap.timeline({ defaults: { ease: 'expo.out' } })
+        .to(chip, { autoAlpha: 1, y: 0, duration: 1 })
+        .to(h1w, { yPercent: 0, rotate: 0, duration: 1.4, stagger: 0.07 }, '<0.05')
+        .to(lead, { autoAlpha: 1, y: 0, duration: 1.1 }, '<0.55')
+        .to(ctas, { autoAlpha: 1, y: 0, duration: 1.1 }, '<0.1')
+        .to(proof, { autoAlpha: 1, y: 0, duration: 1.1 }, '<0.1')
+        .to(stage, { autoAlpha: 1, y: 0, duration: 1.8, onStart: () => { stage.classList.remove('v2-hold'); kpis.forEach(contar) } }, '<0.05')
+    }
+
+    // ── INTRO "1..2..3...gravando!" (uma vez por sessão; ?intro força) ──
+    let mostrar = true
+    try { mostrar = !sessionStorage.getItem('gm-intro'); sessionStorage.setItem('gm-intro', '1') } catch (e) {}
+    if (/[?&]intro\b/.test(location.search)) mostrar = true
+    if (intro && mostrar) {
+      if (lenis) lenis.stop()
+      const passos = $$('.intro-count span', intro)
+      gsap.set(passos, { yPercent: 105 })
+      const fim = () => { intro.remove(); if (lenis) lenis.start() }
+      const tl = gsap.timeline({ delay: 0.15, onComplete: fim })
+      const T = 0.36
+      passos.forEach((s, i) => {
+        tl.to(s, { yPercent: 0, duration: 0.34, ease: 'power3.out' }, i * T)
+        if (i < passos.length - 1) tl.to(s, { yPercent: -105, duration: 0.3, ease: 'power3.in' }, i * T + 0.3)
+      })
+      tl.to($('.intro-bar i', intro), { scaleX: 1, duration: passos.length * T, ease: 'none' }, 0)
+      tl.to(intro, { yPercent: -100, duration: 1, ease: 'expo.inOut' }, '+=0.35')
+      tl.add(entrarHero, '-=0.5')
+      intro.addEventListener('click', () => tl.progress(1))
+      setTimeout(() => { if (document.body.contains(intro)) tl.progress(1) }, 6000)
+    } else {
+      if (intro) intro.remove()
+      entrarHero()
+    }
+
+    // hero se afasta ao rolar + cartões flutuantes em profundidades diferentes
+    gsap.to('.hero-copy', { yPercent: -18, autoAlpha: 0.15, ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: '+=650', scrub: true } })
+    gsap.to('.fc-1', { '--py': '-110px', ease: 'none', scrollTrigger: { trigger: stage, start: 'top bottom', end: 'bottom top', scrub: true } })
+    gsap.to('.fc-2', { '--py': '-200px', ease: 'none', scrollTrigger: { trigger: stage, start: 'top bottom', end: 'bottom top', scrub: true } })
+    if (fino) {
+      const si = $('.stage-inner')
+      const rx = gsap.quickTo(si, 'rotationX', { duration: 0.9, ease: 'power3' }), ry = gsap.quickTo(si, 'rotationY', { duration: 0.9, ease: 'power3' })
+      hero.addEventListener('pointermove', e => { ry((e.clientX / innerWidth - 0.5) * 6); rx(-(e.clientY / innerHeight - 0.5) * 4) })
+      hero.addEventListener('pointerleave', () => { rx(0); ry(0) })
+    }
+
+    // ── SHADER WebGL atrás do hero: aurora azul que respira e segue o mouse ──
+    ;(function shader() {
+      const c = document.createElement('canvas'); c.className = 'hero-gl'; c.setAttribute('aria-hidden', 'true')
+      hero.prepend(c)
+      const gl = c.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'low-power' })
+      if (!gl) return c.remove()
+      const vs = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}'
+      const fs = `precision mediump float;uniform vec2 r;uniform float t;uniform vec2 m;
+        vec2 h(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.5453);}
+        float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*(3.-2.*f);
+          return mix(mix(dot(h(i),f),dot(h(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h(i+vec2(0,1)),f-vec2(0,1)),dot(h(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}
+        float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}
+        void main(){
+          vec2 uv=gl_FragCoord.xy/r; vec2 p=(gl_FragCoord.xy-.5*r)/r.y; float tt=t*.05;
+          vec2 mm=(m-.5)*vec2(r.x/r.y,1.); float md=exp(-2.6*length(p-mm));
+          vec2 q=vec2(fbm(p*1.3+vec2(tt,-tt*.6)),fbm(p*1.3+vec2(-tt*.8,tt)+4.3));
+          float f=fbm(p*1.5+1.8*q+md*.45+vec2(tt*1.6,0.));
+          vec3 navy=vec3(.024,.039,.078),blue=vec3(.184,.42,1.),cyan=vec3(.22,.77,.96),violet=vec3(.49,.36,1.);
+          float top=smoothstep(.05,1.,uv.y);
+          vec3 col=navy;
+          col=mix(col,blue*.62,smoothstep(-.05,.55,f+.18)*(.25+.75*top));
+          col=mix(col,cyan*.55,smoothstep(.3,.85,f+q.x*.5)*.55*top);
+          col=mix(col,violet*.45,smoothstep(.35,.9,q.y+.25)*.25*top);
+          col+=blue*md*.16;
+          col=mix(navy,col,smoothstep(.0,.6,uv.y));
+          gl_FragColor=vec4(col,1.);}`
+      const sh = (tipo, src) => { const s = gl.createShader(tipo); gl.shaderSource(s, src); gl.compileShader(s); return s }
+      const pr = gl.createProgram()
+      gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr)
+      if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return c.remove()
+      gl.useProgram(pr)
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
+      const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0)
+      const uR = gl.getUniformLocation(pr, 'r'), uT = gl.getUniformLocation(pr, 't'), uM = gl.getUniformLocation(pr, 'm')
+      const esc = Math.min(devicePixelRatio || 1, 2) * (innerWidth < 700 ? 0.35 : 0.5)
+      const tam = () => { const b = c.getBoundingClientRect(); c.width = Math.max(2, Math.round(b.width * esc)); c.height = Math.max(2, Math.round(b.height * esc)); gl.viewport(0, 0, c.width, c.height); gl.uniform2f(uR, c.width, c.height) }
+      tam(); new ResizeObserver(tam).observe(c)
+      const alvo = { x: 0.5, y: 0.75 }, mouse = { x: 0.5, y: 0.75 }
+      hero.addEventListener('pointermove', e => { const b = c.getBoundingClientRect(); alvo.x = (e.clientX - b.left) / b.width; alvo.y = 1 - (e.clientY - b.top) / b.height })
+      let visivel = true
+      new IntersectionObserver(([e]) => { visivel = e.isIntersecting }).observe(c)
+      const t0 = performance.now()
+      gsap.ticker.add(() => {
+        if (!visivel) return
+        mouse.x += (alvo.x - mouse.x) * 0.05; mouse.y += (alvo.y - mouse.y) * 0.05
+        gl.uniform1f(uT, (performance.now() - t0) / 1000); gl.uniform2f(uM, mouse.x, mouse.y)
+        gl.drawArrays(gl.TRIANGLES, 0, 3)
+      })
+      gsap.to(c, { opacity: 1, duration: 2.4, delay: 0.3, ease: 'power2.out' })
+    })()
+
+    // ── TÍTULOS das seções: palavras sobem da máscara ──
+    $$('main h2').forEach(h => {
+      h.removeAttribute('data-reveal')
+      const ws = dividir(h)
+      gsap.fromTo(ws, { yPercent: 115, rotate: 4 }, { yPercent: 0, rotate: 0, duration: 1.25, ease: 'expo.out', stagger: 0.055, scrollTrigger: { trigger: h, start: 'top 88%' } })
+    })
+
+    // frases que "acendem" palavra por palavra conforme a rolagem
+    $$('.about blockquote, #principio .head .lead').forEach(el => {
+      const ws = dividir(el)
+      gsap.fromTo(ws, { opacity: 0.14 }, { opacity: 1, ease: 'none', stagger: 0.1, scrollTrigger: { trigger: el, start: 'top 85%', end: 'top 40%', scrub: true } })
+    })
+
+    // princípio: itens das listas entram em cascata
+    $$('.cmp').forEach(card => {
+      gsap.from($$('li', card), { x: card.classList.contains('bad') ? -18 : 18, autoAlpha: 0, duration: 0.8, ease: 'power3.out', stagger: 0.08, scrollTrigger: { trigger: card, start: 'top 80%' } })
+    })
+
+    // ── faixa cinética: anda com a rolagem e inclina com a velocidade ──
+    const k1 = $('.k1 .k-track'), k2 = $('.k2 .k-track')
+    gsap.fromTo(k1, { xPercent: 0 }, { xPercent: -28, ease: 'none', scrollTrigger: { trigger: '.kinetic', start: 'top bottom', end: 'bottom top', scrub: 0.6 } })
+    gsap.fromTo(k2, { xPercent: -30 }, { xPercent: -2, ease: 'none', scrollTrigger: { trigger: '.kinetic', start: 'top bottom', end: 'bottom top', scrub: 0.6 } })
+    const sk1 = gsap.quickTo(k1, 'skewX', { duration: 0.5, ease: 'power3' }), sk2 = gsap.quickTo(k2, 'skewX', { duration: 0.5, ease: 'power3' })
+    let solta
+    ScrollTrigger.create({ trigger: '.kinetic', start: 'top bottom', end: 'bottom top', onUpdate: s => {
+      const v = gsap.utils.clamp(-14, 14, s.getVelocity() / -220); sk1(v); sk2(v)
+      clearTimeout(solta); solta = setTimeout(() => { sk1(0); sk2(0) }, 140)
+    } })
+
+    // ── método: linha do trilho preenche conforme as etapas passam ──
+    const rail = $('.method-rail')
+    if (rail) {
+      const ln = document.createElement('span'); ln.className = 'rail-line'; ln.innerHTML = '<i></i>'; rail.prepend(ln)
+      gsap.to(ln.firstChild, { scaleY: 1, ease: 'none', scrollTrigger: { trigger: '.steps', start: 'top center', end: 'bottom center', scrub: true } })
+    }
+
+    // ── audiovisual: vídeos abrem como cortina e as colunas flutuam em paralaxe ──
+    $$('.av figure').forEach(f => {
+      f.removeAttribute('data-reveal')
+      const st = { trigger: f, start: 'top 98%', end: 'top 40%', scrub: true }
+      gsap.fromTo(f, { clipPath: 'inset(22% 14% 22% 14% round 28px)' }, { clipPath: 'inset(0% 0% 0% 0% round 20px)', ease: 'none', scrollTrigger: st })
+      gsap.fromTo($('video', f), { scale: 1.4 }, { scale: 1, ease: 'none', scrollTrigger: { ...st } })
+    })
+    gsap.matchMedia().add('(min-width: 1081px)', () => {
+      $$('.av figure').forEach((f, i) => gsap.fromTo(f, { y: i % 2 ? 110 : 10 }, { y: i % 2 ? -10 : -60, ease: 'none', scrollTrigger: { trigger: '.av', start: 'top bottom', end: 'bottom top', scrub: true } }))
+    })
+
+    // sobre: foto com paralaxe por dentro da moldura
+    const foto = $('.portrait img')
+    if (foto) gsap.fromTo(foto, { scale: 1.22, yPercent: -7 }, { yPercent: 7, ease: 'none', scrollTrigger: { trigger: '.portrait', start: 'top bottom', end: 'bottom top', scrub: true } })
+
+    // números: entram em cascata
+    gsap.from('.stat', { y: 40, autoAlpha: 0, duration: 1, ease: 'expo.out', stagger: 0.1, scrollTrigger: { trigger: '.stats', start: 'top 85%' } })
+
+    // planos: sobem em leque
+    $$('.plan').forEach(p => p.removeAttribute('data-reveal'))
+    gsap.from('.plan', { y: 70, rotate: (i) => [-2.5, 0, 2.5][i] || 0, autoAlpha: 0, duration: 1.2, ease: 'expo.out', stagger: 0.1, scrollTrigger: { trigger: '.plans', start: 'top 82%' } })
+
+    // CTA final: cresce enquanto chega
+    const cta = $('.cta-box')
+    if (cta) { cta.removeAttribute('data-reveal'); gsap.fromTo(cta, { scale: 0.86, borderRadius: 70 }, { scale: 1, borderRadius: 36, ease: 'none', scrollTrigger: { trigger: cta, start: 'top bottom', end: 'top 35%', scrub: true } }) }
+
+    // ── menu: some ao descer, volta ao subir ──
+    const nav = $('#nav')
+    ScrollTrigger.create({ start: 0, end: 'max', onUpdate: s => {
+      nav.classList.toggle('hide', s.direction === 1 && s.scroll() > 500 && !document.body.classList.contains('menu-open'))
+    } })
+
+    // ── interações de mouse (só desktop) ──
+    if (fino) {
+      // luz que acompanha o mouse
+      $$('.card, .plan, .cmp, .step, .cta-box, .own-erp, .faq details').forEach(el => {
+        el.classList.add('spot')
+        el.addEventListener('pointermove', e => { const b = el.getBoundingClientRect(); el.style.setProperty('--mx', (e.clientX - b.left) + 'px'); el.style.setProperty('--my', (e.clientY - b.top) + 'px') })
+      })
+      // botões magnéticos
+      $$('.hero-ctas .btn, .cta-box .btn, .nav-actions .btn, .wa, .tech-plan .btn').forEach(b => {
+        b.classList.add('mag')
+        const xt = gsap.quickTo(b, 'x', { duration: 0.7, ease: 'elastic.out(1, 0.45)' }), yt = gsap.quickTo(b, 'y', { duration: 0.7, ease: 'elastic.out(1, 0.45)' })
+        b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); xt((e.clientX - r.left - r.width / 2) * 0.3); yt((e.clientY - r.top - r.height / 2) * 0.4) })
+        b.addEventListener('pointerleave', () => { xt(0); yt(0) })
+      })
+    }
+
+    // recalcula posições quando as fontes terminam de carregar
+    if (document.fonts) document.fonts.ready.then(() => ScrollTrigger.refresh())
+    addEventListener('load', () => ScrollTrigger.refresh())
+  })()
+  </script>
 
   <script>
   (() => {
