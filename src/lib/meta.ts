@@ -8,6 +8,7 @@ import type {
   Fadiga,
   Intervalo,
   Metricas,
+  PerfilAnuncios,
   Periodo,
   Regiao,
   SerieDia,
@@ -178,6 +179,11 @@ function normalizar(i: InsightBruto): Metricas {
     conversas: acao(i.actions, 'onsite_conversion.messaging_conversation_started_7d'),
     videoViews: acao(i.actions, 'video_view'),
     engajamento: acao(i.actions, 'post_engagement'),
+    reacoes: acao(i.actions, 'post_reaction'),
+    comentarios: acao(i.actions, 'comment'),
+    compartilhamentos: acao(i.actions, 'post'),
+    salvamentos: acao(i.actions, 'onsite_conversion.post_save'),
+    cadastros: acao(i.actions, 'complete_registration', 'omni_complete_registration'),
   }
 }
 
@@ -261,7 +267,10 @@ export async function contasDisponiveis() {
 
 interface AnuncioBruto {
   id: string
+  name?: string
   effective_status?: string
+  campaign?: { name?: string }
+  adset?: { end_time?: string }
   creative?: {
     thumbnail_url?: string
     image_url?: string
@@ -318,7 +327,9 @@ function tipoCriativo(c: AnuncioBruto['creative']): Criativo['tipo'] {
 
 async function buscarCriativos(act: string, periodo: Periodo, hoje: string): Promise<Criativo[]> {
   const comGasto = JSON.stringify([{ field: 'spend', operator: 'GREATER_THAN', value: 0 }])
-  const [porAnuncio, semana, semanaAntes] = await Promise.all([
+  const camposAnuncio =
+    'id,name,effective_status,campaign{name},adset{end_time},creative.thumbnail_width(480).thumbnail_height(480){thumbnail_url,image_url,object_type,instagram_permalink_url,video_id,effective_instagram_media_id}'
+  const [porAnuncio, semana, semanaAntes, noAr] = await Promise.all([
     graphTodas<InsightBruto>(`${act}/insights`, {
       level: 'ad',
       fields: `ad_id,ad_name,campaign_name,inline_link_click_ctr,video_thruplay_watched_actions,${CAMPOS_INSIGHT}`,
@@ -340,37 +351,60 @@ async function buscarCriativos(act: string, periodo: Periodo, hoje: string): Pro
       filtering: comGasto,
       limit: '200',
     }, 2),
+    // Tudo que está ativo, mesmo sem gasto ainda (anúncio novo ou em aprendizado).
+    graphTodas<AnuncioBruto>(`${act}/ads`, {
+      fields: camposAnuncio,
+      effective_status: JSON.stringify(['ACTIVE']),
+      limit: '100',
+    }, 2).catch(() => [] as AnuncioBruto[]),
   ])
 
-  const top = porAnuncio.sort((a, b) => (Number(b.spend) || 0) - (Number(a.spend) || 0)).slice(0, 12)
-  if (top.length === 0) return []
+  const agoraMs = Date.now()
+  const estaNoAr = (a?: AnuncioBruto) =>
+    a?.effective_status === 'ACTIVE' && (!a.adset?.end_time || new Date(a.adset.end_time).getTime() > agoraMs)
 
-  const anuncios = await graph<{ data: AnuncioBruto[] }>(`${act}/ads`, {
-    fields: 'id,effective_status,creative.thumbnail_width(480).thumbnail_height(480){thumbnail_url,image_url,object_type,instagram_permalink_url,video_id,effective_instagram_media_id}',
-    filtering: JSON.stringify([{ field: 'id', operator: 'IN', value: top.map(a => a.ad_id) }]),
-    limit: '50',
-  }).catch(() => ({ data: [] as AnuncioBruto[] }))
+  // Com gasto no período (por verba) + os que estão no ar e ainda não gastaram.
+  const comGastoIds = new Set(porAnuncio.map(i => i.ad_id!))
+  const ativosSemGasto = noAr.filter(a => estaNoAr(a) && !comGastoIds.has(a.id))
+  const top = porAnuncio.sort((a, b) => (Number(b.spend) || 0) - (Number(a.spend) || 0)).slice(0, 40)
+  if (top.length === 0 && ativosSemGasto.length === 0) return []
 
-  const info = new Map(anuncios.data.map(a => [a.id, a]))
+  const info = new Map(noAr.map(a => [a.id, a]))
+  const faltam = top.map(i => i.ad_id!).filter(id => !info.has(id))
+  if (faltam.length) {
+    const extra = await graph<{ data: AnuncioBruto[] }>(`${act}/ads`, {
+      fields: camposAnuncio,
+      filtering: JSON.stringify([{ field: 'id', operator: 'IN', value: faltam }]),
+      limit: '50',
+    }).catch(() => ({ data: [] as AnuncioBruto[] }))
+    for (const a of extra.data) info.set(a.id, a)
+  }
+
   const agora = new Map(semana.map(i => [i.ad_id!, i]))
   const antes = new Map(semanaAntes.map(i => [i.ad_id!, i]))
+  const linhas: InsightBruto[] = [
+    ...top,
+    ...ativosSemGasto.slice(0, 40).map(a => ({ ad_id: a.id, ad_name: a.name, campaign_name: a.campaign?.name })),
+  ]
 
   const imagensIg = new Map(
     await Promise.all(
-      anuncios.data
-        .filter(a => a.creative?.effective_instagram_media_id && tipoCriativo(a.creative) !== 'video')
+      linhas
+        .map(l => info.get(l.ad_id!))
+        .filter((a): a is AnuncioBruto => !!a?.creative?.effective_instagram_media_id && tipoCriativo(a.creative) !== 'video')
         .map(async a => [a.id, await imagemDoInstagram(a.creative!.effective_instagram_media_id!).catch(() => null)] as const)
     )
   )
 
-  return top.map(i => {
+  return linhas.map(i => {
     const a = info.get(i.ad_id!)
     const tipo = tipoCriativo(a?.creative)
     return {
       id: i.ad_id!,
-      nome: i.ad_name ?? 'Anúncio',
-      campanha: i.campaign_name ?? '',
+      nome: i.ad_name ?? a?.name ?? 'Anúncio',
+      campanha: i.campaign_name ?? a?.campaign?.name ?? '',
       ativo: a?.effective_status === 'ACTIVE',
+      rodando: estaNoAr(a),
       tipo,
       // A miniatura (já pedida em 480px) abre fora do Facebook; o image_url às vezes não.
       thumb: imagensIg.get(i.ad_id!) ?? a?.creative?.thumbnail_url ?? a?.creative?.image_url ?? null,
@@ -378,7 +412,62 @@ async function buscarCriativos(act: string, periodo: Periodo, hoje: string): Pro
       metricas: normalizar(i),
       ctrLink: Number(i.inline_link_click_ctr) || 0,
       thruplays: acao(i.video_thruplay_watched_actions, 'video_view'),
-      fadiga: a?.effective_status === 'ACTIVE' ? avaliarFadiga(agora.get(i.ad_id!), antes.get(i.ad_id!)) : null,
+      fadiga: estaNoAr(a) ? avaliarFadiga(agora.get(i.ad_id!), antes.get(i.ad_id!)) : null,
+    }
+  })
+}
+
+// ─── Perfil do Instagram que assina os anúncios ──────────────────────────────
+
+type InsightsIg = { data: { name: string; total_value?: { value: number; breakdowns?: { results?: { dimension_values: string[]; value: number }[] }[] } }[] }
+
+function diasDoPeriodo(periodo: Periodo, hoje: string) {
+  const fixos: Record<string, number> = { last_7d: 7, last_14d: 14, last_30d: 30, last_month: 30 }
+  return fixos[periodo] ?? Math.max(1, dataUTC(hoje).getUTCDate())
+}
+
+/**
+ * Seguidores, visitas ao perfil e alcance da conta do Instagram usada nos
+ * anúncios. Cada métrica é opcional: depende da permissão da chave e do
+ * tamanho da conta (o Meta só abre "seguiram/deixaram" acima de 100 seguidores).
+ */
+async function buscarPerfil(act: string, periodo: Periodo, hoje: string): Promise<PerfilAnuncios | undefined> {
+  const ads = await graph<{ data: { creative?: { instagram_user_id?: string } }[] }>(`${act}/ads`, {
+    fields: 'creative{instagram_user_id}',
+    effective_status: JSON.stringify(['ACTIVE']),
+    limit: '25',
+  })
+  const contagem = new Map<string, number>()
+  for (const a of ads.data) {
+    const id = a.creative?.instagram_user_id
+    if (id) contagem.set(id, (contagem.get(id) ?? 0) + 1)
+  }
+  const igId = [...contagem.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]
+  if (!igId) return undefined
+
+  return comTokenDe(igId, async () => {
+    const perfil = await graph<{ username: string; profile_picture_url?: string; followers_count?: number }>(igId, {
+      fields: 'username,profile_picture_url,followers_count',
+    })
+    const ate = Math.floor(Date.now() / 1000)
+    const desde = ate - Math.min(diasDoPeriodo(periodo, hoje), 30) * 86400
+    const janela = { period: 'day', metric_type: 'total_value', since: String(desde), until: String(ate) }
+    const [conta, seguidores] = await Promise.all([
+      graph<InsightsIg>(`${igId}/insights`, { metric: 'profile_views,reach,accounts_engaged', ...janela }).catch(() => null),
+      graph<InsightsIg>(`${igId}/insights`, { metric: 'follows_and_unfollows', breakdown: 'follow_type', ...janela }).catch(() => null),
+    ])
+    const total = (ins: InsightsIg | null, nome: string) => ins?.data.find(d => d.name === nome)?.total_value?.value ?? null
+    const porTipo = (tipo: string) =>
+      seguidores?.data[0]?.total_value?.breakdowns?.[0]?.results?.find(r => r.dimension_values[0] === tipo)?.value ?? (seguidores ? 0 : null)
+    return {
+      username: perfil.username,
+      foto: perfil.profile_picture_url ?? null,
+      seguidores: perfil.followers_count ?? 0,
+      novosSeguidores: porTipo('FOLLOWER'),
+      deixaramDeSeguir: porTipo('NON_FOLLOWER'),
+      visitasPerfil: total(conta, 'profile_views'),
+      alcance: total(conta, 'reach'),
+      contasEngajadas: total(conta, 'accounts_engaged'),
     }
   })
 }
@@ -448,6 +537,7 @@ async function montarDadosTrafego(act: string, periodo: Periodo): Promise<DadosT
   // Blocos extras correm em paralelo com o principal e nunca derrubam o painel.
   const extras = Promise.all([
     talvez(buscarCriativos(act, periodo, hoje)),
+    talvez(buscarPerfil(act, periodo, hoje)),
     talvez(buscarRegioes(act, periodo)),
     talvez(
       graph<{ timezone_offset_hours_utc?: number }>(act, { fields: 'timezone_offset_hours_utc' })
@@ -516,7 +606,7 @@ async function montarDadosTrafego(act: string, periodo: Periodo): Promise<DadosT
 
   const dias: SerieDia[] = serie.data.map(d => ({ data: d.date_start!, ...normalizar(d) }))
   const h = dataUTC(hoje)
-  const [criativos, regioes, horas] = await extras
+  const [criativos, perfil, regioes, horas] = await extras
 
   return {
     periodo,
@@ -535,5 +625,6 @@ async function montarDadosTrafego(act: string, periodo: Periodo): Promise<DadosT
     criativos,
     regioes,
     horas,
+    perfil,
   }
 }

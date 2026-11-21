@@ -81,6 +81,11 @@ export interface Metricas {
   conversas: number
   videoViews: number
   engajamento: number
+  reacoes: number
+  comentarios: number
+  compartilhamentos: number
+  salvamentos: number
+  cadastros: number
 }
 
 export interface SerieDia extends Metricas {
@@ -127,6 +132,20 @@ export interface Criativo {
   ctrLink: number
   thruplays: number // vídeo assistido até o fim (ou 15s)
   fadiga: Fadiga | null
+  /** Anúncio no ar agora (status ativo e dentro das datas do conjunto). */
+  rodando: boolean
+}
+
+/** Perfil do Instagram que assina os anúncios, no período do painel. */
+export interface PerfilAnuncios {
+  username: string
+  foto: string | null
+  seguidores: number
+  novosSeguidores: number | null
+  deixaramDeSeguir: number | null
+  visitasPerfil: number | null
+  alcance: number | null
+  contasEngajadas: number | null
 }
 
 export interface Regiao {
@@ -164,6 +183,7 @@ export interface DadosTrafego {
   criativos?: Criativo[]
   regioes?: Regiao[]
   horas?: CelulaHora[]
+  perfil?: PerfilAnuncios
 }
 
 const UFS: Record<string, string> = {

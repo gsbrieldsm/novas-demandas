@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import clsx from 'clsx'
-import { brl, num, pct, razao, type CelulaHora, type Criativo, type Metricas, type Regiao } from '@/lib/trafego'
+import { brl, num, pct, razao, type CelulaHora, type Criativo, type Metricas, type PerfilAnuncios, type Regiao } from '@/lib/trafego'
 import { BRASIL_VIEWBOX, UF_CENTROS, UF_PATHS } from './brasil-uf'
 
 // Blocos visuais extras do painel de tráfego: criativos (com alerta de
@@ -67,9 +67,68 @@ function BarraTaxa({ rotulo, valor, dica }: { rotulo: string; valor: number | nu
   )
 }
 
-export function Criativos({ criativos, total, interno }: { criativos: Criativo[]; total: Metricas; interno?: boolean }) {
+function Numero({ rotulo, valor, dica }: { rotulo: string; valor: number | null; dica?: string }) {
+  return (
+    <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2.5" title={dica}>
+      <p className="text-[11px] text-slate-500">{rotulo}</p>
+      <p className="mt-0.5 text-lg font-semibold tabular-nums text-slate-900">{valor == null ? '—' : num(valor)}</p>
+    </div>
+  )
+}
+
+/** Engajamento que os anúncios trouxeram + o que aconteceu no perfil do Instagram. */
+function ResumoEngajamento({ total, perfil }: { total: Metricas; perfil?: PerfilAnuncios }) {
+  return (
+    <div className="mt-4 space-y-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        <Numero rotulo="Curtidas e reações" valor={total.reacoes} dica="Reações nos anúncios (Facebook e Instagram)" />
+        <Numero rotulo="Comentários" valor={total.comentarios} />
+        <Numero rotulo="Compartilhamentos" valor={total.compartilhamentos} />
+        <Numero rotulo="Salvamentos" valor={total.salvamentos} />
+        <Numero rotulo="Engajamento total" valor={total.engajamento} dica="Todas as interações com os anúncios, incluindo visualizações de vídeo e cliques" />
+        <Numero rotulo="Cadastros" valor={total.cadastros} dica="Cadastros completos registrados pelo pixel" />
+      </div>
+      {perfil && (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-slate-100 px-3 py-2.5 text-sm">
+          <div className="flex items-center gap-2">
+            {perfil.foto ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={perfil.foto} alt="" referrerPolicy="no-referrer" className="h-8 w-8 rounded-full object-cover" />
+            ) : (
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-xs">IG</span>
+            )}
+            <span className="font-medium text-slate-900">@{perfil.username}</span>
+          </div>
+          <span className="text-slate-500"><b className="tabular-nums text-slate-900">{num(perfil.seguidores)}</b> seguidores</span>
+          {perfil.novosSeguidores != null && (
+            <span className="text-slate-500">
+              <b className="tabular-nums text-emerald-600">+{num(perfil.novosSeguidores)}</b> novos
+              {perfil.deixaramDeSeguir ? <span className="text-slate-400"> · {num(perfil.deixaramDeSeguir)} deixaram</span> : null}
+            </span>
+          )}
+          {perfil.visitasPerfil != null && <span className="text-slate-500"><b className="tabular-nums text-slate-900">{num(perfil.visitasPerfil)}</b> visitas ao perfil</span>}
+          {perfil.alcance != null && <span className="text-slate-500"><b className="tabular-nums text-slate-900">{num(perfil.alcance)}</b> contas alcançadas</span>}
+          {perfil.novosSeguidores == null && perfil.visitasPerfil == null && (
+            <span className="text-xs text-slate-400">Métricas do perfil indisponíveis para esta conta.</span>
+          )}
+          <span className="ml-auto text-[11px] text-slate-400">Perfil: orgânico + anúncios no período</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+type FiltroCriativos = 'no_ar' | 'todos'
+const POR_PAGINA = 12
+
+export function Criativos({ criativos, total, perfil, interno }: { criativos: Criativo[]; total: Metricas; perfil?: PerfilAnuncios; interno?: boolean }) {
   const res = resultadoPrincipal(total)
   const custo = (c: Criativo) => (c.metricas[res.chave] > 0 ? c.metricas.investimento / c.metricas[res.chave] : null)
+  const noAr = criativos.filter(c => c.rodando)
+  const [filtro, setFiltro] = useState<FiltroCriativos>(noAr.length ? 'no_ar' : 'todos')
+  const [limite, setLimite] = useState(POR_PAGINA)
+  const lista = filtro === 'no_ar' ? noAr : criativos
+  const visiveis = lista.slice(0, limite)
 
   // "Melhor custo" só faz sentido comparando pelo menos dois com resultado.
   const comResultado = criativos.filter(c => custo(c) != null)
@@ -82,13 +141,25 @@ export function Criativos({ criativos, total, interno }: { criativos: Criativo[]
     <div className={clsx(CARD, 'p-4 md:p-6')}>
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <p className={ROTULO}>Criativos</p>
-          <p className="mt-1 text-sm text-slate-500">Os anúncios que mais receberam verba no período, com o desempenho de cada um.</p>
+          <p className={ROTULO}>Criativos e engajamento</p>
+          <p className="mt-1 text-sm text-slate-500">Todos os anúncios no ar e os que receberam verba no período, com o desempenho e o engajamento de cada um.</p>
         </div>
-        <p className="text-xs text-slate-500">
-          Custo comparado por <b className="text-slate-900">{res.singular}</b>
-        </p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <p className="text-xs text-slate-500">
+            Custo comparado por <b className="text-slate-900">{res.singular}</b>
+          </p>
+          <Abas
+            valor={filtro}
+            onChange={v => { setFiltro(v); setLimite(POR_PAGINA) }}
+            opcoes={[
+              { id: 'no_ar', label: `No ar (${noAr.length})` },
+              { id: 'todos', label: `Todos (${criativos.length})` },
+            ]}
+          />
+        </div>
       </div>
+
+      <ResumoEngajamento total={total} perfil={perfil} />
 
       {alertas.length > 0 && (
         <div className="mt-4 space-y-2" role="alert">
@@ -113,7 +184,7 @@ export function Criativos({ criativos, total, interno }: { criativos: Criativo[]
       )}
 
       <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
-        {criativos.map(c => {
+        {visiveis.map(c => {
           const m = c.metricas
           const cpr = custo(c)
           const parou = c.tipo === 'video' ? razao(m.videoViews, m.impressoes) : null
@@ -130,8 +201,8 @@ export function Criativos({ criativos, total, interno }: { criativos: Criativo[]
                 <span className="rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur">
                   {c.tipo === 'video' ? '▶ Vídeo' : c.tipo === 'imagem' ? 'Imagem' : 'Anúncio'}
                 </span>
-                <span className={clsx('rounded-full px-2 py-0.5 text-[10px] font-semibold backdrop-blur', c.ativo ? 'bg-emerald-500/90 text-white' : 'bg-white/80 text-slate-600')}>
-                  {c.ativo ? 'Ativo' : 'Pausado'}
+                <span className={clsx('rounded-full px-2 py-0.5 text-[10px] font-semibold backdrop-blur', c.rodando ? 'bg-emerald-500/90 text-white' : 'bg-white/80 text-slate-600')}>
+                  {c.rodando ? (m.impressoes > 0 ? 'No ar' : 'No ar · aguardando entrega') : c.ativo ? 'Encerrado' : 'Pausado'}
                 </span>
               </div>
               <div className="absolute inset-x-0 bottom-0 flex flex-wrap gap-1 p-2">
@@ -163,6 +234,13 @@ export function Criativos({ criativos, total, interno }: { criativos: Criativo[]
                   <div><dt className="text-slate-400 capitalize">{res.plural}</dt><dd className="font-semibold tabular-nums text-slate-900">{num(m[res.chave])}</dd></div>
                   <div><dt className="text-slate-400">Custo/{res.singular}</dt><dd className={clsx('font-semibold tabular-nums', melhor === c.id ? 'text-gm-accent' : 'text-slate-900')}>{cpr == null ? '—' : brl(cpr)}</dd></div>
                 </dl>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 border-t border-slate-100 pt-2 text-[11px] text-slate-500" aria-label="Engajamento">
+                  <span title="Curtidas e reações">♥ <b className="tabular-nums text-slate-700">{num(m.reacoes)}</b></span>
+                  <span title="Comentários">💬 <b className="tabular-nums text-slate-700">{num(m.comentarios)}</b></span>
+                  <span title="Compartilhamentos">↗ <b className="tabular-nums text-slate-700">{num(m.compartilhamentos)}</b></span>
+                  <span title="Salvamentos">🔖 <b className="tabular-nums text-slate-700">{num(m.salvamentos)}</b></span>
+                  <span title="Alcance">👁 <b className="tabular-nums text-slate-700">{num(m.alcance)}</b></span>
+                </div>
                 {c.tipo === 'video' && (
                   <div className="space-y-1.5 border-t border-slate-100 pt-2">
                     <BarraTaxa rotulo="Pararam para ver" valor={parou} dica="Visualizações de 3 segundos ÷ impressões: quanto o começo do vídeo prende" />
@@ -174,6 +252,14 @@ export function Criativos({ criativos, total, interno }: { criativos: Criativo[]
           )
         })}
       </div>
+      {lista.length === 0 && <p className="mt-4 text-sm text-slate-400">Nenhum anúncio no ar agora.</p>}
+      {lista.length > limite && (
+        <div className="mt-4 text-center">
+          <button type="button" onClick={() => setLimite(l => l + POR_PAGINA)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            Mostrar mais ({lista.length - limite})
+          </button>
+        </div>
+      )}
     </div>
   )
 }

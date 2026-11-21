@@ -505,7 +505,7 @@ export function PainelTrafego({ dados, metas, interno }: { dados: DadosTrafego; 
             <Funil m={dados.resumo} />
             <GraficoDiario serie={dados.serie} />
           </div>
-          {dados.criativos?.length ? <Criativos criativos={dados.criativos} total={dados.resumo} interno={interno} /> : null}
+          {dados.criativos?.length ? <Criativos criativos={dados.criativos} total={dados.resumo} perfil={dados.perfil} interno={interno} /> : null}
           {dados.horas?.length ? <MapaHoras horas={dados.horas} total={dados.resumo} /> : null}
           {dados.regioes?.length ? <MapaBrasil regioes={dados.regioes} total={dados.resumo} /> : null}
           <MatrizDiaria serie={dados.serie} total={dados.resumo} metas={metas} />
