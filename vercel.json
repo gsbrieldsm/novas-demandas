@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/assistente/cron?tipo=manha", "schedule": "30 10 * * *" },
+    { "path": "/api/assistente/cron?tipo=noite", "schedule": "0 21 * * *" }
+  ]
+}
